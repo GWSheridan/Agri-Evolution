@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:totem_of_undying",
+          "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "agri_evolution:totem_of_undying_crop",
+              "properties": {
+                "age": "7"
+              }
+            }
+          ],
+          "functions": []
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "agri_evolution:totem_of_undying_seed",
+          "conditions": [
+            {
+              "condition": "minecraft:inverted",
+              "term": {
+                "condition": "minecraft:block_state_property",
+                "block": "agri_evolution:totem_of_undying_crop",
+                "properties": {
+                  "age": "7"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

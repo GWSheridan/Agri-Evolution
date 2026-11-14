@@ -1,0 +1,740 @@
+{
+  "existingTexturesPreserved": 1836,
+  "craftingRecipesUnchanged": 32,
+  "newTextures": 120,
+  "species": 203,
+  "foodCrops": 36,
+  "resourceCrops": 157,
+  "version": "0.61.0",
+  "crossedCropModels": 1624,
+  "requiredGameTestsPassed": 95,
+  "illustratedRecipes": 200,
+  "fieldRecipes": 136,
+  "labRecipes": 62,
+  "jarSha256": "9a86bd5a7801a0278d1edd22615def331750c6b3bcdfe44fed3e67305cad7748",
+  "newAssets": [
+    {
+      "path": "block/asparagus_crop_stage0.png",
+      "sha256": "633e3675e8b200b4ed377a066fdecb217c3099d8b5ebfc69204b77682fd9cadc",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/asparagus_crop_stage1.png",
+      "sha256": "7f2cd54a6b8ec9340732f8e40a4ba6fe497b4710f25d485d649f4a758f646352",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/asparagus_crop_stage2.png",
+      "sha256": "6872b406630cdfb03d16373bf1fa6a1575355bce06e106ac0baa521f472ffc04",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/asparagus_crop_stage3.png",
+      "sha256": "51e8a08711b16cc6807e3932e25f4a60ca4edbe69c53bb363ace41762f06f8f5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/asparagus_crop_stage4.png",
+      "sha256": "ad42e0fbc4f1733d6314e60ed7713d44b31ab733ef1cf08fc8d0c2d11905715f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/asparagus_crop_stage5.png",
+      "sha256": "1ee5b070ed6983e01ef5d23bd43e8a7ff1d27e4eb11206329f363992aa983b58",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/asparagus_crop_stage6.png",
+      "sha256": "8f9043b37bd18c6c3deee978dbeb978d19a908308d4fb3418eb954d5ca63a2ed",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/asparagus_crop_stage7.png",
+      "sha256": "0181acc4de39e06ef8e896c63e481ce358dbf6a4138442248a1cff1aeaf2197d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage0.png",
+      "sha256": "c1d2e9d46f3768902e6a24c05e2feca5b9fa1f731e885e9025a883ccbf766a11",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage1.png",
+      "sha256": "24267ff627ffcb31baab4a62e71dda64a91dc137be204406e9fe40895bdad87f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage2.png",
+      "sha256": "ecc3d3bede542c24cd26c70f21a41e028f0f5009c65012393e5a8bacc16cadff",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage3.png",
+      "sha256": "432b50c1eddba5d931649847b276a6020f35b152e97c8451047c649182c0ff58",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage4.png",
+      "sha256": "c60f79231b4e370f55e3e5e65ecaef9d27af4b9934c01a88f1191d3475f3d2f0",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage5.png",
+      "sha256": "62684033eda4f9f1aeea92b14b04e01b0e8791d74a6ffcc95dbc7afd0843c85c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage6.png",
+      "sha256": "41457d954dd083ca0c7fdde99d60aff6226fe79deea66dcbda15c4570b76d09f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blackberry_crop_stage7.png",
+      "sha256": "bfab3e67fcffed596b08b767a3af33de9d5380628f288514e899d6a02470ded7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage0.png",
+      "sha256": "45208da8dba833d4fa4e5a090c73f6abe9ad8aaf5404dab593c8f291131e544b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage1.png",
+      "sha256": "6bea9fe75ace4dc0d2a3f55cf081289684ebe0e08ca040ab59659036e28babc6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage2.png",
+      "sha256": "baa723ee847cb082d44fd748cb8e9afb7881acd6365177e2296983cc544e1f31",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage3.png",
+      "sha256": "c3adddc8673b09444a7534146245e397bf93b98d11afdd6841a0960b2ac71546",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage4.png",
+      "sha256": "93988c38fe42cc3c09932ced32766edc278c2ce70d1737ef8d5ab7912abb0b89",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage5.png",
+      "sha256": "77da81961418226f4425b8e6aaf09edf6f8cb154fadcf407e4decce8c86d9c04",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage6.png",
+      "sha256": "fcb580c399bddc6eb756b1b906bdc7d35deb89a67fb378b6948e64f901b39d89",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/blueberry_crop_stage7.png",
+      "sha256": "9161eef64a3685938ee729839351d7950fceb8bb9a3d2af13c4a9dfdce22847c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage0.png",
+      "sha256": "80e8d0b43fcf87a01539c36ae44e153e34419f2eef37fe5d9e3adaaab96e36e2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage1.png",
+      "sha256": "47db9ba6948ec7c42350b2569e4350281966e6912d1f2c002cbe16ce4de74ffe",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage2.png",
+      "sha256": "772018fa3068b1b43e99bd23771d1f0c52d497fd2b3d980e1bdde0508ac56853",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage3.png",
+      "sha256": "2471a1e65afe5bcd61a3268a28ac0e87d6b3e254f4117444de9faabc08db4f35",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage4.png",
+      "sha256": "665a6863bdd3de55e580925def29871dd16b55220cad78b4ccc5bb8a0b10e8be",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage5.png",
+      "sha256": "16d1d574d99b8951a4fe933bc0dfdfef686aaa294d6ca57381d6e8ce4214e0bd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage6.png",
+      "sha256": "2421043cb5f35a2e1788761f2708cead0589d9e66dc2a835a523e562915c7068",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/butternut_squash_crop_stage7.png",
+      "sha256": "f34f2ecaf56e3c8d30db208397016bda9bbd9d25733ae3cac453b0ea3ced75b5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage0.png",
+      "sha256": "6b3cac60aa77d027bf84c9605c822894285d3d4343085d4c8f445cc0c09ed759",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage1.png",
+      "sha256": "62b4701fa169eb633230647d7f6b7ed731b1799ee2c99e443ae760bf4f2f8ff6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage2.png",
+      "sha256": "ddeae15b2a99a661331fdc17c398c1b1e040b27e1edd2d79161cb7a86cc92ac7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage3.png",
+      "sha256": "4f3ef4166a4f645c34dab3ba6225065375d0c87d65cb68faeabe21d4906ff054",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage4.png",
+      "sha256": "fab7fc82cfa08c82c313be6cf69d55d72026448ff1d00174f6a40c1ad11203db",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage5.png",
+      "sha256": "3eac9076ee96b029a29be3331ffc0ae94cbb0a62fc7b3c8dce0c48e2425ad5b7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage6.png",
+      "sha256": "8b28b20a972cf41be732b6c3f557675ca7fda56f5e80cb6a2ffaa4e0721ecb57",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/celery_crop_stage7.png",
+      "sha256": "86486caf2622f452654e1627c99f236d2ad6e2fc3542de06ecabe8eecd232000",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage0.png",
+      "sha256": "7f44fce9b5e6a1596b1fc67d0ceb5d4d695a39c8a26f7a55294387c29441150c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage1.png",
+      "sha256": "94a662822dac6eea149e934d96d8fd0dd8293bedb49126c84d12ec2aedba7195",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage2.png",
+      "sha256": "d5d1d7228bf971c69bb5e1977871940a6b5308878ce2f724a5111a5afecb3dca",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage3.png",
+      "sha256": "bd66cee2aa10b50ff5f1bb7d36b7a2abb6c64e974f1aa0c8e1ee27d8dbc99e34",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage4.png",
+      "sha256": "bf1024ff2fd82b32475b5438e13d59b239213a9cb562fb4376910b52ada0fedd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage5.png",
+      "sha256": "5176560c00069081e099675191113430af76f3776d6193fe5b9c68989c76d9fd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage6.png",
+      "sha256": "d556cd693547edce662b9830846020c8c0d1d24f93ec17e683a8a5a50401b4eb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/courgette_crop_stage7.png",
+      "sha256": "93d53cf14116e77708ebc036d19e9cd02ff88a39130d2d9dc96cf9b833c2de3d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage0.png",
+      "sha256": "03d54e615bc89a1bea247caf9411ff5e4336c68d59694d6bea8e0895485ab42a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage1.png",
+      "sha256": "5beeb79bba1340b5cf2d83bd8cf172ea2914093c5062142a1bdf94af0a22c657",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage2.png",
+      "sha256": "58d4a2ac6376c3288736674e30a7adaad2f6f59bc96cffed747e30b56c6a558c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage3.png",
+      "sha256": "542d5df157f67b65da83941680fa491f96d1ce8460a51c5e0ed70939931f13e1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage4.png",
+      "sha256": "4c0bdb4b150becb2c2c49f4de5047955ae6c0cf8e13037e8f85546ec383f3892",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage5.png",
+      "sha256": "86bbb6d75b4358d97af72d1a76a2667055877aadc356ec19d9ebfe769e02cda3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage6.png",
+      "sha256": "f6850d110981da466adea478197a1fe01d770f59eb53a4c5fbcc10884840fe32",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/cranberry_crop_stage7.png",
+      "sha256": "04845b6daeed663ab3849e4e6dd53243bacfea2296e047001fdbd3e40e0a113a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage0.png",
+      "sha256": "6fae5caa63897473df21462a78115a5f0d66500314fe105fc2619e5d95908ae3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage1.png",
+      "sha256": "f61ea2af896dfce96cab88379b3a3d689e2f9419d707c365ac53ac9916d1b864",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage2.png",
+      "sha256": "2f49297132b799f99af49d9e196fb7f9a63c4d350cba66fa945397940d080615",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage3.png",
+      "sha256": "a863614da24348bf66f7908e587921ed286e5866dba925ffb3da16cf70f98a6a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage4.png",
+      "sha256": "1eec6bacf1cc05bab81f01aa88bcdf6894a92bcaaed7e6c61143989bf1bb09bd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage5.png",
+      "sha256": "6395be0384c243817e6a9ab09e79a269fce4d6068630229f4c0436cea34d2158",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage6.png",
+      "sha256": "894cd60a798c3d36fd90d48b0e39fd094b4eeae9335474841ffcd4430abbe501",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leek_crop_stage7.png",
+      "sha256": "e6c369f003cb0b4b89aa70a1b037f10f3a18b65e98af98e5c8f5056a05555359",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage0.png",
+      "sha256": "0ffa0b506895b71cdb03265f5eac86951c0a56e1ab71ce23fb8de01ffbec96c7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage1.png",
+      "sha256": "ac5565985c4a21bf9558b03497fff721e52972e93c039b741d444679a22e0910",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage2.png",
+      "sha256": "4b7d2de7236989bdc9f5762a84cdfd1e769cbe3d580b4c2936f4e47cdadcd041",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage3.png",
+      "sha256": "d8cd9ec99052d4154673b640f4388c22ed73b8ed57c7681917f7575cf367846c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage4.png",
+      "sha256": "afa0c06c2c0fe9b3c82f47bd04494d3ebd2a2d594f41542070a25c39574aa459",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage5.png",
+      "sha256": "89c84506ed6ceea980836f392919b52269d7ad05f48c285aabcbad4c73747496",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage6.png",
+      "sha256": "ef6c7315b82f7cae69f73dcde70a3172d54914a6847c266097ea6896587a4c94",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/parsnip_crop_stage7.png",
+      "sha256": "01ad2a917a8a6d0bff72409b112ab5b3e4052bf7ff6daf6bc2761e6b4c01789f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage0.png",
+      "sha256": "e2f97ef8fa2fb2bd061325179da868a99a8e854cfc18a55b7f89b6ca429ab634",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage1.png",
+      "sha256": "aee96c1521f620afe9543704590f5620fecd5b228bce67048a42376404b35bd2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage2.png",
+      "sha256": "37435a77a42d1a9a9fd732bae9c195614a9345bd3585b0908087768a1f894e9f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage3.png",
+      "sha256": "21e49f9bd874eff21cc12d330853211fb78f25dcfecdd97156bcf0c1e8be16db",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage4.png",
+      "sha256": "020dd62a966a45190c8af0ae4439aee07e8e8b1432f987c2ab50168fc4cc33c8",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage5.png",
+      "sha256": "296103d34125749ab635bbd611c8afae48324e91d5b1fd25dee8b8d75054bd5d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage6.png",
+      "sha256": "1e007448f5328939a6ef542fcfddcd2006e37d12de07873d501e64b2af471fa1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pumpkin_crop_stage7.png",
+      "sha256": "a47f3c3751cbee1eb19f283bf9dd28f30c0116be79a4a1176321ce2bfda8b3ae",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage0.png",
+      "sha256": "7e944a195b241affe9516346889d0cd1991ef6f53af533f27d39bda46b791fac",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage1.png",
+      "sha256": "f5095dda59046e8e6a68625358c17d02ae495b76ddcc542e1ed9e198b054f097",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage2.png",
+      "sha256": "c40ab7eec87ccdaccbcbaa088951755ddc7af6f407de87b6c99971d2916dc429",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage3.png",
+      "sha256": "c029fd13c5b1b87914395d9ac955a207993d7f4c125fc157aad98e5c06f59bd0",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage4.png",
+      "sha256": "fb0070015fe2994620a58448a8f9b62f731053eeccc4fae864272364cfc711b4",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage5.png",
+      "sha256": "63fb32e8f92498cbc4800a7fc81ee4b9d2eef5f9f4820c85f10eba7eacf60ff1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage6.png",
+      "sha256": "d3e150b741cfd0a78963ea2afc62278b4fbd65cfdf294d8a5cab30d0ec7a8774",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/raspberry_crop_stage7.png",
+      "sha256": "bf639930b9f7aca372867b20535ab36989268ebdec364bd01e4833327fd3dd3c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage0.png",
+      "sha256": "393b03b18cdea5b4825173b4c737be861f400c8d2b4d1ec9381ab04de75f61b2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage1.png",
+      "sha256": "0bfe0c69c8bc5c689ab4a580159a4053760d8419d6dcf1ed6ac9a5677bc8a3dd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage2.png",
+      "sha256": "1cb4041f12f407ccef33cdff19dcd5b51289b64b1556310598405c2257531481",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage3.png",
+      "sha256": "70f35de07254c57da87efc2dbadd4e2331ab7909b347459a4b3ed99d8495d396",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage4.png",
+      "sha256": "32b5a7b261c3f59763826312eb3a95de4339cb17943f42894377a13102baaac5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage5.png",
+      "sha256": "759c4acee274c52c7ef3f513f661cf077200c9b6092a68a63c1298c7202432ef",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage6.png",
+      "sha256": "2c6f997f2b33744a932918b3a7ccce42feed48c860a82ab3bbfef59d6e4b3cb9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/turnip_crop_stage7.png",
+      "sha256": "5cae6db76905d430d009358a58afab8b8046e4f93c326c82ba350b61108cff14",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/asparagus.png",
+      "sha256": "2e6ddeaeb70e3278152ded7259bed129eaf277b9e4a87aa2efdeab33d13d586c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/asparagus_seed.png",
+      "sha256": "969af3a435ed8bb3d25f0d1ae9db9bb4dfea012d6796e59f82b0c37d92d23dcd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/blackberry.png",
+      "sha256": "f3569587ddc0fca42990c33ae8200ce4cb2635d969087960e6311df7fd52c7c3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/blackberry_seed.png",
+      "sha256": "574639cea2fed4d83b3b37627d28462a337a55ee8766b4bcd970681ba749f12a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/blueberry.png",
+      "sha256": "bb8b21a0ac4d070467e487ed49ef9f889f752e56e1cf1eb4089e52cfd4aa33f2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/blueberry_seed.png",
+      "sha256": "78e7ff037bd536b6eee9a6a15507a7b7d6b140c152cb764f0c0bdce2d155fa8e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/butternut_squash.png",
+      "sha256": "089f97b31cf206690498398578a87a948aa8c2241e750c1a4382bb9dd4750164",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/butternut_squash_seed.png",
+      "sha256": "ec5a848d6dec55f2ec2b5ab3a1dba94697673fd430fb3764b9655257eb18b6ac",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/celery.png",
+      "sha256": "68d4eca5199510dc7a55e1e5f0aa87569cbd0e500dfc9273aec0994a8b89d1eb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/celery_seed.png",
+      "sha256": "3953763667bb935e62cf24068b938055f4c0a5274b8291b4546ec2fc174ca3b8",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/courgette.png",
+      "sha256": "23369ec4e4717dc38f33ab9434ebf32145c5f19738d144d13927d987d2de9475",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/courgette_seed.png",
+      "sha256": "fb2dc3b76aa7aed6bfed18653ec151a2ba3f12d9d8ec6aebe2e47625641a0d57",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/cranberry.png",
+      "sha256": "a043cba6aa544b40009473986072551a31164a38df46c31fa7847ff3d066e273",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/cranberry_seed.png",
+      "sha256": "63044f74f27c59fb63dc534e4cc61a21ebe996b6a02990e075dcea2382189cc9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/leek.png",
+      "sha256": "4ef74ecbe5cb9741b62cb5ac3660af52da926e976d8f0580e78051f6bf303a5b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/leek_seed.png",
+      "sha256": "b139ab944c0767ee6a8c6089427b3ce45e3262e2c0b7e05d9ce4582f16b93ea9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/parsnip.png",
+      "sha256": "ea512709fd9aa3cbcf0321406a55e7cd39979d24b2971e3249a9c9d717b0b83d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/parsnip_seed.png",
+      "sha256": "3ec71dcdb28eba3441a41d05f5eae86e4f4281a9e66a1714d50da17a1e5000ed",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/pumpkin.png",
+      "sha256": "a7b9d292097f4078e88370a8be61235cc282346b12966f07163ef955efc57510",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/pumpkin_seed.png",
+      "sha256": "2793e51d1c118391c16eed1fea62a2016c553043fe917db3a0d0c73aa0287700",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/raspberry.png",
+      "sha256": "83b95831f03ef705da03d8eab5288abe42e8a2898f346630d36932b997a829a1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/raspberry_seed.png",
+      "sha256": "51dcf2deb010c2588ed4cdaf38334ef5a76bbee2ee730fd199557d7e01b5190d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/turnip.png",
+      "sha256": "6076dd45c7dfdbc56b605c5cfea1781c4a511207e71c98b61469c19f4ba6da3e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/turnip_seed.png",
+      "sha256": "0ade1878856ec615e472f93f2f3138d5b22195e34dc32b94a236c2f5c97d4048",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    }
+  ],
+  "journalScreenshots": 24,
+  "journalPreviewBuild": "PASS",
+  "completed": "2026-11-10"
+}

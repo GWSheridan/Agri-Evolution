@@ -1,0 +1,362 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "0",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_000"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "0",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_001"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "0",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_002"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "1",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_010"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "1",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_011"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "1",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_012"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "2",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_020"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "2",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_021"
+      }
+    },
+    {
+      "when": {
+        "part_x": "0",
+        "part_y": "2",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_022"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "0",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_100"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "0",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_101"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "0",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_102"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "1",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_110"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "1",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_111"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "1",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_112"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "2",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_120"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "2",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_121"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "2",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_122"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "0",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_200"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "0",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_201"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "0",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_202"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "1",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_210"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "1",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_211"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "1",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_212"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "2",
+        "part_z": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_220"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "2",
+        "part_z": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_221"
+      }
+    },
+    {
+      "when": {
+        "part_x": "2",
+        "part_y": "2",
+        "part_z": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_222"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "0",
+        "part_z": "0",
+        "fill": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_1_0"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "1",
+        "part_z": "0",
+        "fill": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_1_1"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "0",
+        "part_z": "0",
+        "fill": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_2_0"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "1",
+        "part_z": "0",
+        "fill": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_2_1"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "0",
+        "part_z": "0",
+        "fill": "3"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_3_0"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "1",
+        "part_z": "0",
+        "fill": "3"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_3_1"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "0",
+        "part_z": "0",
+        "fill": "4"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_4_0"
+      }
+    },
+    {
+      "when": {
+        "part_x": "1",
+        "part_y": "1",
+        "part_z": "0",
+        "fill": "4"
+      },
+      "apply": {
+        "model": "agri_evolution:block/water_reservoir_gauge_4_1"
+      }
+    }
+  ]
+}

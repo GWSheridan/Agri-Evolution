@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:cooked_mutton"
+    },
+    {
+      "item": "agri_evolution:peas"
+    },
+    {
+      "item": "agri_evolution:parsnip"
+    },
+    {
+      "item": "agri_evolution:rosemary"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:herb_lamb_platter",
+    "count": 1
+  }
+}

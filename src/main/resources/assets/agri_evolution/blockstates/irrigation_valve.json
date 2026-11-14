@@ -1,0 +1,323 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "facing": "north",
+        "open": "false",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "open": "false",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "open": "true",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_open"
+      }
+    },
+    {
+      "when": {
+        "facing": "north",
+        "open": "true",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed"
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "open": "false",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "open": "false",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "open": "true",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_open",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "east",
+        "open": "true",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "open": "false",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "open": "false",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "open": "true",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_open",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "south",
+        "open": "true",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "open": "false",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "open": "false",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "open": "true",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_open",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "west",
+        "open": "true",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "open": "false",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "open": "false",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "open": "true",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_open",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "up",
+        "open": "true",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "open": "false",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "open": "false",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "open": "true",
+        "powered": "false"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_open",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "facing": "down",
+        "open": "true",
+        "powered": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_valve_closed",
+        "x": 90
+      }
+    },
+    {
+      "when": {
+        "north": "true",
+        "facing": "east|west|up|down"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_pipe_arm"
+      }
+    },
+    {
+      "when": {
+        "east": "true",
+        "facing": "north|south|up|down"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_pipe_arm",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "south": "true",
+        "facing": "east|west|up|down"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_pipe_arm",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "west": "true",
+        "facing": "north|south|up|down"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_pipe_arm",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "up": "true",
+        "facing": "north|east|south|west"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_pipe_arm",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "down": "true",
+        "facing": "north|east|south|west"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_pipe_arm",
+        "x": 90
+      }
+    }
+  ]
+}

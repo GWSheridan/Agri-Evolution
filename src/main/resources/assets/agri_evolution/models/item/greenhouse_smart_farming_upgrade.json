@@ -1,0 +1,4 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {"layer0": "agri_evolution:item/greenhouse_smart_farming_upgrade"}
+}

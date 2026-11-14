@@ -1,0 +1,23 @@
+{
+  "parent": "agri_evolution:farming/root",
+  "display": {
+    "icon": {
+      "id": "agri_evolution:soil_research_table"
+    },
+    "title": {
+      "translate": "advancements.agri_evolution.farming.study_soil.title"
+    },
+    "description": {
+      "translate": "advancements.agri_evolution.farming.study_soil.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "achieved": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

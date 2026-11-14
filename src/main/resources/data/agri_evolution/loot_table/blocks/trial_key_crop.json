@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:trial_key",
+          "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "agri_evolution:trial_key_crop",
+              "properties": {
+                "age": "7"
+              }
+            }
+          ],
+          "functions": []
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "agri_evolution:trial_key_seed",
+          "conditions": [
+            {
+              "condition": "minecraft:inverted",
+              "term": {
+                "condition": "minecraft:block_state_property",
+                "block": "agri_evolution:trial_key_crop",
+                "properties": {
+                  "age": "7"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

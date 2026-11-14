@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "agri_evolution:block/botanical_genetics_laboratory_side",
+    "down": "agri_evolution:block/botanical_genetics_laboratory_side",
+    "up": "agri_evolution:block/botanical_genetics_laboratory_top",
+    "north": "agri_evolution:block/botanical_genetics_laboratory_front",
+    "south": "agri_evolution:block/botanical_genetics_laboratory_side",
+    "east": "agri_evolution:block/botanical_genetics_laboratory_side",
+    "west": "agri_evolution:block/botanical_genetics_laboratory_side"
+  }
+}

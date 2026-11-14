@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:creeper_head",
+          "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "agri_evolution:creeper_head_crop",
+              "properties": {
+                "age": "7"
+              }
+            }
+          ],
+          "functions": []
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "agri_evolution:creeper_head_seed",
+          "conditions": [
+            {
+              "condition": "minecraft:inverted",
+              "term": {
+                "condition": "minecraft:block_state_property",
+                "block": "agri_evolution:creeper_head_crop",
+                "properties": {
+                  "age": "7"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

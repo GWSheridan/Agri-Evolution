@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "agri_evolution:block/seed_analyzer"
+    },
+    "facing=east": {
+      "model": "agri_evolution:block/seed_analyzer",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "agri_evolution:block/seed_analyzer",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "agri_evolution:block/seed_analyzer",
+      "y": 270
+    }
+  }
+}

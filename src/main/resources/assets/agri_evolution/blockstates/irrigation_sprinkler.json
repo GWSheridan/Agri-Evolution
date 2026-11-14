@@ -1,0 +1,62 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "agri_evolution:block/irrigation_sprinkler"
+      }
+    },
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_sprinkler_connector"
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_sprinkler_connector",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_sprinkler_connector",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_sprinkler_connector",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "up": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_sprinkler_connector",
+        "x": 270
+      }
+    },
+    {
+      "when": {
+        "down": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/irrigation_sprinkler_connector",
+        "x": 90
+      }
+    }
+  ]
+}

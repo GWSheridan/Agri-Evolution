@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "minecraft:egg"
+    },
+    {
+      "item": "minecraft:sugar"
+    },
+    [
+      { "item": "agri_evolution:strawberry" },
+      { "item": "agri_evolution:berry_jam" }
+    ]
+  ],
+  "result": {
+    "id": "agri_evolution:strawberry_tart",
+    "count": 1
+  }
+}

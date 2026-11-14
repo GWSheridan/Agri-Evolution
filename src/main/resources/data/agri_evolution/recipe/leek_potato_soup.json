@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:leek"
+    },
+    {
+      "item": "minecraft:baked_potato"
+    },
+    [
+      { "item": "agri_evolution:thyme" },
+      { "item": "agri_evolution:garden_seasoning" }
+    ]
+  ],
+  "result": {
+    "id": "agri_evolution:leek_potato_soup",
+    "count": 1
+  }
+}

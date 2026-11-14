@@ -1,0 +1,415 @@
+{
+  "unchangedCraftingRecipes": 32,
+  "edibleCropsTested": 24,
+  "preservedPngs": 604,
+  "preview": "artwork/herbs-spices-v1/journal-qa.png",
+  "illustratedRecipes": 60,
+  "version": "0.48.0",
+  "generationRecord": "artwork/herbs-spices-v1/generation-record.json",
+  "species": 63,
+  "jarSha256": "E3D6BD800215243D768F772555466ECF10ADB1A061A1F70901A176AB146E33F2",
+  "journalScreenshots": 16,
+  "newSprites": [
+    {
+      "sha256": "59B10F90EA632E2D25A35447F4B0EE9F7D213AB5965A3B8628AE42FE11368A75",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage0.png"
+    },
+    {
+      "sha256": "94C8771D9370C1F7835F41E2E52D9DB24381B61DFC51D384EE1E48B3AD2B7472",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage1.png"
+    },
+    {
+      "sha256": "644E947AF1A5F851F2513C6A881BC01B254C28A4ED3BB43CB0AE41F70C658EBF",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage2.png"
+    },
+    {
+      "sha256": "8EB4C58BC28E89A880A648F5D71E1738F3F8284779FFCE463CDE9D7646FE2752",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage3.png"
+    },
+    {
+      "sha256": "B00F1056221BFF90114BFC8FE5F953C2E9D143B3E3AF1B975FA6749B73768AAF",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage4.png"
+    },
+    {
+      "sha256": "4F46790225A3CD29DF6DEAAA7FCF0780F7D1B31EE8154B4295B0D08984E45B24",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage5.png"
+    },
+    {
+      "sha256": "DFF786A7963DB6FE86B3A3A94E8845836370C3D38AF1D9BFC601603ABC5EFB4A",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage6.png"
+    },
+    {
+      "sha256": "8009025280614320C99AE6FAAC654E96EDA68F08713B721C6A59DFF97E288158",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_crop_stage7.png"
+    },
+    {
+      "sha256": "01B8E46719D11AC7FB0525EAF3483CD5F6F0C14DDC03A338C51096F0B89BB62F",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil_seed.png"
+    },
+    {
+      "sha256": "5B70A9B369C2A3AE81DF214B053B3D73F76561B6726CFBC7C363E491C99DA974",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "basil.png"
+    },
+    {
+      "sha256": "F6E7AA9521B4115EC0EE2CB2D72FE49D2C2DCCA94B37DA7B02527AB4181B8772",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage0.png"
+    },
+    {
+      "sha256": "AC045FE0A48BD68EB88CF2FA2E3896FA1874B68D8B198CA89C6E52B56A1F9B7E",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage1.png"
+    },
+    {
+      "sha256": "C43D9CDB8D817395E56093592286FA31A8C0F26FF58E8423130DEC0A86545770",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage2.png"
+    },
+    {
+      "sha256": "F667C4B6B4455824037E66783670AACC79C579F2EBB5E4E8EC247A4BFF1691D5",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage3.png"
+    },
+    {
+      "sha256": "54BBC0A1A32DECF68DA6E588646E7E05EF265C77D5140E7CBFF3A765549BA3CD",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage4.png"
+    },
+    {
+      "sha256": "CA32AC62CB08BE240DCD942C601848E6F6FE14B8501980959745BAD9AB4E955B",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage5.png"
+    },
+    {
+      "sha256": "ACD9B6C42D91DB35CACEAC5CEE889A891E2A81FCC1CE1616F97FA1FFD74DF6B3",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage6.png"
+    },
+    {
+      "sha256": "9497CD3C67A6C86CF025F4DF817538937A7962A161069FECF448E7287E0951DB",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_crop_stage7.png"
+    },
+    {
+      "sha256": "4AA6718890D1EEDF91B8D8E4DE03614B120EE530735920212AFD8102DDFF0DE3",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander_seed.png"
+    },
+    {
+      "sha256": "4E552312AE2B41A677FA1EA899994AAAB8315E9CEC7FC1585E5E0A878E1B43D5",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "coriander.png"
+    },
+    {
+      "sha256": "E4A639A33A71FDE30019828D73AEAC98AEFE63DBFDB46A8A8E6C0E2DCC06111E",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage0.png"
+    },
+    {
+      "sha256": "F67B64FDD18CF4B1D24E371214926EC704E517E3DAD0DCEC8950D254A036B8A2",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage1.png"
+    },
+    {
+      "sha256": "E83583A7A4E85D18AEED87F8E8C6A4184DAE4545420674F9B15259153C0D228D",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage2.png"
+    },
+    {
+      "sha256": "D84213DA20E2A07131888DF840B6CE296D5EC9E14245C2BC516F84ED6FC6FAF6",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage3.png"
+    },
+    {
+      "sha256": "CF1F995D47CBDD50B2CB1AE54998DBABEB9425142C981B31838472F1193B84F5",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage4.png"
+    },
+    {
+      "sha256": "6E91180E683C836A1370596C487E31137B295E13B04AB50FFE7CC0AF94CA6427",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage5.png"
+    },
+    {
+      "sha256": "15083B2EF6C8A8184AE02861BAE198CBD8690311598AEF83F5BC061E6A1B6099",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage6.png"
+    },
+    {
+      "sha256": "999856D31BCD835BC8A8D4ADEB1F1A31D8E79C46472855B3082AE8C8C2D6B091",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_crop_stage7.png"
+    },
+    {
+      "sha256": "3FF1B6E13B6436BDCB8E35207B21B3B28EE7FD5A871AE4C8890C9267362A44C8",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger_seed.png"
+    },
+    {
+      "sha256": "15B45E29563B694A32F89210F3D83472F7EF4EFFF58FC17C2AF5A4B1E4A8DD74",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "ginger.png"
+    },
+    {
+      "sha256": "07DB727FC0024FA983C3D8DD5F45D3146ACA6BB5330DD498716CE32475B7A621",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage0.png"
+    },
+    {
+      "sha256": "6E9A4853C2F39061CF4B8F9FF878DFF7EB496BFF6B08C50CE9B76EBF240037CC",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage1.png"
+    },
+    {
+      "sha256": "5E31B90E869286DC79FCC12505A44428603FECBD403028C8D0DB29857D01F7DD",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage2.png"
+    },
+    {
+      "sha256": "1542F849502F8CF9999E9A50D2BE4FD0CB915EBEB144AF3BAB7A4ED4D3FA9BAC",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage3.png"
+    },
+    {
+      "sha256": "22B90D71BA60386E906246D228FEC018EAE69485374FBD82613DB5DACD97EC1C",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage4.png"
+    },
+    {
+      "sha256": "E8AD24BAF850A5B989A2652E9E853A6BAB7430A4A7D2D1A8941FA817146B87AE",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage5.png"
+    },
+    {
+      "sha256": "56603876320010CB0A1753B02D24150D8A0EDFE1CBA856B03A553A6DF15E66B1",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage6.png"
+    },
+    {
+      "sha256": "390B1BB2F812AE07EF8C0DFF119984E37CE2963C75500CFE6D91337B2DB3FA76",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_crop_stage7.png"
+    },
+    {
+      "sha256": "D150BAC6258CF79F1174007DB820A9D71365B14CCACD38841883C799416FC46D",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint_seed.png"
+    },
+    {
+      "sha256": "A0E202248EBFC6B7492D4B364645203CCC3C4047061C6B0796ABF88618ED8895",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "mint.png"
+    },
+    {
+      "sha256": "095D4AF5AE93B3B3198689AE0A1ABDC271B29D36E00294F958AA255185C6910D",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage0.png"
+    },
+    {
+      "sha256": "E3F89FF689121BDE65F37F92571DBEACBD70E938A5721AC310B2357615D759EE",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage1.png"
+    },
+    {
+      "sha256": "3BE08639CC050FE766A26F2117281DCA0B47E1A1447036E4973AED8224CDA3EE",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage2.png"
+    },
+    {
+      "sha256": "A082868FA660D8122C15F78A33E1F7BD31EE516B6E6077C43980FDCA02116FDD",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage3.png"
+    },
+    {
+      "sha256": "32651FCA9BD8739D2D692A2E55782D25FFF347395CF399AB500992EB38405317",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage4.png"
+    },
+    {
+      "sha256": "F2206C9FBC23FDB999574101D14A8EB16F1F7B1D04E4D79B739F42E64AA98F58",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage5.png"
+    },
+    {
+      "sha256": "1452E6B8AC5DA021564B42CE4B5FD9F196F1F3739FBF6954624757E2F9066ADD",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage6.png"
+    },
+    {
+      "sha256": "5EF3C980078A026F6546A484FC23224B1C0AD135D67E21AEEF091D91FF074C38",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_crop_stage7.png"
+    },
+    {
+      "sha256": "9A50B9EF148BCA9341886C182931B6D25CCE7EC75D3FBEC6D52941B593884C66",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley_seed.png"
+    },
+    {
+      "sha256": "E252EFA9ADE1CD0F2CE7CBF3D744B387C952B668D4E670665322AB629DBEB8C3",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "parsley.png"
+    },
+    {
+      "sha256": "DC8894B0CE939E7FBC9DC21FF638C1B4743A09C26A30FEBDA6C628BE51EB9E01",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage0.png"
+    },
+    {
+      "sha256": "D04204F3097B3F64E5614F4B0E7976C4D16AC316078DC4741A964090AF724BDB",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage1.png"
+    },
+    {
+      "sha256": "1A6EA5F7287D868CFCD9197276C01191F9E833A9B268B23A49D9F7BE44FFC3F9",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage2.png"
+    },
+    {
+      "sha256": "8AE59B41F149CA4A1C02DE471FED74E93F09D056EA48A27D9629A16BE188E38F",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage3.png"
+    },
+    {
+      "sha256": "96A5790A86B5846DB080F840F17CCF17AE2DDDCA3DC69EDFB36EB30DCA4EA068",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage4.png"
+    },
+    {
+      "sha256": "E723B0E9332CE38D5CB340A435CD5925558D54B10196AD61A808DDE9C9A97792",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage5.png"
+    },
+    {
+      "sha256": "E5340027C9E3678AF2F6574B99613032689F1EA7E843485E0F276B8CA7C6EB56",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage6.png"
+    },
+    {
+      "sha256": "7566F16BE89BC4EFF70F4F51805521DC07998EB9B40B49AEC86A4FCFD452739C",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_crop_stage7.png"
+    },
+    {
+      "sha256": "4669AF0BF7C42AD02BC61D143EF49742F949982B7BF49D9FFB9D6A4FE671C196",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary_seed.png"
+    },
+    {
+      "sha256": "9BFFE5E728E21CF74A02C33E098BFD862772E59D60203E3D47DA4518F60C73B3",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "rosemary.png"
+    },
+    {
+      "sha256": "6C515371AF23A3ABCF14D42F97FF9D93427F8C9180759B9F0A7800BAB2187176",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage0.png"
+    },
+    {
+      "sha256": "FB5C1CEEE7BF0EC0FD01C2143E1794D9D6C5F70FB92FC42E93E5ED4A3BF7D4FE",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage1.png"
+    },
+    {
+      "sha256": "F9B1D81543B36F4E12EF4C38ECC4E8C0124E13DEFC9BC2297A0CC70187606EF4",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage2.png"
+    },
+    {
+      "sha256": "CCFD03E4A7F35E2E7AF4048A49B1294E5F17D57C45CA0EA654A328D976F64B15",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage3.png"
+    },
+    {
+      "sha256": "8C2CE4C907712FD8D0D8BE386C2C99E7943FFA645C7AE19B9056CDA10A1A3DF6",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage4.png"
+    },
+    {
+      "sha256": "8321CC7A95DCA7CE82674094AFD2FA2ACFF59E4F09A1167DFFB77CED30011542",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage5.png"
+    },
+    {
+      "sha256": "9408ADD1C41B756C8DF8F7B2545B3A5C7CD873C1B5CB432A3FEB655E5059D6B7",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage6.png"
+    },
+    {
+      "sha256": "8DF07F2A22955DBC84B7EDADC048794FB581DE1C30539755A820D63D1F3FE39A",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_crop_stage7.png"
+    },
+    {
+      "sha256": "A9EC6F60A1217194F534D3BDE0FFD720CAB0E97BAAF6306D7FA0D879956BC70E",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme_seed.png"
+    },
+    {
+      "sha256": "06F9A1375635336CEBBA78EC4341F9AA92A230212D71EC33BB9FEFF31EC9A054",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "thyme.png"
+    },
+    {
+      "sha256": "0B7CFA2924D667DEB17DB151466ED6A31B2546EF13186F519A605758EB07FC3E",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage0.png"
+    },
+    {
+      "sha256": "0A6DD3C4D4216E80E3061EE1E8B5E4A3783AE95D844DE12D97BF76019E3351E0",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage1.png"
+    },
+    {
+      "sha256": "64273FFDB0E8B2B8891E257490A959F6C9799C8F178025E17A907217E098613E",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage2.png"
+    },
+    {
+      "sha256": "C54603C578D26ABCE9C52058A53F40417D401EB20DB4CE9F9EB8D6D1722A22E5",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage3.png"
+    },
+    {
+      "sha256": "C91D98E0999FD4B3341EDAAD8788D52646C8D0D7856B9CBFED5D4A481ADE5BF8",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage4.png"
+    },
+    {
+      "sha256": "DF6D180129D16D51249C2FC25DACF3E140404A36FBCCCE40D2249058C3232FC5",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage5.png"
+    },
+    {
+      "sha256": "1BCDD1394FE213A0D70087D7258F13AAA03241323F0541A7987C7B4D3F0EF2E1",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage6.png"
+    },
+    {
+      "sha256": "51D99D6CC4876D9B37922AC739B2588E880F3E952FE1D8C4B66929AAD533D771",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_crop_stage7.png"
+    },
+    {
+      "sha256": "3845F6644B4C9ACC261DDE66368E8E36A8F2CA397CF6441C8F8291F34BAFE8BC",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric_seed.png"
+    },
+    {
+      "sha256": "9F490E7DD88CA699A80DE54A474A2695E1879C554D7949AA29972A62C7FFAFC9",
+      "source": "original ImageGen master; mechanical extraction",
+      "file": "turmeric.png"
+    }
+  ],
+  "serverTestsPassed": 59
+}

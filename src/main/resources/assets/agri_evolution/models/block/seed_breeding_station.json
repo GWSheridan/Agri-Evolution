@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "agri_evolution:block/seed_breeding_station_side",
+    "down": "agri_evolution:block/seed_breeding_station_side",
+    "up": "agri_evolution:block/seed_breeding_station_top",
+    "north": "agri_evolution:block/seed_breeding_station_front",
+    "south": "agri_evolution:block/seed_breeding_station_side",
+    "east": "agri_evolution:block/seed_breeding_station_side",
+    "west": "agri_evolution:block/seed_breeding_station_side"
+  }
+}

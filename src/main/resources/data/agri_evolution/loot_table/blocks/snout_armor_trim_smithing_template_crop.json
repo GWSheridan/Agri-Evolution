@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:snout_armor_trim_smithing_template",
+          "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "agri_evolution:snout_armor_trim_smithing_template_crop",
+              "properties": {
+                "age": "7"
+              }
+            }
+          ],
+          "functions": []
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "agri_evolution:snout_armor_trim_smithing_template_seed",
+          "conditions": [
+            {
+              "condition": "minecraft:inverted",
+              "term": {
+                "condition": "minecraft:block_state_property",
+                "block": "agri_evolution:snout_armor_trim_smithing_template_crop",
+                "properties": {
+                  "age": "7"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "minecraft:cooked_porkchop"
+    },
+    {
+      "item": "minecraft:apple"
+    },
+    {
+      "item": "agri_evolution:cabbage"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:pork_apple_sandwich",
+    "count": 1
+  }
+}

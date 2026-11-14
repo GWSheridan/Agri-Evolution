@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "agri_evolution:peanut"
+    },
+    {
+      "item": "agri_evolution:chilli"
+    },
+    {
+      "item": "agri_evolution:sesame"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:spicy_peanut_noodles",
+    "count": 1
+  }
+}

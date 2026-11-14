@@ -1,0 +1,23 @@
+{
+  "parent": "agri_evolution:farming/root",
+  "display": {
+    "icon": {
+      "id": "agri_evolution:breeding_journal"
+    },
+    "title": {
+      "translate": "advancements.agri_evolution.farming.first_cross.title"
+    },
+    "description": {
+      "translate": "advancements.agri_evolution.farming.first_cross.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "achieved": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

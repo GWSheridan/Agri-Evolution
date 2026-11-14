@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:spinach"
+    },
+    {
+      "item": "agri_evolution:spring_onion"
+    },
+    {
+      "item": "agri_evolution:dill"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:green_garden_broth",
+    "count": 1
+  }
+}

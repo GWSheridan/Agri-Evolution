@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:rhubarb"
+    },
+    {
+      "item": "agri_evolution:grape"
+    },
+    {
+      "item": "agri_evolution:cantaloupe"
+    },
+    {
+      "item": "minecraft:sugar"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:summer_fruit_compote",
+    "count": 1
+  }
+}

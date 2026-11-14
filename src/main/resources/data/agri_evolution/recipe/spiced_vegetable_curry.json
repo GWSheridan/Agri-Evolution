@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:rice"
+    },
+    {
+      "item": "agri_evolution:beans"
+    },
+    {
+      "item": "agri_evolution:aubergine"
+    },
+    {
+      "item": "agri_evolution:turmeric"
+    },
+    {
+      "item": "agri_evolution:pepper"
+    },
+    {
+      "item": "agri_evolution:mint"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:spiced_vegetable_curry",
+    "count": 1
+  }
+}

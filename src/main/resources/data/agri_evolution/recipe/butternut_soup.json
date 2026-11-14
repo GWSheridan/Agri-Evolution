@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:butternut_squash"
+    },
+    {
+      "item": "agri_evolution:ginger"
+    },
+    {
+      "item": "agri_evolution:garlic"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:butternut_soup",
+    "count": 1
+  }
+}

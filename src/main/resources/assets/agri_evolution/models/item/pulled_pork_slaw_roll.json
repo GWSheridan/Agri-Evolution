@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "agri_evolution:item/pulled_pork_slaw_roll"
+  }
+}

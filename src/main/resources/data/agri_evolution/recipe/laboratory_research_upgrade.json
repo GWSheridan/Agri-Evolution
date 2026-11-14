@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "DSD",
+    "GLG",
+    "DSD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "S": {
+      "item": "agri_evolution:genetic_sample"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "L": {
+      "item": "agri_evolution:botanical_genetics_laboratory"
+    }
+  },
+  "result": {
+    "id": "agri_evolution:laboratory_research_upgrade",
+    "count": 1
+  }
+}

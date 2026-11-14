@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["DID", "RAR", "CSC"],
+  "key": {
+    "D": {"item": "minecraft:diamond"},
+    "I": {"item": "minecraft:iron_ingot"},
+    "R": {"item": "minecraft:redstone"},
+    "A": {"item": "agri_evolution:greenhouse_automation_upgrade"},
+    "C": {"item": "agri_evolution:nutrient_compost"},
+    "S": {"item": "agri_evolution:seed_analyzer"}
+  },
+  "result": {"id": "agri_evolution:greenhouse_smart_farming_upgrade", "count": 1}
+}

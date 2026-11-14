@@ -1,0 +1,23 @@
+{
+  "parent": "agri_evolution:farming/root",
+  "display": {
+    "icon": {
+      "id": "agri_evolution:spanner"
+    },
+    "title": {
+      "translate": "advancements.agri_evolution.farming.form_reservoir.title"
+    },
+    "description": {
+      "translate": "advancements.agri_evolution.farming.form_reservoir.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "achieved": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

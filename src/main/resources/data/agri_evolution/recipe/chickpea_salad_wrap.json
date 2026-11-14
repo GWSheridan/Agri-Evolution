@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "agri_evolution:chickpea"
+    },
+    {
+      "item": "agri_evolution:cucumber"
+    },
+    {
+      "item": "agri_evolution:tomato"
+    },
+    {
+      "item": "agri_evolution:parsley"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:chickpea_salad_wrap",
+    "count": 1
+  }
+}

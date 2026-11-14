@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "filled=false,upgrade=0": {
+      "model": "agri_evolution:block/irrigation_basin_empty"
+    },
+    "filled=false,upgrade=1": {
+      "model": "agri_evolution:block/irrigation_basin_empty_mk2"
+    },
+    "filled=false,upgrade=2": {
+      "model": "agri_evolution:block/irrigation_basin_empty_mk3"
+    },
+    "filled=true,upgrade=0": {
+      "model": "agri_evolution:block/irrigation_basin_full"
+    },
+    "filled=true,upgrade=1": {
+      "model": "agri_evolution:block/irrigation_basin_full_mk2"
+    },
+    "filled=true,upgrade=2": {
+      "model": "agri_evolution:block/irrigation_basin_full_mk3"
+    }
+  }
+}

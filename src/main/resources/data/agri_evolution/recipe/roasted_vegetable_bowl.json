@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:cauliflower"
+    },
+    {
+      "item": "agri_evolution:artichoke"
+    },
+    {
+      "item": "agri_evolution:fennel"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:roasted_vegetable_bowl",
+    "count": 1
+  }
+}

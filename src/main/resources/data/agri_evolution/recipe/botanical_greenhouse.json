@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GIG",
+    "GCG",
+    "GPG"
+  ],
+  "key": {
+    "G": {
+      "item": "minecraft:glass"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "C": {
+      "item": "agri_evolution:irrigation_basin"
+    },
+    "P": {
+      "item": "minecraft:composter"
+    }
+  },
+  "result": {
+    "id": "agri_evolution:botanical_greenhouse",
+    "count": 1
+  },
+  "category": "misc"
+}

@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "moisture=0": {
+      "model": "agri_evolution:block/nutrient_farmland_dry"
+    },
+    "moisture=1": {
+      "model": "agri_evolution:block/nutrient_farmland_wet"
+    },
+    "moisture=2": {
+      "model": "agri_evolution:block/nutrient_farmland_wet"
+    },
+    "moisture=3": {
+      "model": "agri_evolution:block/nutrient_farmland_wet"
+    },
+    "moisture=4": {
+      "model": "agri_evolution:block/nutrient_farmland_wet"
+    },
+    "moisture=5": {
+      "model": "agri_evolution:block/nutrient_farmland_wet"
+    },
+    "moisture=6": {
+      "model": "agri_evolution:block/nutrient_farmland_wet"
+    },
+    "moisture=7": {
+      "model": "agri_evolution:block/nutrient_farmland_wet"
+    }
+  }
+}

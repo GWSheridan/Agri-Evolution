@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:cooked_porkchop"
+    },
+    {
+      "item": "agri_evolution:corn"
+    },
+    {
+      "item": "agri_evolution:cabbage"
+    },
+    {
+      "item": "agri_evolution:turnip"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:pork_harvest_plate",
+    "count": 1
+  }
+}

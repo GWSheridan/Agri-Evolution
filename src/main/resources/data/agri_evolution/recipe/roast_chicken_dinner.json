@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:cooked_chicken"
+    },
+    {
+      "item": "agri_evolution:sweet_potato"
+    },
+    {
+      "item": "agri_evolution:broccoli"
+    },
+    {
+      "item": "agri_evolution:thyme"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:roast_chicken_dinner",
+    "count": 1
+  }
+}

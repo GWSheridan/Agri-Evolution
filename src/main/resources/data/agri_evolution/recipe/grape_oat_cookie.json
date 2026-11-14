@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "agri_evolution:grape"
+    },
+    {
+      "item": "agri_evolution:oats"
+    },
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "minecraft:sugar"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:grape_oat_cookie",
+    "count": 1
+  }
+}

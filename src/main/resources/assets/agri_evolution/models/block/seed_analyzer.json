@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "agri_evolution:block/seed_analyzer_side",
+    "down": "agri_evolution:block/seed_analyzer_side",
+    "up": "agri_evolution:block/seed_analyzer_top",
+    "north": "agri_evolution:block/seed_analyzer_front",
+    "south": "agri_evolution:block/seed_analyzer_side",
+    "east": "agri_evolution:block/seed_analyzer_side",
+    "west": "agri_evolution:block/seed_analyzer_side"
+  }
+}

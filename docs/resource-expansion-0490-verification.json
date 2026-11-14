@@ -1,0 +1,449 @@
+{
+  "resourceCrops": 37,
+  "requiredGameTests": 62,
+  "illustratedRecipes": 68,
+  "jarSha256": "BC9BB85DF031DB4B4FB29D5DFE0D65D8A14E166659A2F629DFE084F37B37A6E0",
+  "newSprites": [
+    {
+      "path": "block/amethyst_crop_stage0.png",
+      "sha256": "263ec19f7769530c9566f4c59300575b80d9c6ca8cb853b062542ce392f0d137",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/amethyst_crop_stage1.png",
+      "sha256": "c521d8919742af0132405d7de35fe1ac12262b2d8c31b70284c03f9f39d3f4fd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/amethyst_crop_stage2.png",
+      "sha256": "b383ded76eb4a8005e0a79995ff3c9f4a89377d21ce16b366471967a1eeb7742",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/amethyst_crop_stage3.png",
+      "sha256": "fc4ab4a9cfaa846296e6154f7b1c81cdefe359698bbfc47b73703cea1ba2f609",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/amethyst_crop_stage4.png",
+      "sha256": "c616d1cde8fdcbad2a5e19546bcdb1cac0ebf668b30e7dc17d48c36de55d1957",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/amethyst_crop_stage5.png",
+      "sha256": "5f16b8eff28aedbdeaa64dc4ce505270ddce36afd4c806a58abb23e2e02fd270",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/amethyst_crop_stage6.png",
+      "sha256": "bff13a620788b81eee1e0613e9c5fc2fd4b5ec5217e0c322bc09a9a733f380e3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/amethyst_crop_stage7.png",
+      "sha256": "b589a40effa85129e8f4fd2c59830c2930f111ac1a705ee5fca020b6d4f25dd9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage0.png",
+      "sha256": "e066cb2eaaa7161149d114e9f94008124a739d9ab884b7589053e7a229164b6a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage1.png",
+      "sha256": "feda054ddd640d0ab7b097e1c8778265c3c9403aa0b19c9359b5d56875d0450e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage2.png",
+      "sha256": "361628c15787a717aa226bec5a6abc1408c8eeea9339e2048a92f1e8709ba8f1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage3.png",
+      "sha256": "e36766a2d3a1c8c1e16abfa2fddc4066f5f4dee4f23c8191849a9d48de3589ed",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage4.png",
+      "sha256": "c9f2f6bc0034abc78397d822e0da0ce76d58aad1a98714617e2c8ef69a265911",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage5.png",
+      "sha256": "8b18dcdd14ab6493b28d056e6775421629d24544c0c4597b6fba11db84e0d2b3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage6.png",
+      "sha256": "7fabf44a551a995defc0090df0dec1c929d1b1255585c64b086f7ba6cbf72fb7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bone_crop_stage7.png",
+      "sha256": "23dd7e3100fb13518d3733d8a1b63852cef0610ffc1b9ce0e46d9b19f78b4cb9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage0.png",
+      "sha256": "107cfe68f1f04c1cc0287068faddda839c39619fd85c33235c41e92a5b0f0b43",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage1.png",
+      "sha256": "bbbea043880cd303890de863c386bbd331066df05b5e41880f37ac9c42536740",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage2.png",
+      "sha256": "6f1e6b07b8614ee4fded573578c39ab590d6cc2c871163457a0413cb4cf18635",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage3.png",
+      "sha256": "7ed6da009ceb19f524e4bf13ea1a4fb34f4c433d296c6bdc4aebb375fe67ffe4",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage4.png",
+      "sha256": "1541d82ec58eecc4788fbcf79e7a5b4a9becb9596fafb51f5d8d42dee947a697",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage5.png",
+      "sha256": "f6eecdbca5ed52586b4abeddc939cf0f8d5ba3a9e22d15b1b2f9d9dcdda0176e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage6.png",
+      "sha256": "f1f9f4aa59768dae1608be150ce2b3c7c6f7adc33f3b956c330433c1f12c515f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/breeze_rod_crop_stage7.png",
+      "sha256": "c98e9aa5e0c95d584b411bce0a699e71dcd3d68ea5da9bdb7c4eee74a9ef9470",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage0.png",
+      "sha256": "dfe3cccf25dd5d7bc8a7d1fd17d6d404b4eb8bbc65c55000282274b35b318236",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage1.png",
+      "sha256": "34770117eed732e5aaa225a9deac31e3e01323b513bab877521aafe59bfbe4eb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage2.png",
+      "sha256": "e51e33ed430f4c94d3126538897faf669e107c840a6c92d385536ee52fbda295",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage3.png",
+      "sha256": "557b6e3caca41652baa218c218dd057465b804b77ef0336af9d5f359daef5b42",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage4.png",
+      "sha256": "16483b6e009606aa6d543f1bdcc34817ff6ea25894dad9124631b6d9a074a5fb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage5.png",
+      "sha256": "dd563d34f381a183efb33596a76478267297c716edb40fa0638ad3c16c9ab8c3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage6.png",
+      "sha256": "0ba372df992fa1bb865143081e669a9eae8cadfccc02e4a82c6cc3c69290b749",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ghast_tear_crop_stage7.png",
+      "sha256": "e4800aaad338decaf8169ca49ad594ed46670aac74230584be6043c59134042b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage0.png",
+      "sha256": "5f8f94aa4a4a83c60911cf44cca90dd49be64c837fac92013e3302f8636a9a26",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage1.png",
+      "sha256": "4581a4504648c1be245cbec8a49aee4e6dd74f8ca9e9c9f9cd86f3191d0340ef",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage2.png",
+      "sha256": "705a350e29e2d90faad12c8f83b1b80026d06220efb675f1d8648448e9924155",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage3.png",
+      "sha256": "3254f49d7c2166b3f97ef2d9179d4641ffc29073afbbf37cc7e71b180c579523",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage4.png",
+      "sha256": "8e2e0e064e6093258ea196cdb089d6a6a60cc4751c5029d4d500cb07e1e33842",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage5.png",
+      "sha256": "a8e568dfe035e79d3ad32136b3c73fd9f48d3e83c5ff59eca69c663f1b62dbfc",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage6.png",
+      "sha256": "2781d333e8f6d0fab8119d999be5ac7a92cf9d90e3af90258c469f976a2f20ed",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/leather_crop_stage7.png",
+      "sha256": "a51a3789d6c1fe8bd9287d0804bf1b441b6b67e1b6c9d397a40e2835956adda7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage0.png",
+      "sha256": "83c412248b9ab4d535b287b5952dd5015dd6fc5120a00aaf455228096ab883c9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage1.png",
+      "sha256": "f4762cd545b9f960b101fcb92380a42b809d63e37bd58545f88247513dcfa8f6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage2.png",
+      "sha256": "d78afbd8599217824892dc4e56b798753708be2a76cbb8323be47260e5117682",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage3.png",
+      "sha256": "df35a8bdf04fb8c92089132993e7a933759e85e874cdafa8de438330db87981a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage4.png",
+      "sha256": "92db4e0148b9ef5453cae7eff2aeed07d313e1675ab9ec852a50a0a2b91e1188",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage5.png",
+      "sha256": "290a7b9d827b07fac166cd801d0d23ab0a792640bd99c77f73b8339f59e83b71",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage6.png",
+      "sha256": "d3b2668c603c5fa9cb2c6bbc392db4995efae942ae2e8c261228d98a075871cc",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/prismarine_crop_stage7.png",
+      "sha256": "f9587993fbc61f2977d8bc4b70b5e7ed0d454d5732b7223e1247c5c486fe6c05",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage0.png",
+      "sha256": "2a6fd7d877a345fa7d193571c2d829c49c1c42e8586dcd0b7a760b9b6ef3f0cb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage1.png",
+      "sha256": "f304be1a186f8b500bd6e5969f45ad5d921482734ff8f1664d9b60b952d481b9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage2.png",
+      "sha256": "b4987cc68bf6b8e54d48666d209d388fdd52094459c128b31691068d433492fc",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage3.png",
+      "sha256": "ef27a3b1b87689ba91999eb04d297914c31db0884923ba83e8fbd1ecd90dd516",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage4.png",
+      "sha256": "0445e4198de363efeb85a080a414c8973c9e1dfd1ec699a8ed11ca60b6d09cde",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage5.png",
+      "sha256": "fdae3aeea334f56f6d76082922dbe4061784a95aa37ca648be103c6f38c2386a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage6.png",
+      "sha256": "eaa714450436b4c2531e633c4eba46990c2d5180b3ab539c7ed97a4c2f7956d8",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/string_crop_stage7.png",
+      "sha256": "b27cb452e4818e84d7e4d30164d6ad797428ebb17699bb16a65421e23c1944a6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage0.png",
+      "sha256": "110134274d83a95ac098b7888e27215555f5e51547e36ecd8e01de7087823a14",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage1.png",
+      "sha256": "eb936a8c58388c1dfbc7f039bce973224e579195bacd01a94663d8004e5514d8",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage2.png",
+      "sha256": "726ed03d05792e8ce7155fb686a29d2d0f88e5d14f52ff26e7d08464c2171844",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage3.png",
+      "sha256": "4f735851520c6853ec659811ab041b77ab2b50c021617a8f0f2d0c3a87003329",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage4.png",
+      "sha256": "ba2507f99afccac771ba8f5b492139218ceeb8cd23ca98400b987026d3eb82f2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage5.png",
+      "sha256": "0836bb8fa96d4378034d564efefbb10e1c7b80a0c968bf5ba9c871b6065100da",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage6.png",
+      "sha256": "5307ce5dbc830fbf152cd0eeac62f8dfd9f471d76ff6ac53b3500cfefc48c95c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/wool_crop_stage7.png",
+      "sha256": "e82609483cf3dbd5e8ab659289c4eebf2b75850332a3e51cfa76b41fb6e244aa",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/amethyst_seed.png",
+      "sha256": "3f5706df5b24742e0531058b4b0d5bdb79d6024105d1e9743d113b1b9925d71d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/bone_seed.png",
+      "sha256": "171f713f074c45d7b1a9e905d866fc2882dac87babea1829d2b4eb7d9e80a542",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/breeze_rod_seed.png",
+      "sha256": "0572ede0b79b9e627a174bb3b2e9195af7c3819dde8e93471739d96e3a58dad6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/ghast_tear_seed.png",
+      "sha256": "f7599915dbf48c38b27dc5816f96fa3db449c0fc8d0e5084e3ce542e660f7a1e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/leather_seed.png",
+      "sha256": "ecea0e240137763757c6157687550538cc71b709e0232507c5c4f69ed44e69de",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/prismarine_seed.png",
+      "sha256": "c0c4447ef799592ffb4be6d176a8f865c648fcf1b85e619a65cd049ae0234cbd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/string_seed.png",
+      "sha256": "9c8ecd79826da3e1eca9ad6e54758cd91cbcf7657aaf8625ee7b36a201462625",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/wool_seed.png",
+      "sha256": "6923700575862407fed9102897496dd0d6d9a040330a43fa71501b73a7015269",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    }
+  ],
+  "version": "0.49.0",
+  "generationRecord": "artwork/resource-expansion-v1/generation-record.json",
+  "species": 71,
+  "newResourceCrops": 8,
+  "preservedPngs": 684,
+  "unchangedCraftingRecipes": 32,
+  "activePngs": 756,
+  "journalScreenshots": 16,
+  "preview": "artwork/resource-expansion-v1/journal-qa.png"
+}

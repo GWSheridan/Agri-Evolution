@@ -1,0 +1,132 @@
+{
+  "names": [
+    "sugar_cane",
+    "sweet_berries",
+    "seagrass",
+    "hanging_roots",
+    "torchflower",
+    "pitcher_plant",
+    "spore_blossom",
+    "big_dripleaf",
+    "trial_key",
+    "ominous_trial_key",
+    "netherite_upgrade_smithing_template",
+    "disc_fragment_5"
+  ],
+  "field": [
+    [
+      "SUGAR",
+      "PAPER",
+      "SUGAR_CANE",
+      28
+    ],
+    [
+      "STRAWBERRY",
+      "VINE",
+      "SWEET_BERRIES",
+      26
+    ],
+    [
+      "MOSS",
+      "KELP",
+      "SEAGRASS",
+      26
+    ],
+    [
+      "ROOTED_DIRT",
+      "VINE",
+      "HANGING_ROOTS",
+      26
+    ],
+    [
+      "AMBER_MARIGOLD",
+      "SUNFIRE_LILY",
+      "TORCHFLOWER",
+      18
+    ],
+    [
+      "CACTUS",
+      "LILY_PAD",
+      "PITCHER_PLANT",
+      18
+    ],
+    [
+      "MYCELIUM",
+      "VIOLET_STARFLOWER",
+      "SPORE_BLOSSOM",
+      16
+    ],
+    [
+      "LILY_PAD",
+      "JUNGLE_LOG",
+      "BIG_DRIPLEAF",
+      20
+    ]
+  ],
+  "lab": [
+    [
+      "BREEZE_ROD",
+      "COPPER",
+      "TRIAL_KEY",
+      5
+    ],
+    [
+      "TRIAL_KEY",
+      "ECHO_SHARD",
+      "OMINOUS_TRIAL_KEY",
+      3
+    ],
+    [
+      "ANCIENT_DEBRIS",
+      "PAPER",
+      "NETHERITE_UPGRADE_SMITHING_TEMPLATE",
+      3
+    ],
+    [
+      "ECHO_SHARD",
+      "BLACK_DYE",
+      "DISC_FRAGMENT_5",
+      5
+    ]
+  ],
+  "removed": {
+    "snow_block": "snowball",
+    "honey_block": "honey_bottle",
+    "magma_block": "magma_cream",
+    "bone_block": "bone",
+    "slime_block": "slime_ball",
+    "honeycomb_block": "honeycomb",
+    "quartz_block": "quartz",
+    "copper_block": "copper",
+    "amethyst_block": "amethyst",
+    "nether_wart_block": "nether_wart"
+  },
+  "blocks": [
+    "SAND",
+    "MOSS_BLOCK",
+    "CLAY",
+    "ROOTED_DIRT",
+    "MOSS_BLOCK",
+    "MUD",
+    "MOSS_BLOCK",
+    "CLAY",
+    "COPPER_BLOCK",
+    "SCULK",
+    "ANCIENT_DEBRIS",
+    "DEEPSLATE"
+  ],
+  "speeds": [
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4
+  ]
+}

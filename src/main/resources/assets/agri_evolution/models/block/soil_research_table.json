@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "agri_evolution:block/soil_research_table_side",
+    "down": "agri_evolution:block/soil_research_table_side",
+    "up": "agri_evolution:block/soil_research_table_top",
+    "north": "agri_evolution:block/soil_research_table_front",
+    "south": "agri_evolution:block/soil_research_table_side",
+    "east": "agri_evolution:block/soil_research_table_side",
+    "west": "agri_evolution:block/soil_research_table_side"
+  }
+}

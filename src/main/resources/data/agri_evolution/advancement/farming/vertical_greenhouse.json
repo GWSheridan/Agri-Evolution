@@ -1,0 +1,23 @@
+{
+  "parent": "agri_evolution:farming/root",
+  "display": {
+    "icon": {
+      "id": "agri_evolution:vertical_greenhouse"
+    },
+    "title": {
+      "translate": "advancements.agri_evolution.farming.vertical_greenhouse.title"
+    },
+    "description": {
+      "translate": "advancements.agri_evolution.farming.vertical_greenhouse.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "achieved": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

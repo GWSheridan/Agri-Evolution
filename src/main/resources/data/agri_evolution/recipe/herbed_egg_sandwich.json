@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "minecraft:egg"
+    },
+    {
+      "item": "agri_evolution:parsley"
+    },
+    {
+      "item": "agri_evolution:coriander"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:herbed_egg_sandwich",
+    "count": 1
+  }
+}

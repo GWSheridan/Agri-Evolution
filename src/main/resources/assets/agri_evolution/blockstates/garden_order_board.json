@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "agri_evolution:block/garden_order_board"
+    },
+    "facing=east": {
+      "model": "agri_evolution:block/garden_order_board",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "agri_evolution:block/garden_order_board",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "agri_evolution:block/garden_order_board",
+      "y": 270
+    }
+  }
+}

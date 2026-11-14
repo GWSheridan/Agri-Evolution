@@ -1,0 +1,15 @@
+{
+  "priorRecipesPreserved": 64,
+  "priorTexturesPreserved": 2228,
+  "version": "0.65.0",
+  "priorSpeciesIdentitiesAndOrdinalsPreserved": 227,
+  "newDishes": 12,
+  "totalDishes": 44,
+  "foodCropsWithCookingUses": 60,
+  "cropSpecies": 227,
+  "newTextures": 12,
+  "activePngs": 2240,
+  "requiredGameTestsPassed": 98,
+  "jarSha256": "8970b5d015eaaa0ba44f18e1b2f972e6d847e6a40ffbc378073a0b3dc9356a1a",
+  "journalScreenshotsChecked": 24
+}

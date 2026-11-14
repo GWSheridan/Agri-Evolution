@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:rice"
+    },
+    {
+      "item": "minecraft:sugar"
+    },
+    {
+      "item": "agri_evolution:raspberry"
+    },
+    {
+      "item": "minecraft:milk_bucket"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:raspberry_rice_pudding",
+    "count": 1
+  }
+}

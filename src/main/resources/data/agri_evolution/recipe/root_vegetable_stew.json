@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:turnip"
+    },
+    {
+      "item": "agri_evolution:parsnip"
+    },
+    {
+      "item": "minecraft:carrot"
+    },
+    {
+      "item": "agri_evolution:celery"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:root_vegetable_stew",
+    "count": 1
+  }
+}

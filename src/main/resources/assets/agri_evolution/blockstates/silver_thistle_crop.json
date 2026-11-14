@@ -1,0 +1,103 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "age": "0"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage0"
+      }
+    },
+    {
+      "when": {
+        "age": "1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage1"
+      }
+    },
+    {
+      "when": {
+        "age": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage2"
+      }
+    },
+    {
+      "when": {
+        "age": "3"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage3"
+      }
+    },
+    {
+      "when": {
+        "age": "4"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage4"
+      }
+    },
+    {
+      "when": {
+        "age": "5"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage5"
+      }
+    },
+    {
+      "when": {
+        "age": "6"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage6"
+      }
+    },
+    {
+      "when": {
+        "age": "7"
+      },
+      "apply": {
+        "model": "agri_evolution:block/silver_thistle_crop_stage7"
+      }
+    },
+    {
+      "when": {
+        "weedy": "true"
+      },
+      "apply": {
+        "model": "agri_evolution:block/crop_weeds"
+      }
+    },
+    {
+      "when": {
+        "supported": "true",
+        "support_tier": "0|1"
+      },
+      "apply": {
+        "model": "agri_evolution:block/crop_support_overlay"
+      }
+    },
+    {
+      "when": {
+        "supported": "true",
+        "support_tier": "2"
+      },
+      "apply": {
+        "model": "agri_evolution:block/iron_crop_support_overlay"
+      }
+    },
+    {
+      "when": {
+        "supported": "true",
+        "support_tier": "3"
+      },
+      "apply": {
+        "model": "agri_evolution:block/obsidian_crop_support_overlay"
+      }
+    }
+  ]
+}

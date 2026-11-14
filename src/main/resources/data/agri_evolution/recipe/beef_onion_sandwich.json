@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "minecraft:cooked_beef"
+    },
+    {
+      "item": "agri_evolution:onion"
+    },
+    {
+      "item": "agri_evolution:pepper"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:beef_onion_sandwich",
+    "count": 1
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "minecraft:egg"
+    },
+    {
+      "item": "minecraft:sugar"
+    },
+    {
+      "item": "agri_evolution:blueberry"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:blueberry_muffin",
+    "count": 1
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:lentil"
+    },
+    {
+      "item": "agri_evolution:tomato"
+    },
+    {
+      "item": "agri_evolution:chilli"
+    },
+    {
+      "item": "agri_evolution:ginger"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:spicy_lentil_soup",
+    "count": 1
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "agri_evolution:block/botanical_greenhouse_side",
+    "down": "agri_evolution:block/botanical_greenhouse_side",
+    "up": "agri_evolution:block/botanical_greenhouse_top",
+    "north": "agri_evolution:block/botanical_greenhouse_front_on",
+    "south": "agri_evolution:block/botanical_greenhouse_side",
+    "east": "agri_evolution:block/botanical_greenhouse_side",
+    "west": "agri_evolution:block/botanical_greenhouse_side"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "agri_evolution:garden_order_board",
+    "agri_evolution:preserving_station",
+    "agri_evolution:compost_bin",
+    "agri_evolution:seed_vault"
+  ]
+}

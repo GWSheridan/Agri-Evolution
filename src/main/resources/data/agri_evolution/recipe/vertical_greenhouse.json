@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["NAN", "GSG", "CBC"],
+  "key": {
+    "N": { "item": "minecraft:netherite_ingot" },
+    "A": { "item": "agri_evolution:greenhouse_smart_farming_upgrade" },
+    "G": { "item": "minecraft:tinted_glass" },
+    "S": { "item": "agri_evolution:botanical_greenhouse" },
+    "C": { "item": "minecraft:copper_block" },
+    "B": { "item": "agri_evolution:seed_breeding_station" }
+  },
+  "result": { "id": "agri_evolution:vertical_greenhouse", "count": 1 }
+}

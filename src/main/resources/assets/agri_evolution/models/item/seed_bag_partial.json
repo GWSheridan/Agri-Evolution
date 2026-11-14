@@ -1,0 +1,6 @@
+{
+  "textures": {
+    "layer0": "agri_evolution:item/seed_bag"
+  },
+  "parent": "minecraft:item/generated"
+}

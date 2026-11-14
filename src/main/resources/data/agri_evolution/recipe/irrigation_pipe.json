@@ -1,0 +1,7 @@
+{
+  "type":"minecraft:crafting_shaped",
+  "category":"misc",
+  "pattern":["CCC","G G","CCC"],
+  "key":{"C":{"item":"minecraft:copper_ingot"},"G":{"item":"minecraft:glass"}},
+  "result":{"id":"agri_evolution:irrigation_pipe","count":8}
+}

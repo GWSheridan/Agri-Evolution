@@ -1,0 +1,74 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "agri_evolution:item/soil_specimen_dirt"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 0
+      },
+      "model": "agri_evolution:item/soil_specimen_dirt"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "agri_evolution:item/soil_specimen_grass"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "agri_evolution:item/soil_specimen_coarse"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 3
+      },
+      "model": "agri_evolution:item/soil_specimen_rooted"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 4
+      },
+      "model": "agri_evolution:item/soil_specimen_podzol"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 5
+      },
+      "model": "agri_evolution:item/soil_specimen_farmland"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 6
+      },
+      "model": "agri_evolution:item/soil_specimen_cultivated"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 7
+      },
+      "model": "agri_evolution:item/soil_specimen_nutrient"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8
+      },
+      "model": "agri_evolution:item/soil_specimen_mythic"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 9
+      },
+      "model": "agri_evolution:item/soil_specimen_arcane"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10
+      },
+      "model": "agri_evolution:item/soil_specimen_celestial"
+    }
+  ]
+}

@@ -1,0 +1,669 @@
+{
+  "priorSpeciesIdentitiesAndOrdinalsPreserved": 253,
+  "version": "0.70.0",
+  "priorRecipesPreserved": 77,
+  "priorTexturesPreserved": 2475,
+  "species": 265,
+  "resourceCrops": 195,
+  "foodCrops": 60,
+  "newCrops": 12,
+  "newTextures": 108,
+  "activeTextures": 2583,
+  "crossedCropModels": 2120,
+  "requiredGameTestsPassed": 116,
+  "illustratedRecipes": 262,
+  "fieldRecipes": 183,
+  "labRecipes": 77,
+  "journalScreenshots": 24,
+  "jarSHA256": "5AC8B7CD62C9C5F0D8C24831B66E09E2618D655944D1DC9C351F6AE6F974C4A6",
+  "newAssets": [
+    {
+      "path": "block/birch_sapling_crop_stage0.png",
+      "sha256": "8e7ae489a0d7a806f58d411499c467db3157048059462940c2efd25f25d31a5d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/birch_sapling_crop_stage1.png",
+      "sha256": "c22c32a9135e588d572a773fed10d41cc72c04bae186438d189f797a9a515120",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/birch_sapling_crop_stage2.png",
+      "sha256": "eb21922c48393c79f04ad5844df95b50aa545cca2f18e8bdb91e9d2807db13d3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/birch_sapling_crop_stage3.png",
+      "sha256": "d971097908990df5008e55770e0fa4594c4054fe068cbc271c7d8e47c8c203ea",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/birch_sapling_crop_stage4.png",
+      "sha256": "a9e36735b5a7f5e86dab2c7a9a501e4bf9b31b2b848d68666ebbd8103f8337fe",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/birch_sapling_crop_stage5.png",
+      "sha256": "bd48280d1a7552a790e6f182b957aa5d6072e76f483f47e312face26e7215211",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/birch_sapling_crop_stage6.png",
+      "sha256": "e781c97a3e7d2fe75df112ddea57bdcac20664d77abf3cb1cf78dcec36e83e50",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/birch_sapling_crop_stage7.png",
+      "sha256": "87d5317334a2ca56ab979bdf75865790ee1994e59c5f9fc561e45194ac7bb456",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage0.png",
+      "sha256": "b7533270701011a4ccccce9d8c23ee7aecbeaed1ab78e5cba3ecdc726bc40d44",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage1.png",
+      "sha256": "cee298ab406ec9d026c67cf941395e3ff9cb0434ea49c11e162e3e5c3ce47de5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage2.png",
+      "sha256": "e5b6d9daaeb765c0d76c58faf86cc3b13cf51a3a305bab3083e0b82f99063782",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage3.png",
+      "sha256": "fe40ec0d7be706cd993d3420bfdc740b359662f87645b645174b4d1269d234fb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage4.png",
+      "sha256": "d77c2868d412256be8ff2a5b42cac673e819b51b045f40afffce2ddf25fe7329",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage5.png",
+      "sha256": "ce82a3855f415c2325dda9956e99859c341eecef744a65a01c52e5ddfe766d2a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage6.png",
+      "sha256": "0a4d4d3a2d9317e27fee4817bd621100b9824d05fe05ad9d304a46a4d4f488fb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/brain_coral_crop_stage7.png",
+      "sha256": "6a999816ab5a8d42f2c7bdd425a7b31c830106117062d93110f41a8fe1b85adb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage0.png",
+      "sha256": "60f5f07e39c3e487854177500f563715e3089719aad6e93045cf79829d5a86e2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage1.png",
+      "sha256": "98e6fda0746ff7ef6be52c9ba65a7ac32d6c55549f46516b7b3801cea352a8ca",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage2.png",
+      "sha256": "2c0a12468eb711c06d4d0b4214975e989c15f2d639d1ae88fe1ab8c1f39254f6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage3.png",
+      "sha256": "9cdebe1896e4770316abf6b08b785a9e31008820b1bdaf0c4edfc11861690a54",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage4.png",
+      "sha256": "98567528b3a86c6a7d4a7ec62dbb363fffc7fb94800961486649258ea103e852",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage5.png",
+      "sha256": "fa65322cc8c51a0d51638e3525ae7c30ce36ff80ff6024eb589e9dc466d06c0e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage6.png",
+      "sha256": "c76c333f4449899cd7939755a622dda05d6438cf8ad2aa3fefdef0e1464c8218",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/bubble_coral_crop_stage7.png",
+      "sha256": "25aa7532a587535c07337ab9ba5037a555f101ab7450a4911b4f57be9d7c21b2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage0.png",
+      "sha256": "72331eb302e2651fcc0179b0999e7102b2e54657586e874f1faa851791d796ef",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage1.png",
+      "sha256": "e89355a29df3d2f850d1e81b9290aab6e2a1e480c978747d7b68a085d423c561",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage2.png",
+      "sha256": "7dec523136d68038118512aebe0930c3aeeb1302503eed9fac9d8beebecde6ed",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage3.png",
+      "sha256": "04a96015ead3949dc3484a31a434538e079da98d830a72cef720977d54c6ab86",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage4.png",
+      "sha256": "6f024dc246c5e3e7974f8560c9f4b873079858138b9a39e01922239be1c6de90",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage5.png",
+      "sha256": "73a554f5ba6846f4cc12fd18b66c4cd2c6e6a2c9cdf1ccef6c3af24fd2f4465a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage6.png",
+      "sha256": "b0afc83529411c12e6d7938e62572f3a4d245fbf6821b0a391412ef7c4ae4999",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/coast_armor_trim_smithing_template_crop_stage7.png",
+      "sha256": "e1edc5afcac4bbf02fb139751a20b53a2f90a7955c00bab77935058b013de69a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage0.png",
+      "sha256": "f5a5a0a7969c9622ab13b5d408fa4f853a0f327d02a51e012119178a257168ad",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage1.png",
+      "sha256": "a0aab334165e281b3937695ca06410ce6f247bd69f4cb79206e09fb4e2854e4f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage2.png",
+      "sha256": "29c5b5ae5aa34356a0fee779c7a235c1226c8a24b64c72615f9fa3cc36943658",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage3.png",
+      "sha256": "38dfc16225bcad83c0f1a10ac7a271afc4c1b4f98c851f97015702db254c3b6e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage4.png",
+      "sha256": "0c76e625ba83c12c4e93bb9432bc564cb0f58d78bfef4e471dbdef76b80bf748",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage5.png",
+      "sha256": "24c91976e5e901628663a3bc0047604c06c730bc25022643c9a207da36576a2f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage6.png",
+      "sha256": "80b1c7f3a355538a049c57e80dcebeb0865af386ff530fa5df7ebdbd352a1f24",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/dark_oak_sapling_crop_stage7.png",
+      "sha256": "0cb44982af041551fd8250a96bafe148b917fd5db231e4523c3fdc413b184519",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage0.png",
+      "sha256": "b15e8d4cf25d66e5d76b9b590f220cbb10223b0dcc74eb50228183a3d5f51e6a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage1.png",
+      "sha256": "5a7789fcaee3ac37f4a7a15c04b1e67aba18de6b21587d8a1dfefe7829e22b3d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage2.png",
+      "sha256": "d98a9c6e22d620ff5128a102c79c3db57668f5f10cbbdb77eb2802a37c3f32c7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage3.png",
+      "sha256": "310cfbd8ffdfda9a973e76139ed5675791464b95f907ad4cf132ced622c03028",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage4.png",
+      "sha256": "c637605d9e2c109a5b10af63ac2c4332ab9b9940c86b4b0ccfb4fe3d7c209e0d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage5.png",
+      "sha256": "71fc3b3cd315dc7361e6c2bb1caa4e42053fdeee529806d8b16a2808272847a2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage6.png",
+      "sha256": "14336e2a2ab742060a3d03a3849f6927cb5ebdd09434587c10fb2e7c51856813",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/fire_coral_crop_stage7.png",
+      "sha256": "3af6c5a67475b3b604a932fb444f73677db3c938b4111c47d502f4587a0edd70",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage0.png",
+      "sha256": "954a5ef46f5a40cae459bfdace2730de1dc6082d50614daa7c4b08a62e388e85",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage1.png",
+      "sha256": "2f005c2bb49da7048d90901e76113b05ff0ab4cb2b057b7bcab6beef79a792d2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage2.png",
+      "sha256": "6df2ffcf2641473d33af1630dd7fe5c59e437e9084094097b9a2dd213b9f2211",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage3.png",
+      "sha256": "302ab9c1c6207d7667a4213571315b772d9495f2432acd5aa0e418ec1d834297",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage4.png",
+      "sha256": "0f70d818086cc0d88a177a426f5d708a25e67446625eb28f4717b574ced68d7f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage5.png",
+      "sha256": "d7dad2732c1605a24bfa55230951bb990245bc2e53b8b792d87673545846f569",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage6.png",
+      "sha256": "93486a96716a1fb639ae6076d2f991f26894563f94f1f580bea07e83fced892b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/oak_sapling_crop_stage7.png",
+      "sha256": "9c9184f03cfdd7699557bffa51dee4aee199eb5bef11297336b07f790836035f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage0.png",
+      "sha256": "23c80b8d201978c78e4d2a9f28af772aa870e83cc1658c881af358c36b5b68c1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage1.png",
+      "sha256": "91346378f71e005b168666f69f8cce2502898f19c2c39e2d7cab09e0fa7b1e29",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage2.png",
+      "sha256": "ebebe9b152a2502682419d8ca42eea1cf22aecb4b32cfc00225f174c3bd5ab75",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage3.png",
+      "sha256": "4e8e015494d5d8984a615baf94540de02fc5155838366cefe46041fde460a54a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage4.png",
+      "sha256": "5731f29882146e1062d3537670266788775074a819b5221f02ff1b4958c125c2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage5.png",
+      "sha256": "592db784f3b91a637b01021f4f19fbce3440f09d49e5d0c4b40a799f389b8c4f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage6.png",
+      "sha256": "72d8fc4fad071ee6ae89e8793786828b0e31fa1e9aaa4558dc593e4bd10fe3ea",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/silence_armor_trim_smithing_template_crop_stage7.png",
+      "sha256": "c623ba02e08dfe6f25a2208371c607a6a178a05fc3179b155688a5dfa86ee542",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage0.png",
+      "sha256": "8d0734f85a95fbd7d646a258311538082cdeac4d7a80efea6ecddfa7ebf95ff9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage1.png",
+      "sha256": "e11deb4d3bea2ec3215677e870a4bf8074e8bac9b9cae7e44efac37d9b93cb2d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage2.png",
+      "sha256": "e6e321fe2860ca880e1a2f0b8fbfda7454c2417fc9c566f32d6a5b8041373313",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage3.png",
+      "sha256": "822f0bbf41e39680be86033e77001cae3df6ae4d1233f290108e1af3a20fa645",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage4.png",
+      "sha256": "ef05ee4c71fc06cb2f0cfdb1b1e6ac01841b05270401e3674b4cdb5ea817bc30",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage5.png",
+      "sha256": "6b284940ee9123c4731ee98fe537593a1e7686aa885a6bbf55a74b7972f67637",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage6.png",
+      "sha256": "f3b8cf23d1a74fd8eb119b082b46832423b8ab808c87ee81615067e98d6860b4",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/snout_armor_trim_smithing_template_crop_stage7.png",
+      "sha256": "d23c6141149829a3620621fac2400863796ed0f6647487e05057f5bb6998d688",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage0.png",
+      "sha256": "8263e2ba76d869a7b54a4cf6291022a7629b535a27eb5c59e747f60d437b161b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage1.png",
+      "sha256": "eee97a0520409a24addbfc022816e6428501992cb1e63e15c7bd9a50e813db4e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage2.png",
+      "sha256": "c4dadcfccbf42e506ac6044d81726e70ed678ee5ad2988d77925f78b73ab7658",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage3.png",
+      "sha256": "7d2b7169b28f3a511b87fcffeea664fadb17a78797d71ecd89bfae8d1cc0277f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage4.png",
+      "sha256": "6d80bc6303974b48ae130dfb16b42e0a25777fcca010a27090d3d27abd624b59",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage5.png",
+      "sha256": "18eb02e96298330315dc7e0add2057483a2a4f1c8f4ff34a001dde212ee30f0d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage6.png",
+      "sha256": "047b7dd082551e00d13bfdd9574f1af80ed8d420c0347b4e32bb6e74e5b8cfa7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spruce_sapling_crop_stage7.png",
+      "sha256": "3210c6dcc23856e847164332db478dc0dd93147465f99be07840c278a8197fe5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage0.png",
+      "sha256": "e9cada5c2c2ba64d015891ce7476ea3b7f763ba8421c9a71ce28d0a22e19054b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage1.png",
+      "sha256": "c32e6fdcc389d1b3e67173ebe94aaefa060aa3cf9014f0ecd53765cea2fc1659",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage2.png",
+      "sha256": "6a3944755cf3d8c3242badd6de614efcb28d86b5b0a9117e033ef0b020594de9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage3.png",
+      "sha256": "9e734d1d3b748fb027fd0ec7cbf7daf410614aa434cf1fc1ed474bbfea0d0d60",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage4.png",
+      "sha256": "7ebbc97c2cc6ad43e2836603b5173594e92853c8483724045778794b1b89a355",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage5.png",
+      "sha256": "f97ec6cce0bbae0662d8f736253fff495cfc1bc8468fdcdd152417afd110bc97",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage6.png",
+      "sha256": "d7463837557e7b8a6df7ae7e68dc55265bbf85852ae723c3d0eec49edc8c78f5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tide_armor_trim_smithing_template_crop_stage7.png",
+      "sha256": "2789e4d4ebac8050d8a40287345d7d74bcbf614cf0145ad95b9761116e4852ba",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage0.png",
+      "sha256": "17d090a981afb90c583a84ab604dbce324d312d3b4084d404dff7785f427743d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage1.png",
+      "sha256": "137d82fbea5eaf1e39b705213aeeeffae4b5e9838073124d21aa9117a6dda38f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage2.png",
+      "sha256": "357783664426373e50acee05db60099061a009a52c4f7b299c66d10812f57cda",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage3.png",
+      "sha256": "ab49ce5729a83c394b84774479cb5dc27d4de50d028274a5f51858234cc3cd5c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage4.png",
+      "sha256": "59edc6a826548e4ddfbd4caa01e748681e145246e11927a047aac58e6f6e7ee5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage5.png",
+      "sha256": "1b78887e956970e2cf5baf7a99625181bcd1846a9b376fb3e7c39378d3bcc116",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage6.png",
+      "sha256": "5b9c586b60b6d55835973019b7107c5c1d7f57166aefacdb962277fac91ef966",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/tube_coral_crop_stage7.png",
+      "sha256": "77fb0674d5278ba10e795248971c36eaa373f99454404fbf23718f091e947f0c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/birch_sapling_seed.png",
+      "sha256": "79095bcb6e4553cb559cfb92e9fa5798afa54176dd8c2283bbbdf911e100a075",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/brain_coral_seed.png",
+      "sha256": "3ed2261bf6ed1cd6fa79af37b4f613fae529034302f303c4a77844027e2f1ea2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/bubble_coral_seed.png",
+      "sha256": "1629a27bdec5772e37ceab62a8555cd77d0afb85c501e9bf2f66cf0053eebded",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/coast_armor_trim_smithing_template_seed.png",
+      "sha256": "4ecfc0fa85d63700392eab5848886892957eb14dc48120e1abe407b3da2e2749",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/dark_oak_sapling_seed.png",
+      "sha256": "5cd8200de8193b12017213c7024a7012dacb13c7ebf4720cdace02b7776b7c38",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/fire_coral_seed.png",
+      "sha256": "4964152abb53ff93276476d947d17e1ba4253436e3cdccd2903f036a195437c1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/oak_sapling_seed.png",
+      "sha256": "3aa27e2bd10005d927428d5e5e2b9f5c30de8930d7349d3d20b6e22c849a966a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/silence_armor_trim_smithing_template_seed.png",
+      "sha256": "4becab6acc599d8b654fe80b2c760e982b5dcc6d8d35f78925b106c3e1935d51",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/snout_armor_trim_smithing_template_seed.png",
+      "sha256": "6c8d59f4322ea2403505d61fe78cabc2ccff3447d5c0853172079c1ce4c0fffa",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/spruce_sapling_seed.png",
+      "sha256": "1e4c39389fc7a8c30724806ed9a270eaafb5b9b00b6629e72eb47f01d7608bae",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/tide_armor_trim_smithing_template_seed.png",
+      "sha256": "d962c1d6a4e994f8c7e27dc46ca5f8d60eb6ce6e0f570ef639328927e0794801",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/tube_coral_seed.png",
+      "sha256": "136e0242010f424c01b9c73143bc189cbd51d66957419d51f5224e124fc82e2b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    }
+  ]
+}

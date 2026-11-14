@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "agri_evolution:item/spiced_vegetable_curry"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "agri_evolution:block/seed_vault"
+    }
+  }
+}

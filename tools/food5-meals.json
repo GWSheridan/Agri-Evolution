@@ -1,0 +1,63 @@
+[
+  {
+    "id": "green_garden_broth",
+    "name": "Green Garden Broth",
+    "category": "soup",
+    "nutrition": 10,
+    "saturation": 0.65,
+    "bowl": true,
+    "ingredients": [
+      "minecraft:bowl",
+      "agri_evolution:spinach",
+      "agri_evolution:spring_onion",
+      "agri_evolution:dill"
+    ],
+    "visual": "rustic wooden bowl of green spinach broth with pale spring onion slices and dill"
+  },
+  {
+    "id": "roasted_vegetable_bowl",
+    "name": "Roasted Vegetable Bowl",
+    "category": "meal",
+    "nutrition": 12,
+    "saturation": 0.8,
+    "bowl": true,
+    "ingredients": [
+      "minecraft:bowl",
+      "agri_evolution:cauliflower",
+      "agri_evolution:artichoke",
+      "agri_evolution:fennel"
+    ],
+    "visual": "rustic wooden bowl of golden roasted cauliflower, layered green artichoke hearts and pale fennel wedges"
+  },
+  {
+    "id": "spicy_peanut_noodles",
+    "name": "Spicy Peanut Noodles",
+    "category": "meal",
+    "nutrition": 12,
+    "saturation": 0.8,
+    "bowl": true,
+    "ingredients": [
+      "minecraft:bowl",
+      "minecraft:wheat",
+      "agri_evolution:peanut",
+      "agri_evolution:chilli",
+      "agri_evolution:sesame"
+    ],
+    "visual": "rustic wooden bowl of golden noodles with tan peanuts, red chilli slices and cream sesame garnish"
+  },
+  {
+    "id": "berry_oat_crumble",
+    "name": "Berry Oat Crumble",
+    "category": "dessert",
+    "nutrition": 9,
+    "saturation": 0.35,
+    "bowl": false,
+    "ingredients": [
+      "agri_evolution:oats",
+      "agri_evolution:gooseberry",
+      "agri_evolution:blackcurrant",
+      "minecraft:sugar"
+    ],
+    "visual": "individual golden oat crumble portion with purple blackcurrant filling and green gooseberry, no bowl"
+  }
+]

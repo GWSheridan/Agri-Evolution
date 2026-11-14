@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:cooked_salmon"
+    },
+    {
+      "item": "agri_evolution:rice"
+    },
+    {
+      "item": "agri_evolution:asparagus"
+    },
+    {
+      "item": "agri_evolution:garlic"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:salmon_rice_bowl",
+    "count": 1
+  }
+}

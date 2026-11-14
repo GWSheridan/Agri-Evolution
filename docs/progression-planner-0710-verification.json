@@ -1,0 +1,17 @@
+{
+  "jarSHA256": "3B3D2B3085AF23E7C2719AA98631E7DA0AEB7D2765408706F8DA7F6D2EF1987E",
+  "preservedTextures": 2583,
+  "preservedRecipes": 77,
+  "version": "0.71.0",
+  "unchangedJavaFiles": 132,
+  "plannerTargets": 265,
+  "clientScreenshots": 12,
+  "checks": [
+    "Build successful",
+    "All 265 full and remaining progression plans",
+    "Parent discovery pruning and deduplication",
+    "Starter recipes match packaged JSON",
+    "Normal and compact UI renders",
+    "No development classes packaged"
+  ]
+}

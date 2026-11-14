@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "agri_evolution:wild_seed"
+    },
+    "title": {
+      "translate": "advancements.agri_evolution.farming.root.title"
+    },
+    "description": {
+      "translate": "advancements.agri_evolution.farming.root.description"
+    },
+    "frame": "task",
+    "background": "minecraft:textures/block/farmland.png",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "achieved": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

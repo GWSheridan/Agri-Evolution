@@ -1,0 +1,124 @@
+{
+  "variants": {
+    "active=false,facing=north,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_off"
+    },
+    "active=false,facing=north,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off"
+    },
+    "active=false,facing=north,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_off"
+    },
+    "active=false,facing=north,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off"
+    },
+    "active=true,facing=north,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_on"
+    },
+    "active=true,facing=north,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on"
+    },
+    "active=true,facing=north,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_on"
+    },
+    "active=true,facing=north,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on"
+    },
+    "active=false,facing=east,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_off",
+      "y": 90
+    },
+    "active=false,facing=east,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off",
+      "y": 90
+    },
+    "active=false,facing=east,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_off",
+      "y": 90
+    },
+    "active=false,facing=east,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off",
+      "y": 90
+    },
+    "active=true,facing=east,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_on",
+      "y": 90
+    },
+    "active=true,facing=east,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on",
+      "y": 90
+    },
+    "active=true,facing=east,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_on",
+      "y": 90
+    },
+    "active=true,facing=east,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on",
+      "y": 90
+    },
+    "active=false,facing=south,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_off",
+      "y": 180
+    },
+    "active=false,facing=south,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off",
+      "y": 180
+    },
+    "active=false,facing=south,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_off",
+      "y": 180
+    },
+    "active=false,facing=south,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off",
+      "y": 180
+    },
+    "active=true,facing=south,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_on",
+      "y": 180
+    },
+    "active=true,facing=south,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on",
+      "y": 180
+    },
+    "active=true,facing=south,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_on",
+      "y": 180
+    },
+    "active=true,facing=south,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on",
+      "y": 180
+    },
+    "active=false,facing=west,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_off",
+      "y": 270
+    },
+    "active=false,facing=west,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off",
+      "y": 270
+    },
+    "active=false,facing=west,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_off",
+      "y": 270
+    },
+    "active=false,facing=west,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_off",
+      "y": 270
+    },
+    "active=true,facing=west,smart=false,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_on",
+      "y": 270
+    },
+    "active=true,facing=west,smart=true,upgraded=false": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on",
+      "y": 270
+    },
+    "active=true,facing=west,smart=false,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_automated_on",
+      "y": 270
+    },
+    "active=true,facing=west,smart=true,upgraded=true": {
+      "model": "agri_evolution:block/botanical_greenhouse_smart_on",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:cooked_beef"
+    },
+    {
+      "item": "agri_evolution:swede"
+    },
+    {
+      "item": "agri_evolution:celeriac"
+    },
+    {
+      "item": "agri_evolution:lentil"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:beef_pulse_stew",
+    "count": 1
+  }
+}

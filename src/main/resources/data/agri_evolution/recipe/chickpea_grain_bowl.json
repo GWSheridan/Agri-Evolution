@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:chickpea"
+    },
+    {
+      "item": "agri_evolution:barley"
+    },
+    {
+      "item": "agri_evolution:buckwheat"
+    },
+    {
+      "item": "agri_evolution:parsley"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:chickpea_grain_bowl",
+    "count": 1
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "replace": false,
+  "values": [
+    "agri_evolution:crimson_clover_crop",
+    "agri_evolution:azure_flax_crop",
+    "agri_evolution:violet_starflower_crop",
+    "agri_evolution:amber_marigold_crop",
+    "agri_evolution:silver_thistle_crop",
+    "agri_evolution:sunfire_lily_crop",
+    "agri_evolution:moon_orchid_crop",
+    "agri_evolution:eclipse_lotus_crop",
+    "agri_evolution:twilight_sage_crop",
+    "agri_evolution:strawberry_crop",
+    "agri_evolution:blueberry_crop",
+    "agri_evolution:raspberry_crop",
+    "agri_evolution:blackberry_crop",
+    "agri_evolution:buckwheat_crop",
+    "agri_evolution:sesame_crop"
+  ]
+}

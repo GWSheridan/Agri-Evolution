@@ -1,0 +1,415 @@
+{
+  "journalScreenshots": 16,
+  "illustratedRecipes": 52,
+  "foodCropsTested": 16,
+  "generationRecord": "artwork/food-crops-v2/generation-record.json",
+  "preview": "artwork/food-crops-v2/journal-qa.png",
+  "preservedPngs": 524,
+  "version": "0.47.0",
+  "newSprites": [
+    {
+      "file": "aubergine_crop_stage0.png",
+      "sha256": "B2A0004597CD25333C05A7181DEDB8E4F3FF4E2188F0E4007635A7EDCEF86596",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_crop_stage1.png",
+      "sha256": "48237EA57BED879D0560B8B6213E83E9A1D0FE504CDFBC82470B80385DC1790D",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_crop_stage2.png",
+      "sha256": "614CFFFD6984A5E6C124972526A4B71484D0B37274C6E9722FC2E8FE91B7265E",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_crop_stage3.png",
+      "sha256": "ACBC570804A4F6C07811F9CE69ED1CBCC921EB41573B96A418C4BB780EFC7DD4",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_crop_stage4.png",
+      "sha256": "3788DB21A3574AA6127E6C51BF59591F275BB4F56DF0C5B15ED93451C98CB82C",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_crop_stage5.png",
+      "sha256": "614B6DED9BCB83212F14B8328A7EB6E0906D8B5A6E524FCD25512B7FC253815C",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_crop_stage6.png",
+      "sha256": "B62EF1A35A6DC330FFB051E0D8F8C43F414DD39F6045722FE6AA9A8B71E02130",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_crop_stage7.png",
+      "sha256": "49D29D57B8F75DC3F2F49F4E279FB718948A6F4DBA6CE861D35D9EE41FD76923",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine_seed.png",
+      "sha256": "2869682BD9B1E15B88FFF1FA829B7FF653AC11EC58443DC5551EF37B015A9DBC",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "aubergine.png",
+      "sha256": "330F8C5022ECA9B289283CADEBD02DF831DF5FBC55A4B2DF2B91E9BBB72EDBA0",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage0.png",
+      "sha256": "80F50952B1BD712770BD11C9758214F4E9A065D61626B8A660F96D2586E18E96",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage1.png",
+      "sha256": "FA96C2587260FE745DDAA6CBA2F298CF4C1F27B40C9B9B61299C3559851BF5E6",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage2.png",
+      "sha256": "C33D02937377A8D97E312C62D1F941FF0E537D4F80F7FF629222ED4125E5E51F",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage3.png",
+      "sha256": "605255BD8F6DAAEB77C5A6DA54E581FD748D971B502F7DB5C40184857FA06BF1",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage4.png",
+      "sha256": "C413444924E8457B9017B2480D26A88F5FCB7E4559273326E186DD9FF846A833",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage5.png",
+      "sha256": "398C8417CA9044A75DBAF487186CEB93B6417E41912308C3F05D46F8689DB43D",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage6.png",
+      "sha256": "B92C8D7F3928F066126562A8C3CFED684A1E09D543DCD42647DB55D58C6561EA",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_crop_stage7.png",
+      "sha256": "43A077174134BF0E2DDFC7960336C2E588D6B6A5F48549A98D1F48DAA03FAD80",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans_seed.png",
+      "sha256": "DC1EAF49326D55F4176FD907A86A7EADA9A41D1C7AAD18D99CD63FBE5572B0E2",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "beans.png",
+      "sha256": "7816AB8F38E05C255F72912A124877DB731249614CA28ECE587E900C27D4E17B",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage0.png",
+      "sha256": "5F90D4E15813AA74192D926AC21F4389D1806D19CF5FBD9B6FD57262C4779543",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage1.png",
+      "sha256": "8D22851706E74BD1535F550FA63B2EE21799312230F1D1604D6FF0AACD03D818",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage2.png",
+      "sha256": "020001307DF55691440726EC4B67031960A9B82F5CDFDD06B823CFF35C57DBDE",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage3.png",
+      "sha256": "87F7E741D8738DE50DACA119B7C389312EDBA4931973FF0A784226AC431FEE3B",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage4.png",
+      "sha256": "6D71D783C92C36D02DBE574CB77C8B586249C0D2565BB586B475229295D45CF7",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage5.png",
+      "sha256": "5406C9CEFB342C8B1E81B12B35472A770252A001772FF9BB68A82DD5F3E251B0",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage6.png",
+      "sha256": "DC89DCC3BBDF0655FC8BC3CC0B00BCD9B15D61650ED373B935111948FC53889F",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_crop_stage7.png",
+      "sha256": "DF84F33543443C67DC967DD46A9FD470FCBD082EAFC1FDDC44A92697AE8B570C",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli_seed.png",
+      "sha256": "718F3D3E7E9C50A5C1475AC0C9E28BA2A276262BB0209F111C900253D1D9A6CB",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "broccoli.png",
+      "sha256": "F81118DAF489C0E6B306CF994301E9FB1206BADA412AAEE094CDD6D5AFC3517A",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage0.png",
+      "sha256": "42268D81FB5607D90702E60A624971E226CA4B6AB1F25AFD283A2C3C6B13A55A",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage1.png",
+      "sha256": "9E39D09A462333C683A1546A7335C4B6A711B55B7FC275C9A4E6BE7FBD23254A",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage2.png",
+      "sha256": "D363183393E5852DED5525528454BB2A29A8D38B64AB365905725035F655FD43",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage3.png",
+      "sha256": "A1736315996D0F42BF8B67A7BC07B3B252D981A9EE06EFA6AF7462FFB0B310DD",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage4.png",
+      "sha256": "F2B14C810FA991A20A4EBFB2E47053918C405E539FB628D74450800BCFA3D56B",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage5.png",
+      "sha256": "EB1BF8E7941C5BC481E147B4A2C879A80A1383DD105AA8CA23E4926DA7645BFE",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage6.png",
+      "sha256": "CE5FB254A8A7ED62C9104D8800C64E44BF361D922DA9A855C8AEB44E0E1446C6",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_crop_stage7.png",
+      "sha256": "139748AA8BC65F9C6B69580947AAC64CD9C69089E209EB373A32A60316680BBC",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage_seed.png",
+      "sha256": "56C254E5B11182FA5AC92D5D8BC0281DA947CA584E96F012629255A7B0EA7B63",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "cabbage.png",
+      "sha256": "7E40850DF02607337FDD6EEE1D73C61830697BCACD1D5EAFB44522367BFC19A4",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage0.png",
+      "sha256": "832A79B7921C0449FFF040BFDAE6EA8037630BF4C916B9B79095E2DBDA275D14",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage1.png",
+      "sha256": "32E22EEFE0994E07FAE05F459E23C90DABAD35DE09ABD74CDFEE51D92252FB60",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage2.png",
+      "sha256": "D71C2045EF41C7805404ABF711DA42A6A2F6C3187C91330D749656312277CC33",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage3.png",
+      "sha256": "BBFE5212B01E881DE920789595CAEFE9D9CD0061326DE40E923AA1C77159A7F3",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage4.png",
+      "sha256": "C3A20FD1FEC1CCFA1517285EC25057C6206664D3DFABABEF222E0DD107A2A2EC",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage5.png",
+      "sha256": "7CF2EFB39CE7D015E283DC1F1D650B7B4E96695C419BE10223DF72B6A7A0AB10",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage6.png",
+      "sha256": "37FC80F6D5F62ABD0798620470D8DBED7ABE87D917444B24BB1158CC9FC321F3",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_crop_stage7.png",
+      "sha256": "191435CA046ED20CCBECBFDED2F61125B50FA8628BABE84E5367FD8B69360423",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn_seed.png",
+      "sha256": "EA0200A40F5FC05CE1942DDD028C368BE12C46D030709BD2FE8D6656F9878B4E",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "corn.png",
+      "sha256": "5230FC15F2C1A334ED03F6983AF60143F855F2F5964E39AC7AB2919C1896EA5A",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage0.png",
+      "sha256": "1BEA4FD16BA1FC75B05FA6F82D69919CD46A39A7E84F2F8913073146C9103CD1",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage1.png",
+      "sha256": "8446C9D1B1B5D7CFD6844AC56231FBDAB62CDB127A58B636A2D4BCAD097F17E5",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage2.png",
+      "sha256": "B76D419E481AE481073974856136AAB794B7341BFD69270F930F632A44563226",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage3.png",
+      "sha256": "21EAECA1F77496E6A0A286AE858B567410A17EECF98B9A12FE41869611814AB0",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage4.png",
+      "sha256": "E9348BDE6F9C4700F9445EFEDB4223BFA30C803ED65DA7D9C490AF57E0683460",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage5.png",
+      "sha256": "5063AF7EA1195F3B061644DF10ED430DC60FDCBDE3235C58BFF7A17C26CDC085",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage6.png",
+      "sha256": "CC5FB0E0F83FE82E47FB8EB07125A5D00560BFCDC949C97D0CC021D0C263D1CF",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_crop_stage7.png",
+      "sha256": "61D1E2669F38F65A1E212221A175ED0D18EC869EED1650DD53F3F2588D3480F2",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas_seed.png",
+      "sha256": "A272D4BEBEDAFC52C453D543B60DB993BAC94C0D3F01A83D15A53A8652ED7010",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "peas.png",
+      "sha256": "48430FC2326EC49216FBD77242E228294742E517CF5BD3442E693338913087EC",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage0.png",
+      "sha256": "C14B8CA5D29DE4D824C486A81D3F08EEDCE795EDDEAD9360D1C8D8E99C9432E8",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage1.png",
+      "sha256": "A45733D39D4654670BE2609D2A5313F03FF13D706DD7FEDCD487F327C8A964BC",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage2.png",
+      "sha256": "73D607107B588E9E884093D195A3A9704D81589692CE655A148197B457954C61",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage3.png",
+      "sha256": "2AFC3A807E2DC27F6ED453CBD9EAE2BB0714019B5911D4F537544F3831B757D1",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage4.png",
+      "sha256": "D1D0E3EBCB4465A27B628D17D2BECCF94E7BDCFACF40CFCD27E26FD0B7DF9973",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage5.png",
+      "sha256": "5D51E7C6A49F2B149A44A077D658F2DFA11A1900CC4E845B42B4DE6A001B725B",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage6.png",
+      "sha256": "A8FD6826D78D9437D4E11C957FD7C5E558A0B83702A12E22B4030B15502B890F",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_crop_stage7.png",
+      "sha256": "921DACBCD255DE3362902E19AB98038D7BD7545803080B2EACAFCF9C2FB8EB43",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish_seed.png",
+      "sha256": "08EB245FB54B2C702FABE925851ED0A81EC4851E7C00CEE7DD602D321C2D49AB",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "radish.png",
+      "sha256": "F6FE188AFE5E0628DBCAA43485E5E8D76266DEB06F006E0261488733457D40CB",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage0.png",
+      "sha256": "347F3E9F49C500714F041CB4FBA24A9E5B762985F6570AF9EDB8EAD8230CD031",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage1.png",
+      "sha256": "F789C97ADB64EE7C02FC2D21722E4C2B7FD6C201772E1A9460E31BB51EC13185",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage2.png",
+      "sha256": "CB5AC22FB464FA8DA360450E182A6765FFB6C8FAAAA8C0601D84EC05AEE18480",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage3.png",
+      "sha256": "5215343F656A5D150CA7BE1157CE1462533D64FB33EE2D3566DF99E404A86836",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage4.png",
+      "sha256": "9B78A71494F7EB5975574FC0310A8CF859AF690E687B2D4DF19786C4E8F5B7C7",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage5.png",
+      "sha256": "8DB28D2E88D0C1CC19872FBCFE8803E089DAF56807CFF526AA0BC50787F81BF4",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage6.png",
+      "sha256": "38B1EE09DE862AFD5512295182AA388A651A165A74B392E915213F5758651EB2",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_crop_stage7.png",
+      "sha256": "8A59F715C6FEAFB5F8A15FDBF183A50CD999FA1FED560BD2E163CCFA8659DF55",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato_seed.png",
+      "sha256": "164D2F562FEC88B388F8B60F579FA9594AFEEE859469E07FFAA741A8EC442B7A",
+      "source": "original ImageGen master; mechanical extraction"
+    },
+    {
+      "file": "sweet_potato.png",
+      "sha256": "1E4E9DCCD3CC2A6D7918266B672668A415E3213E10B587A6AC1D4C89E85A0085",
+      "source": "original ImageGen master; mechanical extraction"
+    }
+  ],
+  "unchangedCraftingRecipes": 32,
+  "serverTestsPassed": 59,
+  "species": 55,
+  "jarSha256": "FD7A0D44C9E89D7686EF66D54D1BA4553AC7F76CEF65926C49F1309A2237FAD0"
+}

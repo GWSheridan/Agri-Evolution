@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:cooked_mutton"
+    },
+    {
+      "item": "agri_evolution:barley"
+    },
+    {
+      "item": "agri_evolution:turnip"
+    },
+    {
+      "item": "agri_evolution:thyme"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:mutton_barley_soup",
+    "count": 1
+  }
+}

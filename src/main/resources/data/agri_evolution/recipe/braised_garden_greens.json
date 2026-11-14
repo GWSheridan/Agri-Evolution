@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:kale"
+    },
+    {
+      "item": "agri_evolution:pak_choi"
+    },
+    {
+      "item": "agri_evolution:brussels_sprouts"
+    },
+    {
+      "item": "agri_evolution:garlic"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:braised_garden_greens",
+    "count": 1
+  }
+}

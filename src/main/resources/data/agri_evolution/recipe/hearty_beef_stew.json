@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:cooked_beef"
+    },
+    {
+      "item": "minecraft:baked_potato"
+    },
+    {
+      "item": "agri_evolution:pepper"
+    },
+    {
+      "item": "agri_evolution:rosemary"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:hearty_beef_stew",
+    "count": 1
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:cooked_beef"
+    },
+    {
+      "item": "minecraft:wheat"
+    },
+    {
+      "item": "agri_evolution:peas"
+    },
+    {
+      "item": "minecraft:carrot"
+    },
+    {
+      "item": "agri_evolution:onion"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:beef_garden_pie",
+    "count": 1
+  }
+}

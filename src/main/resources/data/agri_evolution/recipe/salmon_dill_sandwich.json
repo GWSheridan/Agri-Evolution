@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "agri_evolution:dill"
+    },
+    {
+      "item": "agri_evolution:cucumber"
+    },
+    {
+      "item": "minecraft:cooked_salmon"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:salmon_dill_sandwich",
+    "count": 1
+  }
+}

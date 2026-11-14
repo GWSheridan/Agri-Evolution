@@ -1,0 +1,21 @@
+{
+  "version": "0.63.0",
+  "priorTexturesPreserved": 1980,
+  "priorRecipesPreserved": 56,
+  "priorSpeciesIdentitiesAndOrdinalsPreserved": 203,
+  "species": 215,
+  "foodCrops": 48,
+  "resourceCrops": 157,
+  "botanicalCrops": 10,
+  "newCropTextures": 120,
+  "newDishTextures": 4,
+  "activePngs": 2104,
+  "crossedCropModels": 1720,
+  "illustratedBreedingRecipes": 212,
+  "fieldRecipes": 148,
+  "labRecipes": 62,
+  "dishes": 28,
+  "requiredGameTestsPassed": 98,
+  "jarSha256": "0599f6a5e7086a01f99adeff7f2f141e2ba3ad3bd435a81ad0bf5fac595d20ad",
+  "journalScreenshotsChecked": 32
+}

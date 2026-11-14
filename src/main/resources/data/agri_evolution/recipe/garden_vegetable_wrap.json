@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "agri_evolution:aubergine"
+    },
+    {
+      "item": "agri_evolution:courgette"
+    },
+    {
+      "item": "agri_evolution:garlic"
+    },
+    {
+      "item": "agri_evolution:rosemary"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:garden_vegetable_wrap",
+    "count": 1
+  }
+}

@@ -1,0 +1,413 @@
+{
+  "illustratedRecipes": 44,
+  "version": "0.46.0",
+  "newSprites": [
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "A90D475CA5B8A09C302135EFF963160D0D4300FF489EAD4FEE4E0453E1A01734",
+      "file": "cucumber_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "E094429BAE87197C4351860B3CA706CD0CFE4581C4FDB5AD10DC3C1851DF1445",
+      "file": "cucumber_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "D3ECFF7BBC0B1B434132E929BABCF6CB29F5F230D2F66A034AF8D34C86FC8315",
+      "file": "cucumber_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "27EFBC988747E374C04B7941ED769207357A79ECE2A396912535C707980E3B42",
+      "file": "cucumber_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "A9DA0D4F93C8DEB3AEECDB55908BF9645AD0FE8BCB4A87EE58649C740C9BB445",
+      "file": "cucumber_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "0744C2F588BBA5D9B05E0A2EEA535DEA9E1A66F0D0B6E48E8FCD3AE63B7C10CF",
+      "file": "cucumber_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "8511943E6852C7403C5D96F089B9BBCFD8C1E3510596B5754B19CC5F8D9CB4D4",
+      "file": "cucumber_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "E333BCAC841D8FDED64E2D87552EF1F2E635261B0EFBE2076B1B0C49C6BA813D",
+      "file": "cucumber_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "6ABE8951E7ED2D0139A81C7EA54E7E8EF49DA3431E70A3EEB359AFD51DE9F0D7",
+      "file": "cucumber_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "9D59CBB316B153AA889F4A82B1A3B69C48B873C077225A569D3595458E812D63",
+      "file": "cucumber.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "964137788BB15A400B87768A93A6A92646CB9D2510E4222018942EDDB7828C08",
+      "file": "garlic_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "8C523FC858C91219EEAC562F51CDB964474A52058057714753F3A648A2539D3E",
+      "file": "garlic_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "85C4A6E6553D14E5110BBCC3AA8F9BEEB7BD66D0332632E8660565E81B949649",
+      "file": "garlic_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "3313B41751C8C424469A924BA4136F0BA65CB9F898647F9AAADA114FB1A33EEE",
+      "file": "garlic_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "A528B185B22F3DA2745253E74F008785C528EED2E7D11034DD3ED713EBDD1F69",
+      "file": "garlic_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "5CDDFD8F84FDC86706BB542BCEEDFB803D0F408C3483440A6FA496561D11F0DB",
+      "file": "garlic_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "FF4FED9CAA959272D5A5CEFF883516EF74A4BF5D5BE21AF3EA700C8E6BF30E6E",
+      "file": "garlic_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "FD34D619DB41161FED541F128BEF898350B507EC9096ACAF5FE47489EA5D40DC",
+      "file": "garlic_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "53C362A95D966BCED6EC79EC6454503347CFA03560509DE73BC955E0202AC5AA",
+      "file": "garlic_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "2D6F1C1454E0A440D3D99DDCAD071A806DBDF2467DB33469412C9D0FDCB30345",
+      "file": "garlic.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "D525355213BFBB3124AF3E71D17DF326672B2BC15866F1D35B2CD74492D3E415",
+      "file": "lettuce_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "58570D7C494F717A50FD548E4B6CBD2C08C18944D3B98A9E0707149A096141C4",
+      "file": "lettuce_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "B05629CA387AB1AB638F15CF2D3212EFBFAD2E46FC7E62CFD05679CFB72A41EE",
+      "file": "lettuce_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "D2CA526E017A7521BF9FC8F2CC7B987D4E4690A864001DD54477A5C1739AA336",
+      "file": "lettuce_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "EE9BD9F58F6B7F2A4610E60E8886A2DFFEE1B8B43A9CB43F56CE4F7E82747C17",
+      "file": "lettuce_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "515D3A7BDCFE247FB15CD576AAE6C56E8990649E372ABCB5B7CF770DFE6955A7",
+      "file": "lettuce_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "3D743F8DB6DF27E41306F4A374D186D608DAC7614DDC0CEAB1F4697E16186B58",
+      "file": "lettuce_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "DB3B0128FFAC424AA9572C9DE5BC8BD6B673A890517FA5B4F7F970BF844AD802",
+      "file": "lettuce_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "951C800F71BFE78C3B0B13B52461E5617764FF6546D0DBDAE8DD628214685624",
+      "file": "lettuce_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "AFAF7F7537DC19C3A0CB93C5693A249A909A3FC03128CE6859CBBC470760FDD9",
+      "file": "lettuce.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "97231FB58A6C1AB171316DE1F3A94B1C3044AD18FF4E1F969DF81020D4F038DB",
+      "file": "onion_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "46669275252ED69A42989D0DD03CEE5F6854BABBA4A32494D6B1B89F7D60C2A8",
+      "file": "onion_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "A6340D94C6D8231AE193C0A81DF8656C0EFF601915CC33B5725737D8800ED342",
+      "file": "onion_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "5EFFD9A38AE1EACF2F377AEA31C9473D755C88D1C12B19257BE01522E78A4630",
+      "file": "onion_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "08371C812AC81DD80BF0B23F8D4C9CC3988ABD3B0E583D72F3C695ADE9880722",
+      "file": "onion_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "54F56D63F5089681653E7099CDC8584CEAE30CFFA7F6C9F8AE95AB0C1BA86FC1",
+      "file": "onion_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "D86CD5D6825499DCE070E61CF1FB26F46375044DEDC9CF8EC468D096E1DB623E",
+      "file": "onion_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "ECE66D30AA3DDEAE8D4D18A6DE236BB9AC8054DF4FB0A142EC900765DF6B0169",
+      "file": "onion_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "FBA5BFC5DECD62DD6D3134D224F7A4FC445F9A0FBAC87181DC5808B78BDF8394",
+      "file": "onion_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "59ACE26447154C50796BA291621D3ECC8ACAA7E1BAB9FEB6C2CD8E7ECD64CBC1",
+      "file": "onion.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "6DAA06BB8567A80DBABAD2EA1E4DA123987C74AF93A8580BBAC42B56F645637F",
+      "file": "pepper_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "8721D3151E7CAA9CD965D15BFF763C5CF3E33D21D033F641972D4F9C6FD1E667",
+      "file": "pepper_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "DF0E72EC0FEADD9AB959A4019EDC136C4437FA193C27D57F2443B9F352365F40",
+      "file": "pepper_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "A2C1F0E6E0BC8286EAFA2A8D63DB74D0ED40DAA74DD3124089C693AF4D01BDA1",
+      "file": "pepper_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "1BD47D92CE3EF026B4F8C1CDAA8720ABD0CD776351595168838B290B4E50289E",
+      "file": "pepper_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "15DE28843FD5BBF7663EE68C8B44A8C7FB6C400446C266C0E08CF5A738724FD5",
+      "file": "pepper_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "4EBF737B2448780AEDD97219EA1E29534D69437659ED3CEC67BB3876F5D808E5",
+      "file": "pepper_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "EEFA11FE0653DD0EB28F2C083669158321D09F3974530436FE58112A3101C443",
+      "file": "pepper_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "2957E0D3724B003EDE29C1449C91E606CE15751876E253AEBD983D0F36A40C81",
+      "file": "pepper_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "D58444DA32F6888312B7E6F383624E419198AF4560F621E4A5357A93DB8F414D",
+      "file": "pepper.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "16F0F848A40975F937D1330E6E16AB04578E6C63618ECAA9C239FDE0EC96CBFB",
+      "file": "rice_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "08B5B1134F0E158452103D4A471DBB6CB22EA8932F73822C490D9D9F9364AB5B",
+      "file": "rice_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "49B2933B3A352382D5087A3517B27FE289D6CA029B07AC1BB50641DCF37D4C07",
+      "file": "rice_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "45E437D83B05DDE17A241D464AB900FA89281338D4CCE90101EB2E2A9D8E90B4",
+      "file": "rice_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "5778C77581479DC60E6451CFCCC2E3F44F42ECD9977E43F5F004BF73248CD686",
+      "file": "rice_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "EE77DDA8E05D078B3045C013CB36A26063694092D2FE1E32C3D4BADCEEEACB71",
+      "file": "rice_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "142F7AD1D1706E4ACA4BD2F78707A37AC7E12B56E3AF0907C95FEABA30B8025B",
+      "file": "rice_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "609865A50C84BDB12C62D2AF25F230A92E804CFA9EC8BCAD1737F7106ABE7736",
+      "file": "rice_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "BE746A79ECFEE9B467B8AAD2832CDD17CDEF5C19DA9F42734019F300D75938DE",
+      "file": "rice_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "325639C9EA4068D28A638077B6748718ED347BDF69B52F981476D91FE982307F",
+      "file": "rice.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "1A58E589AB70FB1D42269AA4F61EBC63965D1DD8628EE858ACEB54F2D4BC8DEA",
+      "file": "strawberry_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "5D6623508219377658CA962B2AD9DC3C23AD0970B5B71659AAEB681888769AE1",
+      "file": "strawberry_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "2D37FD71FC3CE3D3BFEC17F0E78BA3776C53F808D98980D2C2E6EEDA50DF3951",
+      "file": "strawberry_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "AA5C0A64D01DE1011452AB0505E5C51098A3D0C4777CE8B8CF1639B750E99BAD",
+      "file": "strawberry_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "CF1E8BD36CDF00159C4851A267540058832225E944A58E49FCAA2C3DC92FD898",
+      "file": "strawberry_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "A88F41BC785A0C80F091C703F37733740A4E6A176DDBBE97F84E32A31F4C58B1",
+      "file": "strawberry_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "0DD0C26D75D4E18FB424D3D92035B459F575DA7AA2C19861F0126F7ADE1560E1",
+      "file": "strawberry_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "BD3BFCC0F5342B47B2A8ADF34CAE1711B86ADD8B86C5147D9F5C067934EABFA5",
+      "file": "strawberry_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "84780B6CBD36A9FA38FC9CD8D01BE924D329B47CD1EEF45CF74A0A5D07101133",
+      "file": "strawberry_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "94C9134F5C5D26060C37775DA8D74FE610C87F5E9B94E8B7A49F079DAB7F5A20",
+      "file": "strawberry.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "0723C0DE47691090926456D2E7ED963078109602257D2D8EED5ED80C717546DF",
+      "file": "tomato_crop_stage0.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "6AB139C6EE1579ACE6D1DA262762F1A4AECF703ADBA2E01E87BD378DE8456F30",
+      "file": "tomato_crop_stage1.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "CE80C424F1EDFF14965B20D7011662A492BBA48B71941775E91F5DA0C940B4BE",
+      "file": "tomato_crop_stage2.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "5A2A7A0D76DBBF9F9615DD100C42632169A1B14F1E21455AF226CDA4A597F872",
+      "file": "tomato_crop_stage3.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "152BE9F19C0604C9CE47A2E1F9E504DBA53D741D5D278BDEE2F0461DDE43169B",
+      "file": "tomato_crop_stage4.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "809C5C7AD7A63EBC925171A0C685CB9BF714AB89DF9600EA74FE4CBFC994F55E",
+      "file": "tomato_crop_stage5.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "4523E83DEB9F6C4CC1FF03941BE46D07ADE2C55802A662EC1230E8350BEC4D76",
+      "file": "tomato_crop_stage6.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "D6FD8AE1D3B671AC5549685DBBE6A8DA358371FBB7982C958566C5D93F8F9C32",
+      "file": "tomato_crop_stage7.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "2644E536A91BA55CA38699F5E67CFE3E947E3901B76F5CC126D7CDDF51AEFB3D",
+      "file": "tomato_seed.png"
+    },
+    {
+      "source": "original ImageGen master; mechanical extraction",
+      "sha256": "E81A827304FF9A4662996C243C6E6E3CD97AF4D5CF8AE3BB2E76E5A82BD45F1F",
+      "file": "tomato.png"
+    }
+  ],
+  "serverTestsPassed": 59,
+  "preview": "artwork/food-crops-v1/journal-qa.png",
+  "species": 47,
+  "journalScreenshots": 16,
+  "jarSha256": "4AE34E65B23BF8023739C6D8F8E9F42D199E64160127B4781C1E117D98DFE462",
+  "preservedPngs": 444,
+  "unchangedCraftingRecipes": 32
+}

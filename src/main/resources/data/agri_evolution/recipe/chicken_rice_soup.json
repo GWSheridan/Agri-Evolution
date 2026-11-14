@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:cooked_chicken"
+    },
+    {
+      "item": "agri_evolution:rice"
+    },
+    {
+      "item": "agri_evolution:peas"
+    },
+    {
+      "item": "agri_evolution:coriander"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:chicken_rice_soup",
+    "count": 1
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "minecraft:cooked_porkchop"
+    },
+    {
+      "item": "agri_evolution:cabbage"
+    },
+    {
+      "item": "agri_evolution:chilli"
+    },
+    {
+      "item": "agri_evolution:onion"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:pulled_pork_slaw_roll",
+    "count": 1
+  }
+}

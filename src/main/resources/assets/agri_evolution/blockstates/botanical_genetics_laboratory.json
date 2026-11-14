@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "agri_evolution:block/botanical_genetics_laboratory"
+    },
+    "facing=east": {
+      "model": "agri_evolution:block/botanical_genetics_laboratory",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "agri_evolution:block/botanical_genetics_laboratory",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "agri_evolution:block/botanical_genetics_laboratory",
+      "y": 270
+    }
+  }
+}

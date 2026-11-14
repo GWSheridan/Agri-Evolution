@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "agri_evolution:cauliflower"
+    },
+    {
+      "item": "agri_evolution:leek"
+    },
+    {
+      "item": "minecraft:milk_bucket"
+    },
+    {
+      "item": "agri_evolution:garlic"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:creamy_cauliflower_soup",
+    "count": 1
+  }
+}

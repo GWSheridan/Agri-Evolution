@@ -1,0 +1,33 @@
+const fs=require('fs'),path=require('path'),{names,field}=require('./food6-spec.json');
+const j='src/main/java/com/agrievolution/',t='src/test/java/com/agrievolution/',res='src/main/resources/',a=res+'assets/agri_evolution/';
+const title=n=>n.split('_').map(w=>w[0].toUpperCase()+w.slice(1)).join(' '),up=n=>n.toUpperCase();
+const changes=new Map();
+const edit=(p,f)=>{const old=changes.get(p)??fs.readFileSync(p,'utf8'),next=f(old);if(next===old)throw Error('No edit '+p);changes.set(p,next);};
+const write=(p,v)=>changes.set(p,JSON.stringify(v,null,2)+'\n');
+const registry=fs.readFileSync(j+'genetics/CropSpecies.java','utf8');if(registry.includes('KALE('))throw Error('Already applied');
+const breeders=['SpeciesBreeder','AdvancedHybridBreeder'].map(n=>fs.readFileSync(j+'genetics/'+n+'.java','utf8')).join('\n');
+const pairs=[...breeders.matchAll(/pair\(first, second, CropSpecies\.(\w+), CropSpecies\.(\w+)\)/g)].map(m=>[m[1],m[2]].sort().join('/'));
+for(const [x,y]of field){const key=[x,y].sort().join('/');if(pairs.includes(key))throw Error('Existing pair '+key);pairs.push(key);}
+edit(j+'genetics/CropSpecies.java',s=>s.replace('"blackcurrant_seed", true);','"blackcurrant_seed", true),\n'+names.map(n=>'    '+up(n)+'("'+n+'", "'+title(n)+'", "'+n+'_crop", "'+n+'_seed", true)').join(',\n')+';').replace('ordinal() <= BLACKCURRANT.ordinal()','ordinal() <= CANTALOUPE.ordinal()'));
+edit(j+'content/AEItems.java',s=>s.replace('    public static final DeferredItem<Item> BREEDING_JOURNAL',names.map(n=>'    public static final DeferredItem<Item> '+up(n)+' = ITEMS.registerItem("'+n+'", Item::new, new Item.Properties().food(new net.minecraft.world.food.FoodProperties.Builder().nutrition(2).saturationModifier(0.3f).build()));\n    public static final DeferredItem<Item> '+up(n)+'_SEED = ITEMS.registerItem("'+n+'_seed", props -> new SpeciesSeedItem(props, CropSpecies.'+up(n)+', AEBlocks.'+up(n)+'_CROP::get), new Item.Properties());').join('\n')+'\n    public static final DeferredItem<Item> BREEDING_JOURNAL').replace('case TURMERIC -> TURMERIC_SEED.get();','case TURMERIC -> TURMERIC_SEED.get();\n'+names.map(n=>'            case '+up(n)+' -> '+up(n)+'_SEED.get();').join('\n')));
+edit(j+'content/AEBlocks.java',s=>s.replace('    public static final DeferredBlock<AgriCropBlock> NETHERITE_CROP',names.map(n=>'    public static final DeferredBlock<AgriCropBlock> '+up(n)+'_CROP = BLOCKS.register("'+n+'_crop", () -> new AgriCropBlock(cropProperties(), CropSpecies.'+up(n)+', AEItems.'+up(n)+'_SEED::get));').join('\n')+'\n    public static final DeferredBlock<AgriCropBlock> NETHERITE_CROP'));
+edit(j+'content/AEBlockEntities.java',s=>s.replace('AEBlocks.BLACKCURRANT_CROP.get()).build','AEBlocks.BLACKCURRANT_CROP.get(), '+names.map(n=>'AEBlocks.'+up(n)+'_CROP.get()').join(', ')+').build'));
+edit(j+'content/AECreativeTabs.java',s=>s.replace('output.accept(AEItems.BREEDING_JOURNAL.get());',names.map(n=>'output.accept(AEItems.'+up(n)+'_SEED.get()); output.accept(AEItems.'+up(n)+'.get());').join('\n                        ')+'\n                        output.accept(AEItems.BREEDING_JOURNAL.get());'));
+for(const file of ['AgriCropBlock.java','BotanicalGreenhouseBlockEntity.java'])edit(j+'content/'+file,s=>s.replaceAll('case TURMERIC -> AEItems.TURMERIC.get();','case TURMERIC -> AEItems.TURMERIC.get();\n'+names.map(n=>'            case '+up(n)+' -> AEItems.'+up(n)+'.get();').join('\n')).replace('case TURMERIC -> AEBlocks.TURMERIC_CROP.get();','case TURMERIC -> AEBlocks.TURMERIC_CROP.get();\n'+names.map(n=>'            case '+up(n)+' -> AEBlocks.'+up(n)+'_CROP.get();').join('\n')));
+for(const [file,v]of [['CompactJournalRenderer.java','plant'],['JournalScreen.java','species']])edit(j+'client/journal/'+file,s=>s.replace('BLACKCURRANT -> '+v+'.displayName();','BLACKCURRANT, '+names.map(up).join(', ')+' -> '+v+'.displayName();'));
+edit(j+'genetics/SpeciesBreeder.java',s=>s.replace('        return null;',field.map(([x,y,c,p])=>'        if (pair(first, second, CropSpecies.'+x+', CropSpecies.'+y+'))\n            return new MutationRecipe(CropSpecies.'+c+', '+p+');').join('\n')+'\n        return null;'));
+for(const n of names){
+ for(const p of ['blockstates/tomato_crop.json',...Array.from({length:8},(_,i)=>'models/block/tomato_crop_stage'+i+'.json'),'models/item/tomato_seed.json','models/item/tomato.json'])changes.set(a+p.replaceAll('tomato',n),fs.readFileSync(a+p,'utf8').replaceAll('tomato',n));
+ write(res+'data/agri_evolution/loot_table/blocks/'+n+'_crop.json',JSON.parse(fs.readFileSync(res+'data/agri_evolution/loot_table/blocks/tomato_crop.json','utf8').replaceAll('tomato',n)));
+}
+edit(a+'lang/en_us.json',s=>{const o=JSON.parse(s);for(const n of names){o['block.agri_evolution.'+n+'_crop']=title(n)+' Crop';o['item.agri_evolution.'+n]=title(n);o['item.agri_evolution.'+n+'_seed']=title(n)+' Seeds';}return JSON.stringify(o,null,2)+'\n';});
+edit('gradle.properties',s=>s.replace('mod_version=0.63.0','mod_version=0.64.0'));
+edit(t+'genetics/SpeciesSmokeTest.java',s=>s.replace('length != 215','length != 227').replace('public static void main(String[] args) {','public static void main(String[] args) {\n'+field.map(([x,y,c,p])=>'        verifyRecipe(CropSpecies.'+x+',CropSpecies.'+y+',CropSpecies.'+c+','+p+');').join('\n')));
+edit(t+'genetics/ResourceProgressionSelfTest.java',s=>s.replace('count()!=48','count()!=60'));
+edit(t+'content/FoodCropGameTests.java',s=>s.replace('index==48','index==60').replace('Forty-eight food crops','Sixty food crops'));
+edit(t+'content/CookingGameTests.java',s=>s.replace('covered==48','covered==60').replace('All 48 food crops','All 60 food crops').replace('ALL.size()==28','ALL.size()==32').replace('28 dishes','32 dishes'));
+edit(t+'client/journal/JournalNavigationSelfTest.java',s=>s.replaceAll('CropSpecies.BLACKCURRANT','CropSpecies.CANTALOUPE').replace('== 54','== 57').replace('fifty-four species','fifty-seven species').replaceAll('==212','==224').replaceAll('<=212','<=224').replace('all 210 crosses','all 222 crosses').replace('==148','==160').replace('all 215 breeding','all 227 breeding'));
+edit('src/guiPreview/java/com/agrievolution/preview/GrandmasJournalPreview.java',s=>s.replace('CropSpecies.SPINACH.ordinal()','CropSpecies.KALE.ordinal()').replace('?8:56','?8:64').replaceAll('food5-','food6-').replace('"green_garden_broth","roasted_vegetable_bowl","spicy_peanut_noodles","berry_oat_crumble"','"braised_garden_greens","beef_pulse_stew","chickpea_grain_bowl","summer_fruit_compote"'));
+// Commit only after all replacements and pair validation succeed.
+for(const [p,s]of changes){fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,s);}
+console.log('12 food crops added; 227 species with existing IDs retained.');

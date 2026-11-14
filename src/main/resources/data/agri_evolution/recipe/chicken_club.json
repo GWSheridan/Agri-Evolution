@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bread"
+    },
+    {
+      "item": "minecraft:cooked_chicken"
+    },
+    {
+      "item": "agri_evolution:lettuce"
+    },
+    {
+      "item": "agri_evolution:tomato"
+    },
+    {
+      "item": "agri_evolution:basil"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:chicken_club",
+    "count": 1
+  }
+}

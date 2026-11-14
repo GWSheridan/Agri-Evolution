@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "fill=0": {
+      "model": "agri_evolution:block/compost_bin"
+    },
+    "fill=1": {
+      "model": "agri_evolution:block/compost_bin_fill_1"
+    },
+    "fill=2": {
+      "model": "agri_evolution:block/compost_bin_fill_2"
+    },
+    "fill=3": {
+      "model": "agri_evolution:block/compost_bin_fill_3"
+    },
+    "fill=4": {
+      "model": "agri_evolution:block/compost_bin_fill_4"
+    },
+    "fill=5": {
+      "model": "agri_evolution:block/compost_bin_fill_5"
+    },
+    "fill=6": {
+      "model": "agri_evolution:block/compost_bin_fill_6"
+    },
+    "fill=7": {
+      "model": "agri_evolution:block/compost_bin_fill_7"
+    },
+    "fill=8": {
+      "model": "agri_evolution:block/compost_bin_fill_8"
+    },
+    "fill=9": {
+      "model": "agri_evolution:block/compost_bin_fill_9"
+    }
+  }
+}

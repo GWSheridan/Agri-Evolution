@@ -1,0 +1,683 @@
+{
+  "removedDuplicateTextures": 90,
+  "survivingSpeciesIdentitiesPreserved": 241,
+  "priorTexturesPreserved": 2367,
+  "priorRecipesPreserved": 77,
+  "version": "0.69.0",
+  "legacySpeciesMigrationTable": 251,
+  "species": 253,
+  "resourceCrops": 183,
+  "foodCrops": 60,
+  "newCrops": 12,
+  "retiredCrops": {
+    "snow_block": "snowball",
+    "honey_block": "honey_bottle",
+    "magma_block": "magma_cream",
+    "bone_block": "bone",
+    "slime_block": "slime_ball",
+    "honeycomb_block": "honeycomb",
+    "quartz_block": "quartz",
+    "copper_block": "copper",
+    "amethyst_block": "amethyst",
+    "nether_wart_block": "nether_wart"
+  },
+  "newTextures": 108,
+  "activeTextures": 2475,
+  "crossedCropModels": 2024,
+  "requiredGameTestsPassed": 113,
+  "illustratedRecipes": 250,
+  "fieldRecipes": 175,
+  "labRecipes": 73,
+  "journalScreenshots": 24,
+  "jarSHA256": "114CE226B62253E2270B2E2A867C338EF00C1CC5870824807871F0A23FB12448",
+  "newAssets": [
+    {
+      "path": "block/big_dripleaf_crop_stage0.png",
+      "sha256": "8232d757c40d10c938d51d24a207f7a1b117e2ce70ec21187c79f069aa819862",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/big_dripleaf_crop_stage1.png",
+      "sha256": "ca581580296f305dab6b53ee9b65aa9505255ca701cc313403ce16dcf35f9e8d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/big_dripleaf_crop_stage2.png",
+      "sha256": "ab52097f670dd5feea59a563012a6946dfb24578cca447598203629dd088d415",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/big_dripleaf_crop_stage3.png",
+      "sha256": "f57287b10e4066a2faeb6a9867a80ec1f98a159cb899726e7ce2b76c44e1cc77",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/big_dripleaf_crop_stage4.png",
+      "sha256": "cf80d956e3871c0146488e9323b59ddae56fa2a4125b374a1e90e36326daec80",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/big_dripleaf_crop_stage5.png",
+      "sha256": "a9c3015f8c70e278517ece5e956746a58f5348726d778f7e56a66b3cf2e3b4e2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/big_dripleaf_crop_stage6.png",
+      "sha256": "0d746c189f24e6a73062c411aa549d2cd212c5bd1c3ba732c591d0966c119e9e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/big_dripleaf_crop_stage7.png",
+      "sha256": "0a00521503f2ce5edffeb7313968d4a0e4bdadc059ba9653ed59423d5de0c249",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage0.png",
+      "sha256": "94c8b68bf86f9f1f566cf4a2cad63b1ee9545a3b874d1ba0916c3f9c5eb11530",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage1.png",
+      "sha256": "4d0f39ea26d00848b24d33a089e5a48d34d2251dd1c0d347fb7cb28642830d45",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage2.png",
+      "sha256": "8a92666ceb800b75be253114918b0c82b8ee16d73d5c27d8fc903eaf5e238453",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage3.png",
+      "sha256": "fe1756ceb40b55cd9e57e29d911e180ac90b495bc952b8dcdcb2b1564c0fea77",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage4.png",
+      "sha256": "11943da9c9750b31dfe59f876d64885c571dfa917397becf97093464357b4bb5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage5.png",
+      "sha256": "1da269d05d72d7b5261caa330140af4e7eb7a4b2cd7b1c554456eae56508fb3e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage6.png",
+      "sha256": "ddc10cce30ac0de6e4e17e161795becdbe19c1892c8d89c60e3b8c29e4e7c979",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/disc_fragment_5_crop_stage7.png",
+      "sha256": "d0b13fc443625ffd405ff2843b30311eb6950621cfbd044e59f521d1938bac30",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage0.png",
+      "sha256": "85161d25824c339a3f4770f8fa8261d74e6c94992caddc55d69087617d9a3d34",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage1.png",
+      "sha256": "fcb2386ea6deca5dcfbc3bc748df35149b15e3edf25a1671a93c34c7794d1a8e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage2.png",
+      "sha256": "431fbd243b7d10892082b0f8b7e4fd72b8386ca670f44ac9282cc137a145ab49",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage3.png",
+      "sha256": "81e90b996acc1217f4e8ad04fa7d7fc3eedda7dfdb9a3b2f966263e2c451f8b7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage4.png",
+      "sha256": "2bcd26436d7d1cfeb02e70e60c0c5b591a107a5504b70cdd65378ecde5fc09dd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage5.png",
+      "sha256": "805457fe2b9a3fef77ff2ec37169bafa1d636dd20eb507a3644b78a980864eee",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage6.png",
+      "sha256": "091097495de056b95a840c782f331c29728c02586e9e823e9ec2028716d7f6bd",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/hanging_roots_crop_stage7.png",
+      "sha256": "3572c4eec8d13264281ddf0d679ddb0c9602165e00c8df6da70a51c70c513540",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage0.png",
+      "sha256": "6190ab6182c0664710c95f01dd1c88fcc2c9f2fa0da71e2389b10923c5ed2765",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage1.png",
+      "sha256": "b451b360ea8d140f81beb41c817f0e7b07b26d3ac9d4b7ad06b6967dbb822dc2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage2.png",
+      "sha256": "9381a6fad0260e9a614a1492c58d14d1166495508f5070e908acf01d88e003b9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage3.png",
+      "sha256": "ec62ec5fbf4a732ecd62f94215315f4434a87e8403fd956f473600f4d3d6697b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage4.png",
+      "sha256": "dcb4f9ec3dbbee308e47529e595c4e694772102a94829ca30febd65c2e7f359e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage5.png",
+      "sha256": "1b8220201b642b29431a4d81f65423a9afe7e02d56b8c894a2ea065c3b98682b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage6.png",
+      "sha256": "620407d53255a5a8f1d8af24af732502c4409ea07615a52f70c1e0e58601cacb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/netherite_upgrade_smithing_template_crop_stage7.png",
+      "sha256": "e9e70d49ff43229ad3d70033381d04a4abd7549b4301169dd5c2c099370b821f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage0.png",
+      "sha256": "be1ef34bb7a360090d596f1e99beb812209af55e41aa8e355c68940da9f5a611",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage1.png",
+      "sha256": "6226800322a10e3e782ad21807a65c9dc0df9146735a10625ec712f4991db36a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage2.png",
+      "sha256": "e351370af3fd3a2e5b5789d3781fd6d27c0ccbee05604f8ceab31dc1df62ab42",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage3.png",
+      "sha256": "ecbe26a085f0d5443b4abe8caf3ec7137d96cb723fbfda35917c45fc174c9cb9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage4.png",
+      "sha256": "cd2afb99eacbf701884781430890d24ca0d68c99a1bf99e3850f6adb5d800322",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage5.png",
+      "sha256": "2d98d65ef5a180de0741ed7ed03e87f8c49aea0348d0d450bde7ebbdeffa3856",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage6.png",
+      "sha256": "dff849ad1f7facd2a304120bac05c64fc598529bb208492b2ebd152e5e96afaf",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/ominous_trial_key_crop_stage7.png",
+      "sha256": "469b1d8b3195eade26afbb8d274c0a334470adb68f17a5acdf8ced369ee3f1ef",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage0.png",
+      "sha256": "ad79eea42abf646ba7cd9dcbfadc0c79ef38025050eebef1083c8cf8cc733e4a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage1.png",
+      "sha256": "a8b7035ca5af437bb7fbd0fbd9e9608fbd0c589545087c31bbe07c983d6ce9c2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage2.png",
+      "sha256": "deaab5bf1b61c13b3fb2085d76174ae3dfe2bfe516c981bb194d80f1807235b8",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage3.png",
+      "sha256": "957f085cf32c55ab5d4471f81b7a2cfa574d9de501d6c2b02fff8f9512cc7a0e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage4.png",
+      "sha256": "5460e638c7ad52a8d46c86497c0e089cd81bde79c92e1e06fa8c28ba0f25f1cb",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage5.png",
+      "sha256": "bb1b0d0833c044d995846cd3af3be0fa4edd2e2e75520f72ebcdf709b75ed0a9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage6.png",
+      "sha256": "b3bd42c37f39111f1f8643bd89a4a73aa95c3edfbd1ad765414f917a6c17081f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/pitcher_plant_crop_stage7.png",
+      "sha256": "e2a1772a5a96636a6e56ca21dab7886cef8990d561c1911030caeaf667d985d3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage0.png",
+      "sha256": "a929ad3c1e0d3e8ff1e399e1be564271f0832180ce67afe9b41b02600f2b66bf",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage1.png",
+      "sha256": "634f9ce223344f1dd500c800e86d67f0f97c1e094085396f354773579c4f9791",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage2.png",
+      "sha256": "62d4dbdae1d5f81cc0f794a2df601a4dfd82c696efdd48d76877fc2712ebc669",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage3.png",
+      "sha256": "db3d1f755152298051f038e42f50fda9c1f76a97076b33524fa6664b9c659232",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage4.png",
+      "sha256": "e63876c47123d275558189167d3cde2b6bc6aea371833f17e7726144a065271a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage5.png",
+      "sha256": "5b2375588fbdc9bfa5b4dbc5889c77c0d89487f974791a35b68befb5b9f45c82",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage6.png",
+      "sha256": "e51451b4fbba71ea64bdca66c6656cbb1a160b8a7cf001fa9bce20867ec925ea",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/seagrass_crop_stage7.png",
+      "sha256": "2d907b0e09683e2b3ff131182423988aca82ac8165a60b1fcfb703863605eb73",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage0.png",
+      "sha256": "1b9d7f413ef11161c578437fc953cd6141d19e258888521b0d3c47f1ad562358",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage1.png",
+      "sha256": "645a42a6509cded7da1f3fba873eec441ce7ec875a2d22de51ff160995aebdc8",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage2.png",
+      "sha256": "f7c83376e1ec1807ae05d07ff2db6e5bee8f761d13d5896bd4f9854e17eede57",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage3.png",
+      "sha256": "808ce20cfd9a4d9baec9ea031881dddfdff23d1d3914be539b79b7ac36acd348",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage4.png",
+      "sha256": "c693da23d55542895aad5c7c6cdeb346dc33a70980ea85d1fba0b0b2f5e9b957",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage5.png",
+      "sha256": "9a1faf97020007b3e3717275971e60e0ba5c9695cb09a8cde93d945bcbf4551e",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage6.png",
+      "sha256": "8d1f4f6b231853d738bc9fb8a795b01edceca880cef5932bfdcf7ee58e255cb3",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/spore_blossom_crop_stage7.png",
+      "sha256": "e80bc3edea39d10a4dea8b18e187623922461a27444bd0cca7b404de26964336",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage0.png",
+      "sha256": "7a2de32a2b3a5adb0412188ad37e9792ac29c172936ff6257795efa0b140a7c6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage1.png",
+      "sha256": "bf5c5e3c408fd10bcf57c125cb65d9ec961cf5437913b672ac19db5bcefb5c8b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage2.png",
+      "sha256": "be108ff9fb0fd1fc52f748e797fcc9fd8405a082a4cfa2fcee6464d1d9aed97b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage3.png",
+      "sha256": "2e49ac73b3c036c25237f522a393620ed9d5cb50f816d7119097e72629eb0d45",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage4.png",
+      "sha256": "c107204caa3d313f6e32b9973d5fb54970c4e7fe38024cdc7685872fb4f58da5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage5.png",
+      "sha256": "8a2284a169a84ac3926be742a341f54b3a6d8366ebb9c27586719e003a0589b6",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage6.png",
+      "sha256": "575fa6eb1e916ca29f028a38e2629fbd52e4acaec6c177615f45dd696bf0f883",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sugar_cane_crop_stage7.png",
+      "sha256": "34a2ab8694a13008a97993682b54f1ed04b4ab19353d422898d6d4aa56105046",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage0.png",
+      "sha256": "d3f675f6738bbb6267dc967ddff1bbec6475dbe8c6a37f721e4c3226cb6f410d",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage1.png",
+      "sha256": "7702eb241f49b4f541de0fdf0c26bccef572e2871aa7a612e51b02e3ff65ca6c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage2.png",
+      "sha256": "51b791651d2943b00aa9f61b48cb5403d7ba67b3059514586ee4d603916a4b27",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage3.png",
+      "sha256": "757c53a60c20405f7f44f7a6358a2bba9ec51b4004b98b039e6722272097b2de",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage4.png",
+      "sha256": "aa47f25d5365508e3aa65a4a814200ef1b52ec4d6c548fd4ace5ed16799a58f9",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage5.png",
+      "sha256": "35101f9606354ec5ceb6741b97606ceb01801a4bcc552c658467f3a5d0f6c5e0",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage6.png",
+      "sha256": "fa189cd663b23362a1020597d848be2e7358a68f803d79542e0fb76d674f6a96",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/sweet_berries_crop_stage7.png",
+      "sha256": "a0c812d8ee0a891805abe99c004de49efea054c1f877747e9602d5b5db6f4c93",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage0.png",
+      "sha256": "b5df58bdafe03a7fd39a0adae2f8875187bde14a615105dae7cdbd49dd01bd8f",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage1.png",
+      "sha256": "73272e36bf866daae589f589b12e6df2a100daf75add46b2bfb82164f91fb2c8",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage2.png",
+      "sha256": "acea8e141e1733dbf6b795352fe380e6232ea4bd2fba14be1e1c01ead98c2700",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage3.png",
+      "sha256": "95c25b710e14dd184b0769651984d08c49b40cd965a69ee90e796e3bb97d25c1",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage4.png",
+      "sha256": "d1d0f51e55b3e17d77fe72f9b75410daa9822d03bf4b67fb3bc81492666776f0",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage5.png",
+      "sha256": "bf1e49fcb3772cf6c7efe38d8df8cbf960716ee2ecb63baaabf62812d450981b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage6.png",
+      "sha256": "0fc3d4421f6707aaa0d2d69838aa99e4ffb260030893f1adfa688986f7cd626a",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/torchflower_crop_stage7.png",
+      "sha256": "edbb4a9f103933ac59db2a1eafb3d7962c417a15352f9dedf7948dc1398c1221",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage0.png",
+      "sha256": "f7a20a9a0be0aebdd97f79efbfc442fed3961c7865fe3232388a792b3354cb6b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage1.png",
+      "sha256": "8f6be9aa30d40ec0160c8bc6679ec98eda2e66d73997e9dac1da3e31ff5594ba",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage2.png",
+      "sha256": "74a1c2a52487e1e9611079d4e3566bc57efcc051434e2249e3047e43e2367631",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage3.png",
+      "sha256": "7c8ef81de43fdc7210e9c8a7edf803aa6098b30fe66f585a0525dae21cb122ab",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage4.png",
+      "sha256": "4e07f0341e3f5258c81193383d986cd492465a2ae49efe0ee41461179053fb7b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage5.png",
+      "sha256": "29bffa7091b0aa1a840162f160a2c84c699348d65bca1098f614cbd22330b566",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage6.png",
+      "sha256": "1bf793cf2b00afa2e1781a87c13b7db63229688398b79f07891ef52910529450",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "block/trial_key_crop_stage7.png",
+      "sha256": "435f95acfdc5e6e1074aa073a961c5629ff9ee0e326e9dd7a0d265d12bd268b2",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/big_dripleaf_seed.png",
+      "sha256": "960aa92ec76f7aaf2b422fa9a25e54350b18de0aa65e7f9a2ebcdba2e9fcb9ca",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/disc_fragment_5_seed.png",
+      "sha256": "46b01e2c9736f54bf8382ffe2bd61b6bd042da26b165e8275fba0e0e37e02cdc",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/hanging_roots_seed.png",
+      "sha256": "ae91c6531c5824021cd15f7e6dbf537f93f9087e013e07d429a378b61b97bee5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/netherite_upgrade_smithing_template_seed.png",
+      "sha256": "f51b5cc83f3b13d8e14e72a38ae9131c163ca04054881e70b5270a55e1d80543",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/ominous_trial_key_seed.png",
+      "sha256": "10b53c7c23339aa7c9fd60f2b1e715a15a7252cbbf6b65c9d05301dd9f742a6b",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/pitcher_plant_seed.png",
+      "sha256": "8d1a6b1ef75f5e06bcca7788862dd78898cbc748e82462ed9bc6792a21ff15e0",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/seagrass_seed.png",
+      "sha256": "942302c8e4ba02db6f6d8080abfcc278f135dbc273c3b3dcd11180f8f505b5aa",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/spore_blossom_seed.png",
+      "sha256": "9da389db3fa5f4705cdef1c7ebf01da6b15c40e6d8eae3b3cc21d79bd7aa8c87",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/sugar_cane_seed.png",
+      "sha256": "20ce2f04d1d4ac0dd5a2a6464bb776c948cae2dbaf744094fd77c77a9d75d92c",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/sweet_berries_seed.png",
+      "sha256": "a308d247d8607186194e56b3dac2457e421b5852f72a3774475b72e75002d8b7",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/torchflower_seed.png",
+      "sha256": "bdc060df4a2380b3c7c0eca4dbabb1ea95e8650cccb33ed744405f8ea38c39e5",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    },
+    {
+      "path": "item/trial_key_seed.png",
+      "sha256": "44b2db5a87b0abc575f62d493654073f332372c4372c754d063c1d4c29be9cdf",
+      "usage": "model",
+      "status": "retained-review-or-approved"
+    }
+  ]
+}

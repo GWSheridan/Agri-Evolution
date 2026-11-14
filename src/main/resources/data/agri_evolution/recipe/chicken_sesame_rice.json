@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:cooked_chicken"
+    },
+    {
+      "item": "agri_evolution:sesame"
+    },
+    {
+      "item": "agri_evolution:rice"
+    },
+    {
+      "item": "agri_evolution:pak_choi"
+    },
+    {
+      "item": "agri_evolution:spring_onion"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:chicken_sesame_rice",
+    "count": 1
+  }
+}

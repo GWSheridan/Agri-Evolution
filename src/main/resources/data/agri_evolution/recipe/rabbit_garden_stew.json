@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "food",
+  "ingredients": [
+    {
+      "item": "minecraft:bowl"
+    },
+    {
+      "item": "minecraft:cooked_rabbit"
+    },
+    {
+      "item": "minecraft:carrot"
+    },
+    {
+      "item": "agri_evolution:beans"
+    },
+    {
+      "item": "agri_evolution:celery"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:rabbit_garden_stew",
+    "count": 1
+  }
+}

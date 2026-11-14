@@ -1,0 +1,49 @@
+{
+  "variants": {
+    "facing=north,tier=1": {
+      "model": "agri_evolution:block/soil_research_table"
+    },
+    "facing=east,tier=1": {
+      "model": "agri_evolution:block/soil_research_table",
+      "y": 90
+    },
+    "facing=south,tier=1": {
+      "model": "agri_evolution:block/soil_research_table",
+      "y": 180
+    },
+    "facing=west,tier=1": {
+      "model": "agri_evolution:block/soil_research_table",
+      "y": 270
+    },
+    "facing=north,tier=2": {
+      "model": "agri_evolution:block/soil_research_table_mk2"
+    },
+    "facing=east,tier=2": {
+      "model": "agri_evolution:block/soil_research_table_mk2",
+      "y": 90
+    },
+    "facing=south,tier=2": {
+      "model": "agri_evolution:block/soil_research_table_mk2",
+      "y": 180
+    },
+    "facing=west,tier=2": {
+      "model": "agri_evolution:block/soil_research_table_mk2",
+      "y": 270
+    },
+    "facing=north,tier=3": {
+      "model": "agri_evolution:block/soil_research_table_mk3"
+    },
+    "facing=east,tier=3": {
+      "model": "agri_evolution:block/soil_research_table_mk3",
+      "y": 90
+    },
+    "facing=south,tier=3": {
+      "model": "agri_evolution:block/soil_research_table_mk3",
+      "y": 180
+    },
+    "facing=west,tier=3": {
+      "model": "agri_evolution:block/soil_research_table_mk3",
+      "y": 270
+    }
+  }
+}
