@@ -38,12 +38,14 @@ public final class JournalIndexScreen extends Screen {
             .filter(e->!progress||e.section()==JournalNavigation.Section.BREEDING&&BreedingGuidePages.recipe(e.page())!=null)
             .filter(e->!progress||!pending||!snapshot.entry(BreedingGuidePages.recipe(e.page()).result()).discovered()).toList();
         page=Math.clamp(page,0,Math.max(0,(filtered.size()-1)/rows));
-        int tabWidth=nav.building()?100:(w-28)/3;
+        int tabWidth=nav.building()?100:(w-32)/4;
         button(starred?"Bookmarks *":"All pages",left+10,top+49,tabWidth,()->{starred=!starred;page=0;refresh();});
         if(!nav.building()){
             button(progress?"Contents":tabWidth>=105?"Breeding progress":"Progress",left+14+tabWidth,top+49,tabWidth,()->{progress=!progress;page=0;refresh();});
             if(progress)button(pending?"Pending":"All results",left+18+2*tabWidth,top+49,tabWidth,()->{pending=!pending;page=0;refresh();});
             else button("Plan a crop",left+18+2*tabWidth,top+49,tabWidth,()->minecraft.setScreen(new BreedingPlannerScreen(this,snapshot)));
+            button("Varieties",left+22+3*tabWidth,top+49,tabWidth,
+                    ()->minecraft.setScreen(new SeedVarietyScreen(this,snapshot.varieties())));
         }
         for(int r=0;r<rows&&page*rows+r<filtered.size();r++){
             var entry=filtered.get(page*rows+r);int y=top+73+r*29;

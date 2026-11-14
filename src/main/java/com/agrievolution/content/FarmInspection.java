@@ -74,6 +74,8 @@ public final class FarmInspection {
             if(level.getBlockEntity(pos) instanceof AECropBlockEntity plant && state.getBlock() instanceof AgriCropBlock crop){
                 var genes=plant.genome();lines.add("Genes G/Y/R: "+genes.growth()+" / "+genes.yield()+" / "+genes.resilience());
                 lines.add("Nutrition: "+plant.soilNutrition()+" | Moisture: "+FarmEnvironment.moisture(level,pos.below()));
+                String companion = CompanionPlanting.describe(level, pos, crop.species());
+                if (!companion.isEmpty()) lines.add("Companion: " + companion);
                 int supportTier = CropSupportItem.tier(state);
                 lines.add("Support: "+new String[]{"none","wood","iron","obsidian"}[supportTier]+" | Tended: "+(plant.hasBeenTended()?"yes":"no"));
                 if (supportTier == 3) {

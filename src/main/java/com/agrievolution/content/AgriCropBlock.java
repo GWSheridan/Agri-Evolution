@@ -1,11 +1,14 @@
 package com.agrievolution.content;
 
+import com.agrievolution.farming.CompanionPlanting;
+import com.agrievolution.farming.FarmEnvironment;
 import com.agrievolution.genetics.CropGenome;
 import com.agrievolution.genetics.CropSpecies;
 import com.agrievolution.genetics.GenomeStorage;
 import com.agrievolution.genetics.HybridLineageStorage;
 import com.agrievolution.genetics.RareTrait;
 import com.agrievolution.genetics.RareTraitStorage;
+import com.agrievolution.genetics.SeedVariety;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
@@ -18,7 +21,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import com.agrievolution.farming.FarmEnvironment;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -76,7 +78,7 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
     @Override
     protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         // Rare visible weeds coexist with the crop; they never replace or destroy it.
-        int weedChance=CropSupportItem.weedChance(CropSupportItem.tier(state));
+        int weedChance = CompanionPlanting.weeds(level, pos, species, CropSupportItem.weedChance(CropSupportItem.tier(state)));
         if(weedChance==0&&state.getValue(WEEDY)){state=state.setValue(WEEDY,false);level.setBlock(pos,state,3);}
         if (weedChance>0 && !state.getValue(WEEDY) && !isMaxAge(state) && random.nextInt(weedChance) == 0) {
             state = state.setValue(WEEDY, true);
@@ -121,9 +123,18 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
     @Override
     protected java.util.List<ItemStack> getDrops(BlockState state, net.minecraft.world.level.storage.loot.LootParams.Builder params) {
         var drops=new java.util.ArrayList<>(super.getDrops(state,params));
+        var entity=params.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);
+        if (entity instanceof AECropBlockEntity plant && !plant.variety().isEmpty()) {
+            for (var drop : drops) {
+                if (!drop.is(AEItems.seedFor(species))) continue;
+                GenomeStorage.putOnSeed(drop, plant.genome());
+                RareTraitStorage.putOnSeed(drop, plant.rareTrait());
+                if (plant.lineage() != null) HybridLineageStorage.putOnSeed(drop, plant.lineage());
+                SeedVariety.apply(drop, plant.variety());
+            }
+        }
         int tier=CropSupportItem.tier(state);
         if(tier>0){
-            var entity=params.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);
             var support=entity instanceof AECropBlockEntity plant?plant.recoverSupport():new ItemStack(CropSupportItem.itemFor(tier));
             if(!support.isEmpty())drops.add(support);
         }
@@ -143,11 +154,13 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
 
         if (level.isClientSide || player.getAbilities().instabuild
                 || state.getValue(AGE) < getMaxAge()) return;
+        CompanionPlanting.harvested(level, pos, species);
 
         ItemStack seed = new ItemStack(AEItems.seedFor(species));
         GenomeStorage.putOnSeed(seed, genome);
         RareTraitStorage.putOnSeed(seed, rare);
         if (lineage != null) HybridLineageStorage.putOnSeed(seed, lineage);
+        if (blockEntity instanceof AECropBlockEntity plant) SeedVariety.apply(seed, plant.variety());
         Block.popResource(level, pos, seed);
         // One extra identical seed may drop; growth/yield/resilience, rare trait
         // and hybrid lineage remain on it. Do not touch other mods' loot tables.

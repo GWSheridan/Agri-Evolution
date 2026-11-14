@@ -1,43 +1,38 @@
-# Generated Gradle/NeoForge output; never include in source archives.
-.gradle/
-build/
-run/
-runs/
-out/
+# Gradle and Minecraft run files
+/.gradle/
+/build/
+/run/
 *.class
 *.log
 *.hprof
 crash-reports/
 logs/
-# Local release archives, artwork sources and compiler diagnostics.
+
+# Local backups, artwork and archives
 /backups/
 /artwork/
 /javac.*.args
 *.zip
 *.jar
 !/gradle/wrapper/gradle-wrapper.jar
-# Historical update notes are kept locally. Record release changes in CHANGELOG.md.
+
+# Old update notes and texture checks
 /*_0.[0-9]*.md
 /*_0.[0-9]*.txt
 /docs/history/
 /INSTALL_TEXTURE_PATCH.txt
 /TEST_THIS_TEXTURE_UPDATE_FIRST.txt
 /FROM_0.29.5_TO_0.30.0.patch
-# Local texture baselines, catalogs and preview sheets.
 /WORKING_TEXTURE_SHA256.json
-/TEXTURE_QA_PREVIEW_0.32.6.png
-/TEXTURE_QA_PREVIEW_0.32.5.png
-/TEXTURE_QA_PREVIEW_0.32.2.png
-/TEXTURE_CATALOG_0.32.2.json
-/seed_item_sheet_updated.png
-/seed_item_sheet_varied_0324.png
-/species_seed_sheet_updated.png
-# Local IDE/editor files
+/TEXTURE_QA_PREVIEW_*.png
+/TEXTURE_CATALOG_*.json
+/seed_item_sheet_*.png
+/species_seed_sheet_*.png
+
+# Editor, Python and desktop files
 .idea/
 .vscode/
 *.iml
-# Python testing cache
 __pycache__/
-*.pyc
 .DS_Store
 Thumbs.db

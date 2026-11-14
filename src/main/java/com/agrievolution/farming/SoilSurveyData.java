@@ -90,6 +90,8 @@ public final class SoilSurveyData {
                         out.putBoolean("HasCrop", true);
                         out.putString("CropName", crop.species().displayName());
                         out.putInt("Age", state.getValue(AgriCropBlock.AGE));
+                        String companion = CompanionPlanting.describe(level, cropPos, crop.species());
+                        if (!companion.isEmpty()) out.putString("Companion", companion);
                         out.putBoolean("Supported", state.getValue(AgriCropBlock.SUPPORTED));
                         out.putInt("Light", level.getRawBrightness(cropPos, 0));
                         out.putBoolean("Resource", crop.species().isResource());

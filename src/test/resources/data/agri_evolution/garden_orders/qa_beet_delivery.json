@@ -1,0 +1,5 @@
+{
+  "title": "Test Beet Delivery",
+  "ingredients": [{ "item": "minecraft:beetroot", "count": 3 }],
+  "reward": { "item": "minecraft:emerald", "count": 2 }
+}

@@ -12,6 +12,18 @@ base {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
+repositories {
+    maven {
+        url = 'https://maven.blamejared.com'
+        content { includeGroup 'mezz.jei' }
+    }
+}
+
+dependencies {
+    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.51.0.418'
+    if (project.hasProperty('withJei')) runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.51.0.418'
+}
+
 // Opt-in, world-free visual QA; never included in the release JAR.
 sourceSets { guiPreview { compileClasspath += sourceSets.main.output; runtimeClasspath += sourceSets.main.output } }
 

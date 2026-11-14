@@ -3,6 +3,7 @@ package com.agrievolution.content;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.network.chat.Component;
@@ -60,14 +61,52 @@ public final class SpannerItem extends Item {
     public static void onRightClick(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
         var player=event.getEntity();var level=event.getLevel();var pos=event.getPos();var state=level.getBlockState(pos);
         if(event.getHand()!=net.minecraft.world.InteractionHand.MAIN_HAND||!(player.getMainHandItem().getItem() instanceof SpannerItem)||!player.mayBuild())return;
-        if(!(state.getBlock() instanceof IrrigationPipeBlock)&&!(state.getBlock() instanceof IrrigationSprinklerBlock))return;
+        if(!(state.getBlock() instanceof IrrigationPipeBlock)&&!(state.getBlock() instanceof IrrigationSprinklerBlock)
+                && !(state.getBlock() instanceof IrrigationValveBlock))return;
         event.setCanceled(true);event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
         if(level.isClientSide)return;
-        if(state.getBlock() instanceof IrrigationPipeBlock){
+        if(state.getBlock() instanceof IrrigationValveBlock){
+            if (level.mayInteract(player, pos)) inspectValve(player, level, pos, state);
+        }else if(state.getBlock() instanceof IrrigationPipeBlock){
             var side=event.getHitVec().getDirection();IrrigationPipeBlock.toggle(level,pos,side);
             player.displayClientMessage(Component.literal(side.getName()+" pipe port: "+(IrrigationPipeBlock.enabled(level.getBlockState(pos),side)?"enabled":"disabled")),true);
         }else if(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head){
             head.configure(player.isShiftKeyDown());player.displayClientMessage(Component.literal(head.controls()),true);
+        }
+    }
+    private static void inspectValve(net.minecraft.world.entity.player.Player player, net.minecraft.world.level.Level level,
+            net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+        var valve = level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity named ? named : null;
+        if (player.isShiftKeyDown()) {
+            if (valve == null) {
+                valve = new IrrigationValveBlockEntity(pos, state);
+                level.setBlockEntity(valve);
+            }
+            var name = player.getMainHandItem().get(DataComponents.CUSTOM_NAME);
+            valve.rename(name == null ? "" : name.getString());
+        }
+        var status = IrrigationNetwork.inspectZone(level, pos);
+        String name = valve == null ? "Irrigation zone" : valve.zone();
+        String flow;
+        if (!state.getValue(IrrigationValveBlock.OPEN)) flow = "Valve closed";
+        else if (level.hasNeighborSignal(pos)) flow = "Valve paused by redstone";
+        else if (status.limit()) flow = "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
+        else if (status.supplies().isEmpty()) flow = status.blockedPath() ? "Supply path blocked" : "No connected water source";
+        else if (status.supplies().stream().noneMatch(supply -> supply.hasBucket(level))) flow = "Connected sources short of a full bucket";
+        else flow = "Water supply ready";
+        int water = 0, capacity = 0;
+        for (var supply : status.supplies()) {
+            if (supply.reservoir() == null) continue;
+            water += supply.reservoir().water();
+            capacity += WaterReservoirBlockEntity.CAPACITY;
+        }
+        String tanks = capacity == 0 ? "No reservoir" : "Reservoirs: " + water + " / " + capacity + " mB";
+        long active = status.sprinklers().stream().filter(head -> level.getBlockState(head).getValue(IrrigationSprinklerBlock.ACTIVE)).count();
+        player.displayClientMessage(Component.literal(name + " | " + flow + " | " + tanks + " | Sprinklers: "
+                + active + "/" + status.sprinklers().size() + " active"), false);
+        if (active == 0 && !status.sprinklers().isEmpty()
+                && level.getBlockEntity(status.sprinklers().getFirst()) instanceof IrrigationSprinklerBlockEntity head) {
+            player.displayClientMessage(Component.literal("Nearest sprinkler: " + head.inspectionStatus()), false);
         }
     }
     public SpannerItem(Properties properties){super(properties);}
@@ -75,6 +114,7 @@ public final class SpannerItem extends Item {
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> lines, TooltipFlag flag) {
         lines.add(Component.literal("Crouch-use on an Agri crop to recover its sticks."));
         lines.add(Component.literal("Crouch and left-click an irrigation fitting to trace water."));
+        lines.add(Component.literal("Use on a valve to inspect its zone. Crouch-use a renamed Spanner to name it."));
     }
 
     @Override public InteractionResult useOn(UseOnContext context){

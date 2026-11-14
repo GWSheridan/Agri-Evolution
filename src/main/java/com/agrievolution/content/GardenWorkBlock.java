@@ -54,9 +54,10 @@ public final class GardenWorkBlock extends Block {
 
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (player instanceof ServerPlayer serverPlayer) {
+            var orders = preserving ? java.util.List.<GardenWork.Job>of() : GardenOrderReload.current();
             serverPlayer.openMenu(new SimpleMenuProvider(
-                    (id, inventory, owner) -> new GardenWorkMenu(id, inventory, ContainerLevelAccess.create(level, pos), preserving),
-                    Component.translatable(getDescriptionId())));
+                    (id, inventory, owner) -> new GardenWorkMenu(id, inventory, ContainerLevelAccess.create(level, pos), preserving, orders),
+                    Component.translatable(getDescriptionId())), buffer -> GardenOrderReload.write(buffer, orders));
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

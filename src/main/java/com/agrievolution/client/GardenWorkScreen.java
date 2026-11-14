@@ -13,8 +13,10 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
     private static final int ROW_Y = 36, ROW_PITCH = 41, ITEM_X = 20, ITEM_Y = 18, ITEM_PITCH = 21;
     private static final int REWARD_X = 204, ACTION_X = 232, ACTION_Y = 11, ACTION_WIDTH = 62;
     private static final String[] TIERS = {"Early", "Mid", "Late"};
-    private static final String[] TABS = {"Early", "Mid", "Late", "Commissions"};
-    private static final int TAB_X = 14, TAB_Y = 146, TAB_WIDTH = 69, TAB_PITCH = 72;
+    private static final String[] TABS = {"Early", "Mid", "Late", "Commissions", "Seeds", "Custom"};
+    private static final int[] TAB_X = {14, 53, 91, 130, 208, 252};
+    private static final int[] TAB_WIDTH = {36, 35, 36, 75, 41, 46};
+    private static final int TAB_Y = 146;
 
     public GardenWorkScreen(GardenWorkMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -28,10 +30,15 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
         GardenGuiTheme.panel(gui, x + 8, y + 7, imageWidth - 16, 24, GREEN);
         gui.drawCenteredString(font, title, x + imageWidth / 2, y + 15, PAPER);
         for (int row = 0; row < GardenWork.ROWS; row++) drawJob(gui, row);
-        if (!menu.preserving()) for (int page = 0; page < TABS.length; page++) {
-            int tab = x + TAB_X + TAB_PITCH * page;
-            GardenGuiTheme.panel(gui, tab, y + TAB_Y, TAB_WIDTH, 13, page == menu.page() ? GREEN : MUTED);
-            gui.drawCenteredString(font, TABS[page], tab + TAB_WIDTH / 2, y + TAB_Y + 3, PAPER);
+        if (!menu.preserving()) for (int page = 0; page < tabCount(); page++) {
+            int tab = x + TAB_X[page], width = TAB_WIDTH[page];
+            int current = Math.min(menu.page(), GardenWorkMenu.CUSTOM_PAGE);
+            GardenGuiTheme.panel(gui, tab, y + TAB_Y, width, 13, page == current ? GREEN : MUTED);
+            gui.drawCenteredString(font, TABS[page], tab + width / 2, y + TAB_Y + 3, PAPER);
+        }
+        if (menu.custom() && menu.customPages() > 1) {
+            pageArrow(gui, 16, "<", menu.page() > GardenWorkMenu.CUSTOM_PAGE);
+            pageArrow(gui, imageWidth - 34, ">", menu.page() < GardenWorkMenu.CUSTOM_PAGE + menu.customPages() - 1);
         }
         GardenGuiTheme.panel(gui, x + 8, y + 163, imageWidth - 16, 85, PAPER);
         gui.drawString(font, "Inventory", x + 17, y + 172, INK, false);
@@ -39,9 +46,10 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
     }
 
     private void drawJob(GuiGraphics gui, int row) {
+        var job = menu.job(row);
+        if (job == null) return;
         int x = leftPos, y = rowTop(row);
         GardenGuiTheme.panel(gui, x + 8, y, imageWidth - 16, menu.preserving() ? 38 : 35, PAPER);
-        var job = menu.job(row);
         if (!menu.unlocked(row)) {
             int previous = menu.tier(row) - 1;
             gui.drawString(font, menu.commissions() ? job.title() + " locked" : TIERS[menu.tier(row)] + " orders locked", x + ITEM_X, y + 8, INK, false);
@@ -49,9 +57,13 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
                     x + ITEM_X, y + 22, MUTED, false);
             return;
         }
-        gui.drawString(font, job.title(), x + ITEM_X, y + 5, INK, false);
+        gui.drawString(font, font.plainSubstrByWidth(job.title(), ACTION_X - ITEM_X - 8), x + ITEM_X, y + 5, INK, false);
         for (int i = 0; i < job.ingredients().size(); i++) {
             drawItem(gui, job.ingredients().get(i), x + ITEM_X + i * ITEM_PITCH, y + ITEM_Y);
+        }
+        if (menu.seedCommissions()) {
+            var rules = job.ingredients().getFirst().requirements(true);
+            gui.drawString(font, font.plainSubstrByWidth(rules, 120), x + ITEM_X + ITEM_PITCH, y + 22, INK, false);
         }
         gui.drawString(font, menu.preserving() ? "Makes" : "Reward", x + 165, y + 22, INK, false);
         drawItem(gui, job.reward(), x + REWARD_X, y + ITEM_Y);
@@ -59,6 +71,13 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
         GardenGuiTheme.panel(gui, x + ACTION_X, y + ACTION_Y, ACTION_WIDTH, 18, ready ? GREEN : MUTED);
         gui.drawCenteredString(font, menu.preserving() ? "Preserve" : menu.claimed(row) ? "Claimed" : "Deliver",
                 x + ACTION_X + ACTION_WIDTH / 2, y + ACTION_Y + 5, PAPER);
+    }
+
+    private int tabCount() { return menu.customPages() == 0 ? TABS.length - 1 : TABS.length; }
+
+    private void pageArrow(GuiGraphics gui, int x, String label, boolean enabled) {
+        GardenGuiTheme.panel(gui, leftPos + x, topPos + 11, 18, 15, enabled ? GREEN : MUTED);
+        gui.drawCenteredString(font, label, leftPos + x + 9, topPos + 15, PAPER);
     }
 
     private void drawItem(GuiGraphics gui, GardenWork.Ingredient ingredient, int x, int y) {
@@ -75,21 +94,36 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
     }
 
     @Override public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && !menu.preserving()) for (int page = 0; page < TABS.length; page++) {
-            if (!inside(mouseX, mouseY, TAB_X + TAB_PITCH * page, topPos + TAB_Y, TAB_WIDTH, 13)) continue;
-            if (minecraft != null && minecraft.gameMode != null) {
-                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, menu.pageAction(page));
+        if (button == 0 && menu.custom() && menu.customPages() > 1) {
+            if (inside(mouseX, mouseY, 16, topPos + 11, 18, 15) && menu.page() > GardenWorkMenu.CUSTOM_PAGE) {
+                switchPage(menu.page() - 1);
+                return true;
             }
+            if (inside(mouseX, mouseY, imageWidth - 34, topPos + 11, 18, 15)
+                    && menu.page() < GardenWorkMenu.CUSTOM_PAGE + menu.customPages() - 1) {
+                switchPage(menu.page() + 1);
+                return true;
+            }
+        }
+        if (button == 0 && !menu.preserving()) for (int page = 0; page < tabCount(); page++) {
+            if (!inside(mouseX, mouseY, TAB_X[page], topPos + TAB_Y, TAB_WIDTH[page], 13)) continue;
+            switchPage(page);
             return true;
         }
         if (button == 0) for (int row = 0; row < GardenWork.ROWS; row++) {
-            if (!menu.unlocked(row) || !inside(mouseX, mouseY, ACTION_X, rowTop(row) + ACTION_Y, ACTION_WIDTH, 18)) continue;
+            if (menu.job(row) == null || !menu.unlocked(row) || !inside(mouseX, mouseY, ACTION_X, rowTop(row) + ACTION_Y, ACTION_WIDTH, 18)) continue;
             if (menu.ready(row) && minecraft != null && minecraft.gameMode != null) {
                 minecraft.gameMode.handleInventoryButtonClick(menu.containerId, menu.action(row));
             }
             return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    private void switchPage(int page) {
+        if (minecraft != null && minecraft.gameMode != null) {
+            minecraft.gameMode.handleInventoryButtonClick(menu.containerId, menu.pageAction(page));
+        }
     }
 
     @Override protected void renderLabels(GuiGraphics gui, int mouseX, int mouseY) {}
@@ -100,10 +134,16 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
         for (int row = 0; row < GardenWork.ROWS; row++) {
             if (!menu.unlocked(row)) continue;
             var job = menu.job(row);
+            if (job == null) continue;
             int y = rowTop(row) + ITEM_Y;
             for (int i = 0; i < job.ingredients().size(); i++) {
                 if (inside(mouseX, mouseY, ITEM_X + i * ITEM_PITCH, y, 16, 16)) {
-                    gui.renderTooltip(font, job.ingredients().get(i).stack(), mouseX, mouseY);
+                    var ingredient = job.ingredients().get(i);
+                    if (ingredient.qualified()) {
+                        var hint = Component.literal(ingredient.count() + " × " + ingredient.stack().getHoverName().getString()
+                                + "\n" + ingredient.requirements(false));
+                        gui.renderTooltip(font, font.split(hint, 175), mouseX, mouseY);
+                    } else gui.renderTooltip(font, ingredient.stack(), mouseX, mouseY);
                     return;
                 }
             }

@@ -142,6 +142,7 @@ public final class SoilSamplerScreen extends Screen {
             line(gui, "Growth roll: " + (sample.contains("GrowthRoll")
                     ? sample.getInt("GrowthRoll") + "/200" : "unavailable"), 211, 188, MUTED);
         }
+        if (sample.contains("Companion")) line(gui, sample.getString("Companion"), 211, 201, GREEN);
     }
 
     private void area(GuiGraphics gui) {

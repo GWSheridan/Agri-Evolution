@@ -1,5 +1,6 @@
 package com.agrievolution.content;
 
+import com.agrievolution.genetics.CropSpecies;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -13,21 +14,24 @@ import net.minecraft.world.item.ItemStack;
 
 public final class SeedVaultMenu extends AbstractContainerMenu {
     public static final int SIZE = SeedVaultBlockEntity.SIZE, FIRST_X = 21, FIRST_Y = 57, PITCH = 18;
+    public static final int SET_SPECIES = SIZE, CLEAR_SPECIES = SIZE + 1, CYCLE_MINIMUM = SIZE + 2;
+    private static final int DATA_COUNT = 6;
     private final Container seeds;
     private final SeedVaultBlockEntity vault;
     private final ContainerData data;
 
     public SeedVaultMenu(int id, Inventory inventory) {
-        this(id, inventory, new SimpleContainer(SIZE), null, new SimpleContainerData(2));
+        this(id, inventory, new SimpleContainer(SIZE), null, new SimpleContainerData(DATA_COUNT));
     }
 
     SeedVaultMenu(int id, Inventory inventory, SeedVaultBlockEntity vault) {
         this(id, inventory, vault, vault, new ContainerData() {
             @Override public int get(int index) {
-                return (vault.locks() >>> (index * SeedVaultBlockEntity.MASK_HALF)) & SeedVaultBlockEntity.HALF_MASK;
+                if (index < 2) return (vault.locks() >>> (index * SeedVaultBlockEntity.MASK_HALF)) & SeedVaultBlockEntity.HALF_MASK;
+                return index == 2 ? vault.intakeSpeciesId() : vault.minimum(index - 3);
             }
             @Override public void set(int index, int value) {}
-            @Override public int getCount() { return 2; }
+            @Override public int getCount() { return DATA_COUNT; }
         });
     }
 
@@ -52,6 +56,11 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
         int half = slot / SeedVaultBlockEntity.MASK_HALF;
         return (data.get(half) & (1 << (slot % SeedVaultBlockEntity.MASK_HALF))) != 0;
     }
+    public CropSpecies intakeSpecies() {
+        int id = data.get(2);
+        return id == 0 ? null : CropSpecies.values()[id - 1];
+    }
+    public int minimum(int trait) { return data.get(trait + 3); }
 
     @Override public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
         int index = slots.indexOf(slot);
@@ -61,9 +70,22 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
     @Override public boolean stillValid(Player player) { return vault == null || seeds.stillValid(player); }
 
     @Override public boolean clickMenuButton(Player player, int slot) {
-        if (vault == null || player.isSpectator() || slot < 0 || slot >= SIZE || !stillValid(player)) return false;
-        if (!locked(slot) && seeds.getItem(slot).isEmpty()) return false;
-        vault.toggleLock(slot);
+        if (vault == null || player.isSpectator() || slot < 0 || slot >= CYCLE_MINIMUM + 3 || !stillValid(player)) return false;
+        if (slot < SIZE) {
+            if (!locked(slot) && seeds.getItem(slot).isEmpty()) return false;
+            vault.toggleLock(slot);
+        } else {
+            if (!player.mayBuild() || !player.level().mayInteract(player, vault.getBlockPos())) return false;
+            if (slot == SET_SPECIES) {
+                if (!(getCarried().getItem() instanceof SpeciesSeedItem seed)) return false;
+                vault.setIntakeSpecies(seed.species());
+            } else if (slot == CLEAR_SPECIES) {
+                if (!getCarried().isEmpty()) return false;
+                vault.setIntakeSpecies(null);
+            } else {
+                vault.cycleMinimum(slot - CYCLE_MINIMUM);
+            }
+        }
         broadcastChanges();
         return true;
     }

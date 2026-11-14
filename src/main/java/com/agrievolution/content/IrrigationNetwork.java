@@ -33,11 +33,13 @@ public final class IrrigationNetwork {
     public record Search(boolean attached,List<Supply> supplies,boolean overflow,boolean blockedValve) {}
     public enum Flow { READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE }
     public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {}
+    record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, boolean blockedPath) {}
     private record Endpoint(BlockPos pos, Supply supply) {}
     private record ClosedPort(BlockPos from, BlockPos pipe, Direction side) {}
     private static final class Trace {
         final Map<BlockPos, BlockPos> parents = new HashMap<>();
         final List<Endpoint> endpoints = new ArrayList<>();
+        final List<BlockPos> sprinklers = new ArrayList<>();
         BlockPos valve, lastFitting;
         ClosedPort port;
     }
@@ -59,6 +61,13 @@ public final class IrrigationNetwork {
         return route(trace, trace.lastFitting == null ? head : trace.lastFitting, Flow.DISCONNECTED);
     }
 
+    static ZoneStatus inspectZone(Level level, BlockPos valve) {
+        var trace = new Trace();
+        var network = search(level, valve, trace, true);
+        return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), network.overflow(),
+                network.blockedValve() || trace.port != null);
+    }
+
     private static Route route(Trace trace, BlockPos end, Flow flow) {
         var blocks = new ArrayList<BlockPos>();
         for (BlockPos pos = end; pos != null; pos = trace.parents.get(pos)) blocks.add(pos);
@@ -71,9 +80,13 @@ public final class IrrigationNetwork {
     }
 
     private static Search search(Level level, BlockPos head, Trace trace) {
+        return search(level, head, trace, false);
+    }
+
+    private static Search search(Level level, BlockPos head, Trace trace, boolean inspectClosedOrigin) {
         if(!level.hasChunkAt(head))return new Search(true,List.of(),false,true);
         var initial=level.getBlockState(head);
-        if(initial.getBlock() instanceof IrrigationValveBlock && !IrrigationValveBlock.permitsFlow(level,head,initial)){
+        if(!inspectClosedOrigin && initial.getBlock() instanceof IrrigationValveBlock && !IrrigationValveBlock.permitsFlow(level,head,initial)){
             if (trace != null) trace.valve = head;
             return new Search(true,List.of(),false,true);
         }
@@ -115,6 +128,8 @@ public final class IrrigationNetwork {
                     if(sources.add(core) && level.hasChunkAt(core)
                             && level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank && tank.complete())
                         addSupply(supplies, trace, next, new Supply(null,tank));
+                } else if (trace != null && neighbor.getBlock() instanceof IrrigationSprinklerBlock) {
+                    trace.sprinklers.add(next);
                 }
             }
         }

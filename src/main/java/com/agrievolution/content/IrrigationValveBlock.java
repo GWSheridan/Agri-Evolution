@@ -12,6 +12,8 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -23,7 +25,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.Shapes;
 
 /** Flow-control junction. Facing orients the wheel; neighbouring fittings define the ports. */
-public final class IrrigationValveBlock extends Block {
+public final class IrrigationValveBlock extends Block implements EntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
     public static final BooleanProperty OPEN = BooleanProperty.create("open");
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
@@ -33,6 +35,10 @@ public final class IrrigationValveBlock extends Block {
         BlockState state=defaultBlockState().setValue(FACING, Direction.NORTH).setValue(OPEN, true).setValue(POWERED,false);
         for(var d:Direction.values())state=state.setValue(IrrigationSprinklerBlock.connection(d),false);
         registerDefaultState(state);
+    }
+
+    @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new IrrigationValveBlockEntity(pos, state);
     }
 
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

@@ -9,19 +9,29 @@ final class JournalBookmarks {
     private final Set<String> keys=new HashSet<>();
     private final Path file;
     private String error="";
-    JournalBookmarks(boolean building){
+    JournalBookmarks(boolean building){this(building?"machines":"crops");}
+    JournalBookmarks(String section){
         var mc=Minecraft.getInstance();String user=mc.player==null?"preview":mc.player.getUUID().toString();
-        file=mc.gameDirectory.toPath().resolve("config/agri-evolution/bookmarks-"+user+(building?"-machines":"-crops")+".txt");
+        file=mc.gameDirectory.toPath().resolve("config/agri-evolution/bookmarks-"+user+"-"+section+".txt");
         try{if(Files.exists(file))keys.addAll(Files.readAllLines(file));}catch(java.io.IOException ex){error="Bookmarks could not be read";}
     }
     boolean contains(String key){return keys.contains(key);}
     String error(){return error;}
+    String first(){return keys.stream().findFirst().orElse("");}
     void toggle(String key){
-        boolean removed=keys.remove(key);if(!removed)keys.add(key);
+        var next=new HashSet<>(keys);
+        if(!next.remove(key))next.add(key);
+        save(next);
+    }
+    void select(String key){save(keys.contains(key)?Set.of():Set.of(key));}
+    private void save(Set<String> next){
         try{
             Files.createDirectories(file.getParent());var temp=file.resolveSibling(file.getFileName()+".tmp");
-            Files.write(temp,new TreeSet<>(keys));
-            Files.move(temp,file,StandardCopyOption.REPLACE_EXISTING);error="";
-        }catch(java.io.IOException ex){if(removed)keys.add(key);else keys.remove(key);error="Bookmark save failed";}
+            Files.write(temp,new TreeSet<>(next));
+            Files.move(temp,file,StandardCopyOption.REPLACE_EXISTING);
+            keys.clear();
+            keys.addAll(next);
+            error="";
+        }catch(java.io.IOException ex){error="Could not save journal selection.";}
     }
 }

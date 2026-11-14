@@ -6,6 +6,7 @@ import com.agrievolution.genetics.CropSpecies;
 import com.agrievolution.genetics.GenomeBreeder;
 import com.agrievolution.genetics.GenomeStorage;
 import com.agrievolution.genetics.HybridLineageStorage;
+import com.agrievolution.genetics.SeedVariety;
 import com.agrievolution.genetics.SpeciesBreeder;
 import com.agrievolution.genetics.RareTrait;
 import com.agrievolution.genetics.RareTraitStorage;
@@ -66,6 +67,7 @@ public final class BreedingJournalItem extends Item {
 
         discover(root, crop.species());
         recordBestGenetics(root, crop.species(), genome);
+        SeedVariety.record(root, target.variety(), crop.species(), genome, target.lineage());
         boolean newTrait = recordTrait(root, target.rareTrait());
 
         if (player.isShiftKeyDown()) {
@@ -127,11 +129,18 @@ public final class BreedingJournalItem extends Item {
         ItemStack seed = new ItemStack(AEItems.seedFor(offspringSpecies));
         if (first.species() != crop.species()) HybridLineageStorage.putOnSeed(seed,
                 new HybridLineageStorage.Lineage(first.species(), crop.species()));
+        else if (offspringSpecies == crop.species() && parent.variety().equals(target.variety())) {
+            SeedVariety.apply(seed, target.variety());
+            if (target.lineage() != null && target.lineage().equals(parent.lineage())) {
+                HybridLineageStorage.putOnSeed(seed, target.lineage());
+            }
+        }
         GenomeStorage.putOnSeed(seed, offspringGenome);
         RareTrait inherited = RareTrait.inherit(parent.rareTrait(), target.rareTrait(),
                 new java.util.Random(level.random.nextLong()));
         RareTraitStorage.putOnSeed(seed, inherited);
         recordTrait(root, inherited);
+        SeedVariety.record(root, SeedVariety.name(seed), offspringSpecies, offspringGenome, HybridLineageStorage.fromSeed(seed));
         if (!player.getInventory().add(seed)) player.drop(seed, false);
         parent.setCrossed(true);
         target.setCrossed(true);

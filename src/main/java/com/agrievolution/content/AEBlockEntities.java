@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 public final class AEBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> TYPES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, AgriEvolution.MOD_ID);
+    public static final Supplier<BlockEntityType<IrrigationValveBlockEntity>> IRRIGATION_VALVE = TYPES.register(
+            "irrigation_valve", () -> BlockEntityType.Builder.of(IrrigationValveBlockEntity::new, AEBlocks.IRRIGATION_VALVE.get()).build(null));
     public static final Supplier<BlockEntityType<SeedVaultBlockEntity>> SEED_VAULT = TYPES.register(
             "seed_vault", () -> BlockEntityType.Builder.of(SeedVaultBlockEntity::new, AEBlocks.SEED_VAULT.get()).build(null));
 

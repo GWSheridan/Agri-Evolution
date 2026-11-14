@@ -53,6 +53,7 @@ public final class GeneticClippersItem extends Item {
             GenomeStorage.putOnSeed(sourceSeed, plant.genome());
             RareTraitStorage.putOnSeed(sourceSeed, plant.rareTrait());
             if (plant.lineage() != null) HybridLineageStorage.putOnSeed(sourceSeed, plant.lineage());
+            com.agrievolution.genetics.SeedVariety.apply(sourceSeed, plant.variety());
             ItemStack geneticSample = GeneticSampleItem.capture(sourceSeed);
             plant.setClipped(true); // Persist before giving the sample, so re-use cannot duplicate it.
             if (!player.addItem(geneticSample)) Block.popResource(level, pos, geneticSample);

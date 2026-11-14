@@ -127,6 +127,7 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
         int bonus = getItem(SUPPORT).getCount() >= 2 ? CropSupportItem.fieldBonus(CropSupportItem.tier(getItem(SUPPORT))) : 0;
         CropSpecies species = SpeciesBreeder.cross(kindA, kindB, level.getRandom().nextLong(), bonus);
         ItemStack offspring = new ItemStack(AEItems.seedFor(species));
+        com.agrievolution.genetics.SeedVariety.inherit(offspring, parentA, parentB);
         if (kindA != kindB) HybridLineageStorage.putOnSeed(offspring,
                 new HybridLineageStorage.Lineage(kindA, kindB));
         GenomeStorage.putOnSeed(offspring, genes);

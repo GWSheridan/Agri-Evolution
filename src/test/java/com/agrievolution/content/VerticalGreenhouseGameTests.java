@@ -329,6 +329,45 @@ public final class VerticalGreenhouseGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void vaultRoutesOnlyMatchingOffspring(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new BlockPos(4, 227, 4));
+        var greenhouse = place(helper, pos);
+        level.setBlock(pos.east(), AEBlocks.SEED_VAULT.get().defaultBlockState(), 3);
+        var vault = (SeedVaultBlockEntity) level.getBlockEntity(pos.east());
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        var menu = new VerticalGreenhouseMenu(1, player.getInventory(), greenhouse);
+        int east = VerticalGreenhouseMenu.CYCLE_ROUTE + 2;
+        for (int i = 0; i < 3; i++) menu.clickMenuButton(player, east);
+        var crop = com.agrievolution.genetics.CropSpecies.WILD;
+        var seed = new ItemStack(AEItems.seedFor(crop), 3);
+        var wrong = new ItemStack(AEItems.seedFor(com.agrievolution.genetics.CropSpecies.LETTUCE));
+        var vaultMenu = new SeedVaultMenu(2, player.getInventory(), vault);
+        vaultMenu.setCarried(seed.copyWithCount(1));
+        helper.assertTrue(vaultMenu.clickMenuButton(player, SeedVaultMenu.SET_SPECIES), "Filter can be set from the seed on the cursor");
+        for (int i = 0; i < 3; i++) vaultMenu.clickMenuButton(player, SeedVaultMenu.CYCLE_MINIMUM);
+        var tag = new CompoundTag();
+        vault.saveAdditional(tag, level.registryAccess());
+        vault.loadAdditional(tag, level.registryAccess());
+        helper.assertTrue(vaultMenu.intakeSpecies() == crop && vaultMenu.minimum(0) == 30, "Intake filters persist");
+        greenhouse.setItem(VerticalGreenhouseBlockEntity.HARVEST, new ItemStack(Items.WHEAT));
+        greenhouse.setItem(VerticalGreenhouseBlockEntity.OFFSPRING, wrong);
+        greenhouse.setItem(VerticalGreenhouseBlockEntity.OFFSPRING + 1, seed);
+        seconds(helper, greenhouse, 1);
+        helper.assertTrue(vault.isEmpty() && seed.getCount() == 3, "Low genetics and wrong species remain in the greenhouse");
+        com.agrievolution.genetics.GenomeStorage.putOnSeed(seed, com.agrievolution.genetics.CropGenome.elite());
+        vault.setItem(0, seed.copyWithCount(1));
+        vault.toggleLock(0);
+        seconds(helper, greenhouse, 2);
+        helper.assertTrue(vault.getItem(0).getCount() == 1 && vault.getItem(1).getCount() == 2
+                        && greenhouse.getItem(VerticalGreenhouseBlockEntity.HARVEST).is(Items.WHEAT)
+                        && greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING) == wrong && seed.getCount() == 1,
+                "Vault merges matching seeds in unlocked slots and leaves produce and rejected seeds untouched");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void verticalGreenhouseCraftHasOneMatch(GameTestHelper helper) {
         var level = helper.getLevel();
         var input = CraftingInput.of(3, 3, List.of(new ItemStack(Items.NETHERITE_INGOT), new ItemStack(AEItems.GREENHOUSE_SMART_FARMING_UPGRADE.get()),

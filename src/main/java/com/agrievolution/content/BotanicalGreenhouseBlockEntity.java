@@ -744,6 +744,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
             GenomeStorage.putOnSeed(seed, genes);
             RareTraitStorage.putOnSeed(seed, rare);
             if (lineage != null) HybridLineageStorage.putOnSeed(seed, lineage);
+            com.agrievolution.genetics.SeedVariety.apply(seed, entity.variety());
             List<ItemStack> drops = new ArrayList<>();
             if (!autoReplant || smartFarmingUpgraded) drops.add(seed);
             if (server.random.nextInt(100) < ExtraSeedRules.chancePercent(
@@ -765,6 +766,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
                 return;
             }
             server.setBlock(cropPos, Blocks.AIR.defaultBlockState(), 3);
+            com.agrievolution.farming.CompanionPlanting.harvested(server, cropPos, crop.species());
             installInventories(futureBank, futureStorage);
             if (autoReplant) {
                 if (!smartFarmingUpgraded) {
@@ -777,6 +779,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
                             replanted.setGenome(genes);
                             replanted.setRareTrait(rare);
                             replanted.setLineage(lineage);
+                            replanted.setVariety(entity.variety());
                         }
                         totalReplants++;
                     }
@@ -841,6 +844,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
         RareTraitStorage.putOnSeed(offspring,
                 RareTrait.inherit(RareTraitStorage.fromSeed(a), RareTraitStorage.fromSeed(b),
                         new java.util.Random(server.random.nextLong())));
+        com.agrievolution.genetics.SeedVariety.inherit(offspring, a, b);
         if (kindA != kindB) {
             HybridLineageStorage.putOnSeed(offspring, new HybridLineageStorage.Lineage(kindA, kindB));
         } else {
@@ -1226,6 +1230,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
                     plant.setGenome(genes);
                     plant.setRareTrait(RareTraitStorage.fromSeed(seed));
                     plant.setLineage(HybridLineageStorage.fromSeed(seed));
+                    plant.setVariety(com.agrievolution.genetics.SeedVariety.name(seed));
                 }
                 // Capture what was actually placed while the original seed still holds its data.
                 // Unsuccessful cycles never clear the last successful planting record.
@@ -1263,6 +1268,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
             entity.setGenome(genes);
             entity.setRareTrait(rare);
             entity.setLineage(lineage);
+            entity.setVariety(com.agrievolution.genetics.SeedVariety.name(source));
         }
         monitorPlantedSpecies = type.species().ordinal() + 1;
         monitorPlantedSlot = slot + 1;

@@ -1,27 +1,35 @@
 package com.agrievolution.client.journal;
 
 import java.util.*;
+import com.agrievolution.content.SeedBagItem;
+import com.agrievolution.content.SpeciesSeedItem;
+import com.agrievolution.farming.ResourceCropRules;
 import com.agrievolution.genetics.CropSpecies;
+import com.agrievolution.content.AEItems;
 import com.agrievolution.client.GardenGuiTheme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.ItemContainerContents;
 
-/** Read-only progression plan from gameplay recipes and this book's discoveries. */
+/** Progression plan from gameplay recipes, discoveries, and the player's carried seeds. */
 public final class BreedingPlannerScreen extends Screen {
     private final Screen parent;
     private final JournalSnapshot snapshot;
-    private CropSpecies target=CropSpecies.DIAMOND;
-    private int left,top,w,h,rows,page;
+    private final JournalBookmarks goal=new JournalBookmarks("breeding-goal");
+    private CropSpecies target=Arrays.stream(CropSpecies.values())
+            .filter(crop -> crop.name().equals(goal.first())).findFirst().orElse(CropSpecies.LETTUCE);
+    private int left,top,w,h,rows,page,detailTicks;
     private String query="";
     private boolean remainingOnly;
     private BreedingPlanner.Step detail;
     private List<CropSpecies> targets=List.of(CropSpecies.values());
     private List<BreedingPlanner.Step> steps=List.of(),remaining=List.of();
     private List<FormattedCharSequence> detailLines=List.of();
-    private Button view,next;
+    private Button view,next,track;
     public BreedingPlannerScreen(Screen parent,JournalSnapshot snapshot){super(Component.literal("Crop progression planner"));this.parent=parent;this.snapshot=snapshot;}
     private boolean known(CropSpecies species){return snapshot.entry(species).discovered();}
     @Override protected void init(){
@@ -30,20 +38,48 @@ public final class BreedingPlannerScreen extends Screen {
         search.setMaxLength(100);search.setValue(query);search.setHint(Component.literal("Search target crop"));
         search.setResponder(value->{query=value;targets=Arrays.stream(CropSpecies.values()).filter(c->c.displayName().toLowerCase(Locale.ROOT).contains(value.strip().toLowerCase(Locale.ROOT))).toList();if(!targets.isEmpty()&&!targets.contains(target))target=targets.getFirst();detail=null;page=0;updatePlan();});addRenderableWidget(search);
         button("< Crop",left+10,top+49,58,()->cycle(-1));button("Crop >",left+w-68,top+49,58,()->cycle(1));
-        view=button("Full chain",left+10,top+73,100,()->{if(detail!=null)detail=null;else remainingOnly=!remainingOnly;page=0;updatePlan();});
-        next=button("Next needed",left+w-110,top+73,100,()->{if(!remaining.isEmpty()){detail=remaining.getFirst();page=0;updatePlan();}});
+        int controls=Math.min(100,(w-28)/3);
+        view=button("Full chain",left+10,top+73,controls,()->{if(detail!=null)detail=null;else remainingOnly=!remainingOnly;page=0;updatePlan();});
+        track=button("Track goal",left+(w-controls)/2,top+73,controls,this::trackGoal);
+        next=button("Next needed",left+w-controls-10,top+73,controls,this::nextStep);
         button("<",left+10,top+h-24,24,()->page=Math.max(0,page-1));button(">",left+38,top+h-24,24,()->page=Math.min(pageCount()-1,page+1));
         button("Back",left+w-60,top+h-24,50,this::onClose);updatePlan();
+        if(goal.contains(target.name()) && detail==null)nextStep();
     }
     private int detailRows(){return Math.max(1,(h-160)/11);}
     private int pageCount(){int size=detail==null?steps.size():detailLines.size(),per=detail==null?rows:detailRows();return Math.max(1,(size+per-1)/per);}
     private void updatePlan(){
         remaining=targets.isEmpty()?List.of():BreedingPlanner.remaining(target,this::known);
         steps=targets.isEmpty()?List.of():remainingOnly?remaining:BreedingPlanner.plan(target);
-        detailLines=detail==null?List.of():detailText(detail).stream().flatMap(line->font.split(Component.literal(line),w-28).stream()).toList();
+        refreshDetails();
         page=Math.clamp(page,0,pageCount()-1);
         if(view!=null)view.setMessage(Component.literal(detail!=null?"Back to chain":remainingOnly?"Remaining only":"Full chain"));
+        if(track!=null){
+            track.active=!targets.isEmpty();
+            track.setMessage(Component.literal(goal.contains(target.name())?"Stop tracking":"Track goal"));
+        }
         if(next!=null)next.active=!remaining.isEmpty();
+    }
+    private void nextStep(){
+        if(remaining.isEmpty())return;
+        detail=remaining.getFirst();
+        page=0;
+        updatePlan();
+    }
+    private void trackGoal(){
+        goal.select(target.name());
+        updatePlan();
+        if(goal.contains(target.name()))nextStep();
+    }
+    @Override public void tick(){
+        if(detail!=null && ++detailTicks%10==0){
+            refreshDetails();
+            page=Math.min(page,pageCount()-1);
+        }
+    }
+    private void refreshDetails(){
+        detailLines=detail==null?List.of():detailText(detail).stream()
+                .flatMap(line->font.split(Component.literal(line),w-28).stream()).toList();
     }
     private List<String> detailText(BreedingPlanner.Step step){
         var text=new ArrayList<String>();
@@ -51,8 +87,8 @@ public final class BreedingPlannerScreen extends Screen {
         text.add("Method: "+BreedingPlanner.method(step));
         var recipe=step.recipe();
         if(recipe==null){text.add(BreedingPlanner.requirements(step));return text;}
-        text.add("Parent: "+recipe.first().displayName()+" - "+(known(recipe.first())?"discovered":"undiscovered"));
-        if(recipe.second()!=null)text.add("Parent: "+recipe.second().displayName()+" - "+(known(recipe.second())?"discovered":"undiscovered"));
+        text.add(parentStatus(recipe.first()));
+        if(recipe.second()!=null)text.add(parentStatus(recipe.second()));
         else text.add("Material: "+recipe.material().replace("minecraft:","").replace('_',' '));
         text.add("Base success: "+recipe.chance()+"%.");
         switch(recipe.method()){
@@ -60,10 +96,25 @@ public final class BreedingPlannerScreen extends Screen {
             case FIELD -> text.add("Sneak-use Grandmas Journal on one mature crop, then use it on the other within 8 blocks. Or use both seeds in a Breeding Station. Either parent order works.");
             case LAB -> text.add("Requires the Tier 3 Genetics Laboratory and one Nutrient Compost per attempt. Either parent order works.");
         }
-        var missing=BreedingPlanner.missingParents(step,this::known);
-        text.add(missing.isEmpty()?"Seed parents discovered; check you still have them.":"Undiscovered parents: "+String.join(", ",missing.stream().map(CropSpecies::displayName).toList()));
+        text.add(step.species().isResource()?ResourceCropRules.catalystHint(step.species()):"Plant on hydrated farmland.");
         if(recipe.method()!=IllustratedBreedingRecipes.Method.CRAFT)text.add("A failed cross returns a parent species. Supports and greenhouse bonuses can improve the base chance.");
         return text;
+    }
+    private String parentStatus(CropSpecies species){
+        int loose=0, bagged=0;
+        if(minecraft!=null && minecraft.player!=null){
+            var inventory=minecraft.player.getInventory();
+            for(int i=0;i<inventory.getContainerSize();i++){
+                var stack=inventory.getItem(i);
+                if(stack.getItem() instanceof SpeciesSeedItem seed && seed.species()==species)loose+=stack.getCount();
+                if(stack.getItem() instanceof SeedBagItem){
+                    bagged+=stack.getOrDefault(DataComponents.CONTAINER,ItemContainerContents.EMPTY).nonEmptyStream()
+                            .filter(seed -> seed.is(AEItems.seedFor(species))).mapToInt(net.minecraft.world.item.ItemStack::getCount).sum();
+                }
+            }
+        }
+        String count=loose+bagged==0?"no seeds carried":loose+" loose"+(bagged>0?", "+bagged+" in bags":"");
+        return species.displayName()+" - "+count;
     }
     private void cycle(int delta){if(targets.isEmpty())return;target=targets.get(Math.floorMod(targets.indexOf(target)+delta,targets.size()));page=0;detail=null;updatePlan();}
     private Button button(String text,int x,int y,int width,Runnable action){return addRenderableWidget(new Button(x,y,width,18,Component.literal(text),b->action.run(),supplier->supplier.get()){
@@ -93,8 +144,18 @@ public final class BreedingPlannerScreen extends Screen {
             }
             if(steps.isEmpty()&&!targets.isEmpty())g.drawString(font,font.plainSubstrByWidth("No undiscovered steps. Use Full chain to review.",w-24),left+12,top+115,0x52614B,false);
         }
-        g.drawString(font,font.plainSubstrByWidth("Discovery only; check your seed inventory.",w-20),left+10,top+h-39,0x52614B,false);
+        String footer=goal.error().isEmpty()
+                ? goal.contains(target.name())?"Tracking "+target.displayName()+" | T to stop":"T to track this crop"
+                : goal.error();
+        g.drawString(font,font.plainSubstrByWidth(footer,w-20),left+10,top+h-39,0x52614B,false);
         g.drawString(font,"Page "+(page+1)+" / "+pageCount(),left+76,top+h-19,0x254D37,false);
+    }
+    @Override public boolean keyPressed(int key,int scanCode,int modifiers){
+        if(key==org.lwjgl.glfw.GLFW.GLFW_KEY_T && !(getFocused() instanceof EditBox) && !targets.isEmpty()){
+            trackGoal();
+            return true;
+        }
+        return super.keyPressed(key,scanCode,modifiers);
     }
     @Override public boolean mouseClicked(double x,double y,int button){
         if(super.mouseClicked(x,y,button))return true;

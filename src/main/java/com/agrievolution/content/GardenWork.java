@@ -1,6 +1,9 @@
 package com.agrievolution.content;
 
 import com.agrievolution.AgriEvolution;
+import com.agrievolution.genetics.GenomeStorage;
+import com.agrievolution.genetics.RareTrait;
+import com.agrievolution.genetics.RareTraitStorage;
 import java.util.List;
 import java.util.function.Supplier;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -15,40 +18,69 @@ import net.minecraft.world.item.Items;
 public final class GardenWork {
     private static final String ORDERS_KEY = "AgriGardenOrders";
     private static final String COMMISSIONS_KEY = "AgriGardenCommissions";
+    private static final String SEED_COMMISSIONS_KEY = "AgriSeedCommissions";
     public static final int ROWS = 3, UNLOCK_AT = 2;
 
-    public record Ingredient(Supplier<? extends Item> item, int count) {
+    public record Ingredient(Supplier<? extends Item> item, int count, int growth, int yield, int resilience, boolean rare) {
+        public Ingredient(Supplier<? extends Item> item, int count) { this(item, count, 0, 0, 0, false); }
         public ItemStack stack() { return new ItemStack(item.get(), count); }
+
+        private boolean matches(ItemStack stack, Item required) {
+            if (!stack.is(required)) return false;
+            if (!qualified()) return true;
+            if (!(stack.getItem() instanceof SpeciesSeedItem)) return false;
+            var genes = GenomeStorage.fromSeed(stack);
+            return genes.growth() >= growth && genes.yield() >= yield && genes.resilience() >= resilience
+                    && (!rare || RareTraitStorage.fromSeed(stack) != RareTrait.NONE);
+        }
+
+        public boolean qualified() { return growth != 0 || yield != 0 || resilience != 0 || rare; }
+
+        public String requirements(boolean compact) {
+            var rules = new java.util.ArrayList<String>();
+            if (growth > 0) rules.add("Growth ≥ " + growth);
+            if (yield > 0) rules.add("Yield ≥ " + yield);
+            if (resilience > 0) rules.add((compact ? "Res. ≥ " : "Resilience ≥ ") + resilience);
+            if (rare) rules.add("Any rare trait");
+            return String.join(compact ? " " : ", ", rules);
+        }
     }
 
     public record Job(String title, List<Ingredient> ingredients, Ingredient reward) {
         public boolean ready(Inventory inventory) {
+            return plan(inventory) != null;
+        }
+
+        private int[] plan(Inventory inventory) {
+            var consumed = new int[inventory.items.size()];
             for (var ingredient : ingredients) {
-                int found = 0;
+                int remaining = ingredient.count();
                 Item item = ingredient.item().get();
-                for (var stack : inventory.items) if (stack.is(item)) found += stack.getCount();
-                if (found < ingredient.count()) return false;
+                for (int slot = 0; slot < consumed.length && remaining > 0; slot++) {
+                    var stack = inventory.items.get(slot);
+                    if (consumed[slot] >= stack.getCount() || !ingredient.matches(stack, item)) continue;
+                    int used = Math.min(remaining, stack.getCount() - consumed[slot]);
+                    consumed[slot] += used;
+                    remaining -= used;
+                }
+                if (remaining > 0) return null;
             }
-            return true;
+            return consumed;
         }
 
         boolean complete(Player player) {
             var inventory = player.getInventory();
-            if (!ready(inventory)) return false;
-            for (var ingredient : ingredients) {
-                Item item = ingredient.item().get();
-                int remaining = ingredient.count();
-                for (int slot = 0; slot < inventory.items.size() && remaining > 0; slot++) {
-                    var stack = inventory.items.get(slot);
-                    if (!stack.is(item)) continue;
-                    int used = Math.min(remaining, stack.getCount());
-                    stack.shrink(used);
-                    if (stack.isEmpty()) inventory.items.set(slot, ItemStack.EMPTY);
-                    remaining -= used;
-                }
+            var consumed = plan(inventory);
+            if (consumed == null) return false;
+            for (int slot = 0; slot < consumed.length; slot++) {
+                if (consumed[slot] == 0) continue;
+                var stack = inventory.items.get(slot);
+                stack.shrink(consumed[slot]);
+                if (stack.isEmpty()) inventory.items.set(slot, ItemStack.EMPTY);
             }
             var result = reward.stack();
-            if (!inventory.add(result)) player.drop(result, false);
+            inventory.add(result);
+            if (!result.isEmpty()) player.drop(result, false);
             inventory.setChanged();
             return true;
         }
@@ -77,6 +109,14 @@ public final class GardenWork {
             new Job("A Full Table", List.of(dish("garden_sandwich", 4), dish("leek_potato_soup", 4),
                     dish("roast_chicken_dinner", 4), dish("strawberry_tart", 4)), use(AEItems.OBSIDIAN_CROP_SUPPORT, 4))
     );
+    private static final List<Job> SEED_COMMISSIONS = List.of(
+            new Job("Kitchen Garden Seed Trial", List.of(new Ingredient(AEItems.TOMATO_SEED, 4, 0, 70, 0, false)),
+                    use(AEItems.NUTRIENT_COMPOST, 12)),
+            new Job("Fast and Hardy", List.of(new Ingredient(AEItems.CORN_SEED, 3, 65, 0, 65, false)),
+                    use(AEItems.IRON_CROP_SUPPORT, 8)),
+            new Job("Rare Lettuce", List.of(new Ingredient(AEItems.LETTUCE_SEED, 2, 0, 0, 0, true)),
+                    use(AEItems.OBSIDIAN_CROP_SUPPORT, 4))
+    );
 
     private static final List<Job> PRESERVES = List.of(
             new Job("Berry Jam", List.of(use(AEItems.STRAWBERRY, 3), use(AEItems.BLUEBERRY, 3),
@@ -86,6 +126,8 @@ public final class GardenWork {
             new Job("Garden Seasoning", List.of(use(AEItems.THYME, 3), use(AEItems.ROSEMARY, 3),
                     use(() -> Items.GLASS_BOTTLE, 1)), use(AEItems.GARDEN_SEASONING, 1))
     );
+
+    public static List<Job> preservingRecipes() { return PRESERVES; }
 
     static Ingredient use(Supplier<? extends Item> item, int count) { return new Ingredient(item, count); }
 
@@ -99,7 +141,9 @@ public final class GardenWork {
 
     static Job job(boolean preserving, int page, int row) {
         if (preserving) return PRESERVES.get(row);
-        return page == ROWS ? COMMISSIONS.get(row) : ORDERS.get(page).get(row);
+        if (page == ROWS) return COMMISSIONS.get(row);
+        if (page == ROWS + 1) return SEED_COMMISSIONS.get(row);
+        return ORDERS.get(page).get(row);
     }
 
     static int completed(Player player, int tier) {
@@ -120,16 +164,22 @@ public final class GardenWork {
     static void copyOrders(net.minecraft.nbt.CompoundTag original, net.minecraft.nbt.CompoundTag next) {
         if (original.contains(ORDERS_KEY)) next.putIntArray(ORDERS_KEY, original.getIntArray(ORDERS_KEY));
         if (original.contains(COMMISSIONS_KEY)) next.putInt(COMMISSIONS_KEY, original.getInt(COMMISSIONS_KEY));
+        if (original.contains(SEED_COMMISSIONS_KEY)) next.putInt(SEED_COMMISSIONS_KEY, original.getInt(SEED_COMMISSIONS_KEY));
     }
 
     static int commissions(Player player) {
-        return player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG).getInt(COMMISSIONS_KEY) & 7;
+        return commissions(player, false);
     }
 
-    static void recordCommission(Player player, int row) {
+    static int commissions(Player player, boolean seeds) {
+        return player.getPersistentData().getCompound(Player.PERSISTED_NBT_TAG)
+                .getInt(seeds ? SEED_COMMISSIONS_KEY : COMMISSIONS_KEY) & 7;
+    }
+
+    static void recordCommission(Player player, int row, boolean seeds) {
         var root = player.getPersistentData();
         var persisted = root.getCompound(Player.PERSISTED_NBT_TAG);
-        persisted.putInt(COMMISSIONS_KEY, commissions(player) | (1 << row));
+        persisted.putInt(seeds ? SEED_COMMISSIONS_KEY : COMMISSIONS_KEY, commissions(player, seeds) | (1 << row));
         root.put(Player.PERSISTED_NBT_TAG, persisted);
     }
 

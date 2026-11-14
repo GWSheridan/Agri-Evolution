@@ -1,5 +1,7 @@
 package com.agrievolution.content;
 
+import com.agrievolution.genetics.CropSpecies;
+import com.agrievolution.genetics.GenomeStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -20,6 +22,8 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
     private static final int[] NO_AUTOMATION_SLOTS = {};
     private NonNullList<ItemStack> seeds = NonNullList.withSize(SIZE, ItemStack.EMPTY);
     private int locked;
+    private CropSpecies intakeSpecies;
+    private final int[] minimum = new int[3];
 
     public SeedVaultBlockEntity(BlockPos pos, BlockState state) { super(AEBlockEntities.SEED_VAULT.get(), pos, state); }
     @Override public int getContainerSize() { return SIZE; }
@@ -36,6 +40,43 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
     }
 
     int locks() { return locked; }
+    int intakeSpeciesId() { return intakeSpecies == null ? 0 : intakeSpecies.ordinal() + 1; }
+    int minimum(int trait) { return minimum[trait]; }
+
+    void setIntakeSpecies(CropSpecies species) {
+        intakeSpecies = species;
+        setChanged();
+    }
+
+    void cycleMinimum(int trait) {
+        minimum[trait] = (minimum[trait] + 10) % 110;
+        setChanged();
+    }
+
+    boolean receiveOffspring(ItemStack stack) {
+        if (!SeedBagItem.accepts(stack)) return false;
+        if (intakeSpecies != null || minimum[0] != 0 || minimum[1] != 0 || minimum[2] != 0) {
+            if (!(stack.getItem() instanceof SpeciesSeedItem seed)) return false;
+            if (intakeSpecies != null && seed.species() != intakeSpecies) return false;
+            var genes = GenomeStorage.fromSeed(stack);
+            if (genes.growth() < minimum[0] || genes.yield() < minimum[1] || genes.resilience() < minimum[2]) return false;
+        }
+        int empty = -1;
+        for (int slot = 0; slot < SIZE; slot++) {
+            if (!canPlaceItem(slot, stack)) continue;
+            var stored = seeds.get(slot);
+            if (stored.isEmpty()) {
+                if (empty < 0) empty = slot;
+            } else if (stored.getCount() < stored.getMaxStackSize() && ItemStack.isSameItemSameComponents(stored, stack)) {
+                stored.grow(1);
+                setChanged();
+                return true;
+            }
+        }
+        if (empty < 0) return false;
+        setItem(empty, stack.copyWithCount(1));
+        return true;
+    }
     void toggleLock(int slot) {
         locked ^= 1 << slot;
         setChanged();
@@ -45,6 +86,8 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, seeds, registries);
         tag.putInt("Locked", locked);
+        if (intakeSpecies != null) tag.putString("IntakeSpecies", intakeSpecies.name());
+        tag.putIntArray("IntakeMinimum", minimum);
     }
 
     @Override protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -52,5 +95,14 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
         seeds = NonNullList.withSize(SIZE, ItemStack.EMPTY);
         ContainerHelper.loadAllItems(tag, seeds, registries);
         locked = tag.getInt("Locked") & ((1 << SIZE) - 1);
+        intakeSpecies = null;
+        if (tag.contains("IntakeSpecies")) {
+            try { intakeSpecies = CropSpecies.valueOf(tag.getString("IntakeSpecies")); }
+            catch (IllegalArgumentException ignored) { }
+        }
+        var savedMinimum = tag.getIntArray("IntakeMinimum");
+        for (int i = 0; i < minimum.length; i++) {
+            minimum[i] = i < savedMinimum.length ? Math.clamp(savedMinimum[i], 0, 100) / 10 * 10 : 0;
+        }
     }
 }

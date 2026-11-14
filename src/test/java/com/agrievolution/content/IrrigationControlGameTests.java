@@ -5,6 +5,28 @@ import net.minecraft.world.level.block.*;
 import net.neoforged.neoforge.gametest.*;
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class IrrigationControlGameTests {
+ @GameTest(template="empty")
+ public static void namedZoneReadsWaterWithoutOpeningValve(GameTestHelper helper) {
+  var level = helper.getLevel();
+  var core = helper.absolutePos(new BlockPos(3, 100, 3));
+  var tank = ReservoirGameTests.tank(helper, core);
+  var pos = core.east(2);
+  var head = pos.east();
+  level.setBlock(pos, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState().setValue(IrrigationValveBlock.OPEN, false), 3);
+  level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), 3);
+  var valve = (IrrigationValveBlockEntity) level.getBlockEntity(pos);
+  valve.rename(" North garden ");
+  var tag = new net.minecraft.nbt.CompoundTag();
+  valve.saveAdditional(tag, level.registryAccess());
+  var restored = new IrrigationValveBlockEntity(pos, level.getBlockState(pos));
+  restored.loadAdditional(tag, level.registryAccess());
+  var status = IrrigationNetwork.inspectZone(level, pos);
+  helper.assertTrue(restored.zone().equals("North garden") && status.sprinklers().equals(java.util.List.of(head))
+          && status.supplies().getFirst().reservoir() == tank && tank.water() == 1000
+          && IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.CLOSED_VALVE,
+          "Zone names persist and inspection can see supply and heads around a closed valve without moving water");
+  helper.succeed();
+ }
  @GameTest(template="empty") public static void drySoilModeAndPowerModes(GameTestHelper h){
   var level=h.getLevel();var pos=h.absolutePos(new BlockPos(4,20,4));
   level.setBlock(pos,AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),3);

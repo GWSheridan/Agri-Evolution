@@ -273,12 +273,16 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
             Direction side = OUTPUT_FACES[face];
             BlockPos destination = worldPosition.relative(side);
             if (!server.hasChunkAt(destination)) continue;
-            var handler = server.getCapability(Capabilities.ItemHandler.BLOCK, destination, side.getOpposite());
-            if (handler == null) continue;
+            var vault = server.getBlockEntity(destination) instanceof SeedVaultBlockEntity seedVault ? seedVault : null;
+            var handler = vault == null ? server.getCapability(Capabilities.ItemHandler.BLOCK, destination, side.getOpposite()) : null;
+            if (vault == null && handler == null) continue;
             for (int slot : getSlotsForFace(side)) {
                 ItemStack stack = items.get(slot);
                 if (stack.isEmpty()) continue;
-                if (ItemHandlerHelper.insertItemStacked(handler, stack.copyWithCount(1), false).isEmpty()) {
+                boolean exported = vault != null
+                        ? slot >= OFFSPRING && vault.receiveOffspring(stack)
+                        : ItemHandlerHelper.insertItemStacked(handler, stack.copyWithCount(1), false).isEmpty();
+                if (exported) {
                     stack.shrink(1);
                     if (stack.isEmpty()) items.set(slot, ItemStack.EMPTY);
                     break;
@@ -398,6 +402,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         if (!(first.getItem() instanceof SpeciesSeedItem a) || !(second.getItem() instanceof SpeciesSeedItem b)) return first.copyWithCount(1);
         var species = SpeciesBreeder.cross(a.species(), b.species(), server.random.nextLong());
         var child = new ItemStack(AEItems.seedFor(species));
+        com.agrievolution.genetics.SeedVariety.inherit(child, first, second);
         GenomeStorage.putOnSeed(child, GenomeBreeder.cross(GenomeStorage.fromSeed(first), GenomeStorage.fromSeed(second), server.random.nextLong()));
         RareTraitStorage.putOnSeed(child, RareTrait.inherit(RareTraitStorage.fromSeed(first), RareTraitStorage.fromSeed(second), new Random(server.random.nextLong())));
         var lineage = a.species() != b.species() ? new HybridLineageStorage.Lineage(a.species(), b.species()) : HybridLineageStorage.fromSeed(first);

@@ -35,7 +35,7 @@ public final class VerticalGreenhouseHarvests extends SimpleJsonResourceReloadLi
         event.addListener(new VerticalGreenhouseHarvests());
     }
 
-    static Harvest forSeed(ItemStack seed) {
+    public static Harvest forSeed(ItemStack seed) {
         if (seed.isEmpty()) return null;
         if (seed.getItem() instanceof SpeciesSeedItem agri) {
             var genes = GenomeStorage.fromSeed(seed);

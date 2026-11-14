@@ -53,6 +53,7 @@ public class SpeciesSeedItem extends Item {
                     crop.setGenome(genome);
                     crop.setRareTrait(RareTraitStorage.fromSeed(context.getItemInHand()));
                     crop.setLineage(HybridLineageStorage.fromSeed(context.getItemInHand()));
+                    crop.setVariety(com.agrievolution.genetics.SeedVariety.name(context.getItemInHand()));
                 }
                 if (context.getPlayer() == null || !context.getPlayer().getAbilities().instabuild) {
                     context.getItemInHand().shrink(1);

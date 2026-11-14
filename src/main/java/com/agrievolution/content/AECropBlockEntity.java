@@ -4,6 +4,7 @@ import com.agrievolution.genetics.CropGenome;
 import com.agrievolution.genetics.GenomeStorage;
 import com.agrievolution.genetics.HybridLineageStorage;
 import com.agrievolution.genetics.RareTrait;
+import com.agrievolution.genetics.SeedVariety;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -19,6 +20,7 @@ public final class AECropBlockEntity extends BlockEntity {
     private CropGenome genome = CropGenome.wild();
     private RareTrait rareTrait = RareTrait.NONE;
     private HybridLineageStorage.Lineage lineage;
+    private String variety = "";
     private boolean crossed;
     // One non-destructive genetic clipping per planting; resets with the replanted block entity.
     private boolean clipped;
@@ -55,6 +57,11 @@ public final class AECropBlockEntity extends BlockEntity {
     public CropGenome genome() { return genome; }
     public RareTrait rareTrait() { return rareTrait; }
     public HybridLineageStorage.Lineage lineage() { return lineage; }
+    public String variety() { return variety; }
+    public void setVariety(String name) {
+        variety = SeedVariety.clean(name);
+        setChanged();
+    }
     public void setLineage(HybridLineageStorage.Lineage lineage) {
         this.lineage = lineage;
         setChanged();
@@ -93,6 +100,7 @@ public final class AECropBlockEntity extends BlockEntity {
         tag.put(GENOME, GenomeStorage.writeGenome(genome));
         tag.putString("AgriRareTrait", rareTrait.name());
         HybridLineageStorage.write(tag, lineage);
+        if (!variety.isEmpty()) tag.putString("AgriVariety", variety);
         tag.putBoolean(CROSSED, crossed);
         tag.putBoolean("AgriGeneticClipped", clipped);
         tag.putBoolean("AgriTrowelTended", tended);
@@ -109,6 +117,7 @@ public final class AECropBlockEntity extends BlockEntity {
                 ? GenomeStorage.readGenome(tag.getCompound(GENOME)) : CropGenome.wild();
         rareTrait = RareTrait.fromName(tag.getString("AgriRareTrait"));
         lineage = HybridLineageStorage.read(tag);
+        variety = SeedVariety.clean(tag.getString("AgriVariety"));
         crossed = tag.getBoolean(CROSSED);
         clipped = tag.getBoolean("AgriGeneticClipped");
         tended = tag.getBoolean("AgriTrowelTended");

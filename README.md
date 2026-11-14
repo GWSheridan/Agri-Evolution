@@ -4,7 +4,7 @@ I built Agri Evolution around the kind of farm I wanted to play in Minecraft. St
 
 ## Install
 
-Agri Evolution **1.0.0** is built for **Minecraft 1.21.1**, **NeoForge 21.1.265**, and **Java 21**. Put the release JAR in your NeoForge profile’s `mods` folder. For multiplayer, use the same mod version on the server and every client. [Download 1.0.0](https://github.com/GWSheridan/Agri-Evolution/releases/tag/v1.0.0) · [Changelog](CHANGELOG.md)
+Agri Evolution **1.2.0** is built for **Minecraft 1.21.1**, **NeoForge 21.1.265**, and **Java 21**. Put the release JAR in your NeoForge profile’s `mods` folder. For multiplayer, install the same version on the server and every client. [Download 1.2.0](https://github.com/GWSheridan/Agri-Evolution/releases/tag/v1.2.0) · [Changelog](CHANGELOG.md)
 
 ## Start your first garden
 
@@ -20,6 +20,9 @@ Agri Evolution **1.0.0** is built for **Minecraft 1.21.1**, **NeoForge 21.1.265*
 - **Set up irrigation.** Start with an Irrigation Basin or fill a Sprinkler by hand. For larger plots, use a Spanner to form a copper Water Reservoir and run pipes through valves to your sprinklers. The Mk II Reservoir replenishes its own water.
 - **Automate a greenhouse.** Build around the Greenhouse Controller, following the layout in the Building & Machines Journal. Later, build a three-block-tall Vertical Greenhouse. It uses water to grow up to six trays and breed selected seeds, with separate outputs for harvests and offspring.
 - **Cook and put harvests to work.** Make sandwiches, soups, meals, desserts, and preserves. Stock a Lunch Box for automatic feeding, turn spare crops and weeds into compost, or deliver supplies at a Garden Order Board to earn emeralds.
+
+- **Keep your best seed lines.** Give seeds a name at an anvil, then use Grandmas Journal on the plant to record the variety. Search for it by name in the Seed Vault. Open the Garden Order Board’s **Seeds** tab to see which traits earn rewards. [Writing datapack orders](docs/GARDEN_ORDERS.md)
+- **Plant crops that help each other.** Grow Basil next to Tomato for fewer weeds, or harvest Beans next to Corn to give it a boost. The Soil Sampler shows which bonus a plot has.
 
 ## Build from source
 

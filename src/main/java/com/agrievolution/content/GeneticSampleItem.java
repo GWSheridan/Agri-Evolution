@@ -25,6 +25,8 @@ public final class GeneticSampleItem extends Item {
         data.put("Genome", GenomeStorage.writeGenome(GenomeStorage.fromSeed(seed)));
         data.putString("RareTrait", RareTraitStorage.fromSeed(seed).name());
         if (seed.getItem() instanceof SpeciesSeedItem type) data.putString("Species", type.species().name());
+        String variety = com.agrievolution.genetics.SeedVariety.name(seed);
+        if (!variety.isEmpty()) data.putString("Variety", variety);
         CompoundTag custom = new CompoundTag();
         custom.put(KEY, data);
         sample.set(DataComponents.CUSTOM_DATA, CustomData.of(custom));
@@ -54,6 +56,8 @@ public final class GeneticSampleItem extends Item {
         if (!isValid(stack)) { tooltip.add(Component.literal("Empty genetic specimen")); return; }
         CropGenome genome = genome(stack);
         tooltip.add(Component.literal("Source: " + speciesName(stack)));
+        String variety = sampleData(stack).getString("Variety");
+        if (!variety.isEmpty()) tooltip.add(Component.literal("Variety: " + variety));
         tooltip.add(Component.literal("Growth " + genome.growth() + "  Yield " + genome.yield()
                 + "  Resilience " + genome.resilience()));
         if (rareTrait(stack) != RareTrait.NONE)

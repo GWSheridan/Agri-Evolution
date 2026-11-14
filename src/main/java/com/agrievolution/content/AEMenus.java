@@ -11,7 +11,7 @@ public final class AEMenus {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, AgriEvolution.MOD_ID);
     public static final Supplier<MenuType<GardenWorkMenu>> GARDEN_WORK = MENUS.register("garden_work",
-            () -> new MenuType<>(GardenWorkMenu::new, FeatureFlags.DEFAULT_FLAGS));
+            () -> net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(GardenWorkMenu::new));
     public static final Supplier<MenuType<SeedVaultMenu>> SEED_VAULT = MENUS.register("seed_vault",
             () -> new MenuType<>(SeedVaultMenu::new, FeatureFlags.DEFAULT_FLAGS));
     public static final Supplier<MenuType<LunchBoxMenu>> LUNCH_BOX = MENUS.register("lunch_box",

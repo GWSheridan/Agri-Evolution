@@ -2,6 +2,7 @@ package com.agrievolution.client.journal;
 
 import com.agrievolution.genetics.CropSpecies;
 import com.agrievolution.genetics.RareTrait;
+import com.agrievolution.genetics.SeedVariety;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -28,13 +29,15 @@ public final class JournalSnapshot {
     private final boolean parentSelected;
     private final int discoveredCount;
     private final java.util.Set<RareTrait> rareDiscovered;
+    private final java.util.List<SeedVariety.Record> varieties;
 
     private JournalSnapshot(Map<CropSpecies, Entry> entries, boolean parentSelected,
-                            int discoveredCount, java.util.Set<RareTrait> rareDiscovered) {
+                            int discoveredCount, java.util.Set<RareTrait> rareDiscovered, java.util.List<SeedVariety.Record> varieties) {
         this.entries = Map.copyOf(entries);
         this.parentSelected = parentSelected;
         this.discoveredCount = discoveredCount;
         this.rareDiscovered = java.util.Set.copyOf(rareDiscovered);
+        this.varieties = varieties;
     }
 
     public static JournalSnapshot from(ItemStack journal) {
@@ -67,7 +70,7 @@ public final class JournalSnapshot {
             RareTrait trait = RareTrait.fromName(found.getString(i));
             if (trait != RareTrait.NONE) rare.add(trait);
         }
-        return new JournalSnapshot(entries, root.contains(SELECTED, Tag.TAG_COMPOUND), total, rare);
+        return new JournalSnapshot(entries, root.contains(SELECTED, Tag.TAG_COMPOUND), total, rare, SeedVariety.records(root));
     }
 
     public Entry entry(CropSpecies species) { return entries.get(species); }
@@ -76,4 +79,5 @@ public final class JournalSnapshot {
     public boolean parentSelected() { return parentSelected; }
     public int rareDiscoveredCount() { return rareDiscovered.size(); }
     public boolean rareDiscovered(RareTrait trait) { return rareDiscovered.contains(trait); }
+    public java.util.List<SeedVariety.Record> varieties() { return varieties; }
 }
