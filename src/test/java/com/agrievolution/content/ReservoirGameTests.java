@@ -5,6 +5,7 @@ import java.util.List;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Mirror;
@@ -37,6 +38,26 @@ public final class ReservoirGameTests {
         h.assertTrue(level.getBlockState(core).is(Blocks.WATER),"Nonempty dismantled tank may return only its original source");
         h.succeed();
     }
+    @GameTest(template = "empty")
+    public static void reservoirWaterChangesLeaveAdjacentChunkUnloaded(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(1792, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var outside = edge.east();
+        var core = edge.west(2);
+        level.getChunkAt(core);
+        var tank = tank(h, core);
+        level.setBlock(edge, Blocks.STONE.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        h.assertFalse(level.hasChunkAt(outside), "The chunk beyond the conductor must start unloaded");
+
+        h.assertTrue(tank.addBucket() && tank.water() == 2000, "The formed tank stores another bucket");
+        h.assertFalse(level.hasChunkAt(outside), "Refilling must not check for a comparator beyond the loaded conductor");
+        h.assertTrue(tank.takeBucket() && tank.takeBucket() && tank.water() == 0, "Both buckets can be collected");
+        h.assertTrue(level.getBlockState(core.east()).getValue(WaterReservoirBlock.FILL) == 0 && !level.hasChunkAt(outside),
+                "The shell shows an empty tank without loading the next chunk");
+        h.succeed();
+    }
+
     @GameTest(template="empty") public static void invalidBlueprintAndEmptyDismantle(GameTestHelper h){
         var level=h.getLevel();var core=h.absolutePos(new BlockPos(3,30,3));blueprint(h,core);
         level.setBlock(core.above(),Blocks.AIR.defaultBlockState(),2);

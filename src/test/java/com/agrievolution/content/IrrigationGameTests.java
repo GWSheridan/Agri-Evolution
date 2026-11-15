@@ -25,6 +25,7 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.common.FarmlandWaterManager;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -205,6 +206,40 @@ public final class IrrigationGameTests {
         block.useItemOn(player.getMainHandItem(), level.getBlockState(pos), level, pos, player, InteractionHand.MAIN_HAND, hit);
         h.assertTrue(sprinkler.water() == 975 && player.getMainHandItem().is(Items.BUCKET)
                 && player.getInventory().countItem(Items.WATER_BUCKET) == 1, "A partial bucket leaves the held item and tank alone");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void basinWatersAndSuppliesSprinklerAtChunkEdge(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(2048, 100, 4)));
+        var basin = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var outside = basin.east();
+        var soil = basin.south();
+        var head = basin.west();
+        level.getChunkAt(basin);
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        var block = AEBlocks.IRRIGATION_BASIN.get();
+        level.setBlock(basin, block.defaultBlockState(), quietUpdate);
+        level.setBlock(soil, Blocks.FARMLAND.defaultBlockState(), quietUpdate);
+        level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
+        h.assertFalse(level.hasChunkAt(outside), "The neighboring chunk must start unloaded");
+
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
+        var hit = new BlockHitResult(Vec3.atCenterOf(basin), Direction.UP, basin, false);
+        block.useItemOn(player.getMainHandItem(), level.getBlockState(basin), level, basin, player, InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED)
+                && level.getBlockState(soil).getValue(FarmBlock.MOISTURE) == 7
+                && FarmlandWaterManager.hasBlockWaterTicket(level, soil), "Filling waters the farmland next to the chunk border");
+        h.assertFalse(level.hasChunkAt(outside), "Bucket filling and hydration leave the neighboring chunk unloaded");
+
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+        sprinkler.irrigateCycle();
+        h.assertTrue(sprinkler.water() == 975 && !level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED),
+                "The sprinkler can draw one bucket from the basin");
+        h.assertTrue(!FarmlandWaterManager.hasBlockWaterTicket(level, soil) && !level.hasChunkAt(outside),
+                "Draining releases the basin's water ticket and leaves the next chunk unloaded");
         h.succeed();
     }
 

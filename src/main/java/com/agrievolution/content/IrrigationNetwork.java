@@ -4,6 +4,7 @@ import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.SignalGetter;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 /** Loaded-only bounded graph. Sources are endpoints, never conduits between branches. */
@@ -30,6 +31,34 @@ public final class IrrigationNetwork {
         return false;
     }
 
+    static void updateComparators(Level level, BlockPos pos, Block source) {
+        if (level.isClientSide) return;
+        // Match vanilla comparator notifications, including through solid blocks, within loaded chunks.
+        for (Direction side : Direction.values()) {
+            BlockPos neighbor = pos.relative(side);
+            if (!level.hasChunkAt(neighbor)) continue;
+            BlockState state = level.getBlockState(neighbor);
+            state.onNeighborChange(level, neighbor, pos);
+            BlockPos behind = neighbor.relative(side);
+            if (!level.hasChunkAt(behind) || !state.isRedstoneConductor(level, neighbor)) continue;
+            BlockState behindState = level.getBlockState(behind);
+            if (behindState.getWeakChanges(level, behind)) level.neighborChanged(behindState, behind, source, pos, false);
+        }
+    }
+
+    /** Water and activity properties leave the block's shape and ports intact. */
+    static int loadedUpdateFlags(Level level, BlockPos pos, int flags) {
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            BlockPos neighbor = pos.relative(side);
+            if (!level.hasChunkAt(neighbor) || ((flags & Block.UPDATE_NEIGHBORS) != 0
+                    && !level.hasChunkAt(neighbor.relative(side)) && level.getBlockState(pos).hasAnalogOutputSignal()
+                    && level.getBlockState(neighbor).isRedstoneConductor(level, neighbor))) {
+                return Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+            }
+        }
+        return flags;
+    }
+
     public static boolean port(BlockState state,Direction side) {
         return state.getBlock() instanceof IrrigationPipeBlock && IrrigationPipeBlock.enabled(state,side)
                 || state.getBlock() instanceof IrrigationSprinklerBlock
@@ -53,10 +82,11 @@ public final class IrrigationNetwork {
         }
 
         boolean takeBucket(Level level) {
-            if(reservoir!=null)return reservoir.takeBucket();
-            var state=level.getBlockState(basin);
+            if (reservoir != null) return reservoir.takeBucket();
+            if (!level.hasChunkAt(basin)) return false;
+            var state = level.getBlockState(basin);
             return state.getBlock() instanceof IrrigationBasinBlock && state.getValue(IrrigationBasinBlock.FILLED)
-                    && level.setBlock(basin,state.setValue(IrrigationBasinBlock.FILLED,false),3);
+                    && IrrigationBasinBlock.setFilled(level, basin, state, false);
         }
     }
     public record Search(boolean attached,List<Supply> supplies,boolean overflow,boolean blockedValve) {}

@@ -7,7 +7,6 @@ import net.minecraft.core.HolderLookup;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -39,7 +38,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     @Override public void setChanged() {
         if (level == null || !level.hasChunkAt(worldPosition)) return;
         level.blockEntityChanged(worldPosition);
-        IrrigationSprinklerBlock.updateComparators(level, worldPosition, getBlockState().getBlock());
+        IrrigationNetwork.updateComparators(level, worldPosition, getBlockState().getBlock());
     }
 
     boolean growthActive() {
@@ -184,7 +183,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             tickets.add(FarmlandWaterManager.addAABBTicket(server,new AABB(soil)));
             BlockState state = server.getBlockState(soil);
             if (state.getBlock() instanceof FarmBlock && state.getValue(FarmBlock.MOISTURE) != 7)
-                server.setBlock(soil, state.setValue(FarmBlock.MOISTURE,7), loadedUpdateFlags(server, soil, Block.UPDATE_CLIENTS));
+                server.setBlock(soil, state.setValue(FarmBlock.MOISTURE,7),
+                        IrrigationNetwork.loadedUpdateFlags(server, soil, Block.UPDATE_CLIENTS));
         }
         setActive(true);
         // A loaded but no-longer-ticking chunk cannot retain a free growth bonus.
@@ -195,19 +195,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (level instanceof ServerLevel && !isRemoved() && getBlockState().getBlock() instanceof IrrigationSprinklerBlock
                 && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE) != active)
             level.setBlock(worldPosition, getBlockState().setValue(IrrigationSprinklerBlock.ACTIVE, active),
-                    loadedUpdateFlags(level, worldPosition, Block.UPDATE_ALL));
-    }
-
-    private static int loadedUpdateFlags(Level level, BlockPos pos, int flags) {
-        // Moisture and spray leave the block shape alone. Comparator updates can also reach through a solid neighbor.
-        for (Direction side : Direction.Plane.HORIZONTAL) {
-            BlockPos neighbor = pos.relative(side);
-            if (!level.hasChunkAt(neighbor) || ((flags & Block.UPDATE_NEIGHBORS) != 0
-                    && !level.hasChunkAt(neighbor.relative(side)) && level.getBlockState(neighbor).isRedstoneConductor(level, neighbor))) {
-                return Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
-            }
-        }
-        return flags;
+                    IrrigationNetwork.loadedUpdateFlags(level, worldPosition, Block.UPDATE_ALL));
     }
     private void stopWatering() {
         if (level instanceof ServerLevel server) SprinklerGrowth.deactivate(server, worldPosition);

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.15
+
+- Filling or draining a Water Reservoir keeps comparator updates in loaded chunks.
+- Dismantling a Water Reservoir clears the comparator reading, including through a solid block.
+- Irrigation Basins can fill, hydrate loaded farmland and supply sprinklers at chunk edges without loading the next chunk.
+
 ## 1.2.14
 
 - Valve inspection counts water and capacity from both basins and reservoirs.

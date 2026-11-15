@@ -41,6 +41,11 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
         registerDefaultState(defaultBlockState().setValue(FILLED, false).setValue(UPGRADE, 0));
     }
 
+    static boolean setFilled(Level level, BlockPos pos, BlockState state, boolean filled) {
+        return level.setBlock(pos, state.setValue(FILLED, filled),
+                IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
+    }
+
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
@@ -86,8 +91,7 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
         if ((!filling && !stack.is(Items.BUCKET)) || filling == state.getValue(FILLED)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (!level.isClientSide && level.setBlock(pos, state.setValue(FILLED, filling), Block.UPDATE_ALL)) {
-            if (level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin) basin.refreshWatering();
+        if (!level.isClientSide && setFilled(level, pos, state, filling)) {
             if (!player.getAbilities().instabuild) {
                 var result = new ItemStack(filling ? Items.BUCKET : Items.WATER_BUCKET);
                 player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, result));

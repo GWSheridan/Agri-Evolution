@@ -62,8 +62,10 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
         level.scheduleTick(pos,this,20);
     }
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState replacement,boolean piston){
-        if(state.getBlock()!=replacement.getBlock())ReservoirStructure.dismantle(level,core(pos,state),pos);
+        boolean dismantled = !state.is(replacement.getBlock());
+        if (dismantled) ReservoirStructure.dismantle(level, core(pos, state), pos);
         super.onRemove(state,level,pos,replacement,piston);
+        if (dismantled) IrrigationNetwork.updateComparators(level, pos, this);
     }
     @Override protected boolean hasAnalogOutputSignal(BlockState state){return true;}
     @Override protected int getAnalogOutputSignal(BlockState state,Level level,BlockPos pos){

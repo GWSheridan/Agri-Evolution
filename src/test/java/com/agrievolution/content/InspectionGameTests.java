@@ -82,6 +82,10 @@ public final class InspectionGameTests {
         var level=h.getLevel();var core=h.absolutePos(new BlockPos(3,140,3));var tank=ReservoirGameTests.tank(h,core);
         var pos=core.north(2);level.setBlock(pos.below(),Blocks.STONE.defaultBlockState(),3);
         level.setBlock(pos,Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING,Direction.SOUTH),3);
+        var through = core.east(3);
+        level.setBlock(through.below(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(core.east(2), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(through, Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING, Direction.WEST), Block.UPDATE_ALL);
         tank.addBucket();
         h.runAfterDelay(5,()->{
             int before=level.getBlockState(pos).getSignal(level,pos,Direction.SOUTH);
@@ -89,7 +93,16 @@ public final class InspectionGameTests {
             tank.addBucket();
             h.runAfterDelay(5,()->{
                 h.assertTrue(level.getBlockState(core.north()).getValue(WaterReservoirBlock.FILL)==1,"Visual fill remains first band");
-                h.assertTrue(level.getBlockState(pos).getSignal(level,pos,Direction.SOUTH)==2,"Comparator must update even inside same visual band");h.succeed();
+                h.assertTrue(level.getBlockState(pos).getSignal(level,pos,Direction.SOUTH)==2
+                        && level.getBlockState(through).getSignal(level, through, Direction.WEST) == 2,
+                        "Both comparators update inside the same visual band");
+                level.removeBlock(core.south(), false);
+                h.runAfterDelay(5, () -> {
+                    h.assertTrue(level.getBlockState(pos).getSignal(level, pos, Direction.SOUTH) == 0
+                            && level.getBlockState(through).getSignal(level, through, Direction.WEST) == 0,
+                            "Dismantling clears direct and through-block comparators");
+                    h.succeed();
+                });
             });
         });
     }

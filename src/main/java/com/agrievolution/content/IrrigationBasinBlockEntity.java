@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -50,8 +51,7 @@ public final class IrrigationBasinBlockEntity extends BlockEntity {
             BlockPos neighbor = pos.relative(side);
             if (!server.hasChunkAt(neighbor)) continue;
             if (server.getFluidState(neighbor).is(FluidTags.WATER) && server.getFluidState(neighbor).isSource()) {
-                server.setBlock(pos, state.setValue(IrrigationBasinBlock.FILLED, true), 3);
-                basin.refreshWatering();
+                IrrigationBasinBlock.setFilled(server, pos, state, true);
                 return;
             }
         }
@@ -119,7 +119,8 @@ public final class IrrigationBasinBlockEntity extends BlockEntity {
                     BlockState farmland = server.getBlockState(soil);
                     if (farmland.getBlock() instanceof FarmBlock &&
                             farmland.getValue(FarmBlock.MOISTURE) != 7) {
-                        server.setBlock(soil, farmland.setValue(FarmBlock.MOISTURE, 7), 2);
+                        server.setBlock(soil, farmland.setValue(FarmBlock.MOISTURE, 7),
+                                IrrigationNetwork.loadedUpdateFlags(server, soil, Block.UPDATE_CLIENTS));
                     }
                 }
             }

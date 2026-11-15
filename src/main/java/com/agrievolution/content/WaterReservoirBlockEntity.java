@@ -2,6 +2,7 @@ package com.agrievolution.content;
 
 import net.minecraft.core.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -22,7 +23,10 @@ public final class WaterReservoirBlockEntity extends BlockEntity implements net.
     public WaterReservoirBlockEntity(BlockPos pos,BlockState state) {super(AEBlockEntities.WATER_RESERVOIR.get(),pos,state);}
     public int water(){return water;}
     public int comparatorSignal(){return water==0?0:1+14*water/CAPACITY;}
-    public boolean complete(){return !isRemoved() && level!=null && level.getBlockEntity(worldPosition)==this && ReservoirStructure.complete(level,worldPosition);}
+    public boolean complete() {
+        return !isRemoved() && level != null && level.hasChunkAt(worldPosition)
+                && level.getBlockEntity(worldPosition) == this && ReservoirStructure.complete(level, worldPosition);
+    }
     @Override public int getTanks(){return 1;}
     @Override public net.neoforged.neoforge.fluids.FluidStack getFluidInTank(int tank){return tank==0&&complete()?new net.neoforged.neoforge.fluids.FluidStack(net.minecraft.world.level.material.Fluids.WATER,water):net.neoforged.neoforge.fluids.FluidStack.EMPTY;}
     @Override public int getTankCapacity(int tank){return tank==0?CAPACITY:0;}
@@ -41,6 +45,12 @@ public final class WaterReservoirBlockEntity extends BlockEntity implements net.
     public boolean addBucket(){if(!complete()||water>CAPACITY-1000)return false;water+=1000;changed();return true;}
     public boolean takeBucket(){if(!complete()||water<1000)return false;water-=1000;changed();return true;}
     void initialize(){water=1000;changed();}
+
+    @Override public void setChanged() {
+        // The core only owns storage. Water changes notify comparators at the shell below.
+        if (level != null) level.blockEntityChanged(worldPosition);
+    }
+
     private void changed(){
         setChanged();if(level==null)return;
         int fill=water==0?0:Math.min(4,(water+7999)/8000);
@@ -48,8 +58,11 @@ public final class WaterReservoirBlockEntity extends BlockEntity implements net.
             var p=worldPosition.offset(x,y,z);if(!level.hasChunkAt(p))continue;var state=level.getBlockState(p);
             if(state.getBlock() instanceof WaterReservoirBlock&&WaterReservoirBlock.core(p,state).equals(worldPosition)
                     ){
-                if(state.getValue(WaterReservoirBlock.FILL)!=fill)level.setBlock(p,state.setValue(WaterReservoirBlock.FILL,fill),2);
-                level.updateNeighbourForOutputSignal(p,state.getBlock());
+                if (state.getValue(WaterReservoirBlock.FILL) != fill) {
+                    level.setBlock(p, state.setValue(WaterReservoirBlock.FILL, fill),
+                            IrrigationNetwork.loadedUpdateFlags(level, p, Block.UPDATE_CLIENTS));
+                }
+                IrrigationNetwork.updateComparators(level, p, state.getBlock());
                 level.invalidateCapabilities(p);
             }
         }
