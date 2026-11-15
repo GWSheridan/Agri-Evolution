@@ -53,6 +53,13 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         return true;
     }
 
+    boolean takeBucket() {
+        if (!(level instanceof ServerLevel) || water < 1000) return false;
+        water -= 1000;
+        setChanged();
+        return true;
+    }
+
     private boolean flowAllowed() {
         return localBlockage() == null && networkBlockage(IrrigationNetwork.search(level, worldPosition)) == null;
     }

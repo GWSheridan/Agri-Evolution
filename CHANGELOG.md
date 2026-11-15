@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.12
+
+- Use an empty bucket on a sprinkler to take 1,000 mB from its tank.
+
 ## 1.2.11
 
 - A redstone comparator can read the sprinkler tank. Empty gives 0, and full gives 15.

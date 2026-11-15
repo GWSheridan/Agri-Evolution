@@ -9,6 +9,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -153,18 +154,20 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                         Player player, InteractionHand hand, BlockHitResult hit) {
-        if (stack.is(Items.WATER_BUCKET) && level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler) {
-            if (sprinkler.water() > IrrigationSprinklerBlockEntity.CAPACITY-1000) {
-                if (!level.isClientSide) player.displayClientMessage(Component.literal("Sprinkler needs space for a full 1000 mB bucket."), true);
-                return ItemInteractionResult.sidedSuccess(level.isClientSide);
-            }
-            if (!level.isClientSide && sprinkler.fillBucket()) {
-                if (!player.getAbilities().instabuild) {
-                    stack.shrink(1);var empty=new ItemStack(Items.BUCKET);
-                    if(stack.isEmpty())player.setItemInHand(hand,empty);
-                    else if(!player.getInventory().add(empty))player.drop(empty,false);
+        boolean filling = stack.is(Items.WATER_BUCKET);
+        if ((filling || stack.is(Items.BUCKET)) && level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler) {
+            if (!level.isClientSide) {
+                boolean transferred = filling ? sprinkler.fillBucket() : sprinkler.takeBucket();
+                if (transferred) {
+                    if (!player.getAbilities().instabuild) {
+                        var result = new ItemStack(filling ? Items.BUCKET : Items.WATER_BUCKET);
+                        player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, result));
+                    }
+                    if (filling) sprinkler.startAfterFill();
+                } else {
+                    player.displayClientMessage(Component.literal(filling ? "Sprinkler needs space for a full 1000 mB bucket."
+                            : "Sprinkler has less than 1000 mB to collect."), true);
                 }
-                sprinkler.startAfterFill();
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }

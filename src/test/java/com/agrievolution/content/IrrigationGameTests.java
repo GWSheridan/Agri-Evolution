@@ -196,6 +196,42 @@ public final class IrrigationGameTests {
         player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.WATER_BUCKET));
         block.useItemOn(player.getMainHandItem(),level.getBlockState(pos),level,pos,player,InteractionHand.MAIN_HAND,hit);
         h.assertTrue(player.getMainHandItem().is(Items.BUCKET) && sprinkler.water()==1975,"Top-up adds a bucket without forcing another watering interval");
+
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BUCKET, 2));
+        block.useItemOn(player.getMainHandItem(), level.getBlockState(pos), level, pos, player, InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(player.getMainHandItem().is(Items.BUCKET) && player.getMainHandItem().getCount() == 1
+                && player.getInventory().countItem(Items.WATER_BUCKET) == 1, "Take one empty bucket and return one water bucket");
+        h.assertTrue(sprinkler.water() == 975 && sprinkler.growthActive(), "Draining preserves the spray already paid for");
+        block.useItemOn(player.getMainHandItem(), level.getBlockState(pos), level, pos, player, InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(sprinkler.water() == 975 && player.getMainHandItem().is(Items.BUCKET)
+                && player.getInventory().countItem(Items.WATER_BUCKET) == 1, "A partial bucket leaves the held item and tank alone");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void emptyBucketDrawsOnlyFromTheSprinklerTank(GameTestHelper h) {
+        var sprinkler = setup(h, true);
+        var level = h.getLevel();
+        var pos = position(h);
+        var valve = pos.west();
+        var basin = pos.west(2);
+        var valveState = level.getBlockState(valve);
+        level.setBlock(valve, valveState.setValue(IrrigationValveBlock.OPEN, false), Block.UPDATE_ALL);
+        var block = AEBlocks.IRRIGATION_SPRINKLER.get();
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.WATER_BUCKET));
+        block.useItemOn(player.getOffhandItem(), level.getBlockState(pos), level, pos, player, InteractionHand.OFF_HAND, hit);
+        h.assertTrue(sprinkler.water() == 1000 && player.getOffhandItem().is(Items.BUCKET), "A paused sprinkler can store a full offhand bucket");
+        block.useItemOn(player.getOffhandItem(), level.getBlockState(pos), level, pos, player, InteractionHand.OFF_HAND, hit);
+        h.assertTrue(sprinkler.water() == 0 && player.getOffhandItem().is(Items.WATER_BUCKET)
+                && level.getBlockState(pos).getAnalogOutputSignal(level, pos) == 0, "Collecting the last full bucket empties the tank");
+
+        level.setBlock(valve, valveState, Block.UPDATE_ALL);
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.BUCKET));
+        block.useItemOn(player.getOffhandItem(), level.getBlockState(pos), level, pos, player, InteractionHand.OFF_HAND, hit);
+        h.assertTrue(sprinkler.water() == 0 && player.getOffhandItem().is(Items.BUCKET)
+                && level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED), "A bucket only uses water already stored in the sprinkler");
         h.succeed();
     }
     @GameTest(template="empty", timeoutTicks = 140)
