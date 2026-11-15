@@ -1,12 +1,20 @@
 package com.agrievolution.content;
 
+import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -14,11 +22,29 @@ import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 import net.neoforged.neoforge.gametest.*;
 
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class ReservoirGameTests {
+    private static final class InspectingPlayer extends Player {
+        private String message = "";
+
+        InspectingPlayer(ServerLevel level) {
+            super(level, BlockPos.ZERO, 0, new GameProfile(UUID.randomUUID(), "irrigation-test"));
+        }
+
+        @Override public boolean isSpectator() { return false; }
+        @Override public boolean isCreative() { return false; }
+        @Override public void displayClientMessage(Component text, boolean actionBar) { message = text.getString(); }
+    }
+
     static WaterReservoirBlockEntity tank(GameTestHelper h,BlockPos core){
         blueprint(h,core);h.assertTrue(ReservoirStructure.tryForm(h.getLevel(),core.north()),"Valid shell must form");
         return (WaterReservoirBlockEntity)h.getLevel().getBlockEntity(core);
@@ -41,6 +67,89 @@ public final class ReservoirGameTests {
         h.assertTrue(level.getBlockState(core).is(Blocks.WATER),"Nonempty dismantled tank may return only its original source");
         h.succeed();
     }
+    @GameTest(template = "empty")
+    public static void spannerRespectsTheBoundaryAcrossFittingsAndReservoirParts(GameTestHelper h) {
+        var level = h.getLevel();
+        var core = h.absolutePos(new BlockPos(4, 95, 4));
+        var clicked = core.west();
+        blueprint(h, core);
+        var pipe = core.east(3);
+        var head = pipe.east();
+        var valve = pipe.south();
+        level.setBlock(pipe, AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(valve, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+        var player = new InspectingPlayer(level);
+        var tool = new ItemStack(AEItems.SPANNER.get());
+        tool.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal("Garden"));
+        player.setItemInHand(InteractionHand.MAIN_HAND, tool);
+        var border = level.getWorldBorder();
+        double oldX = border.getCenterX(), oldZ = border.getCenterZ(), oldSize = border.getSize();
+        try {
+            border.setCenter(core.getX(), core.getZ());
+            border.setSize(2.0);
+            h.assertTrue(level.mayInteract(player, clicked) && !level.mayInteract(player, core.east()), "The shell crosses the world border");
+            var onShell = new BlockHitResult(Vec3.atCenterOf(clicked), Direction.WEST, clicked, false);
+            tool.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, onShell));
+            h.assertTrue(player.message.contains("permission") && level.getBlockState(core).is(Blocks.WATER),
+                    "Formation reports a protected part and preserves the source");
+            for (var part : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(1, 1, 1))) {
+                if (!part.equals(core)) h.assertTrue(level.getBlockState(part).is(Blocks.COPPER_BLOCK), "The whole copper shell stays in place");
+            }
+
+            for (var target : List.of(pipe, head, valve)) {
+                player.setShiftKeyDown(target.equals(valve));
+                var hit = new BlockHitResult(Vec3.atCenterOf(target), Direction.UP, target, false);
+                SpannerItem.onRightClick(new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, target, hit));
+            }
+            var namedValve = (IrrigationValveBlockEntity) level.getBlockEntity(valve);
+            h.assertTrue(IrrigationPipeBlock.enabled(level.getBlockState(pipe), Direction.UP)
+                    && !sprinkler.smartWatering() && namedValve.zone().equals("Irrigation zone"),
+                    "Protected fittings retain their port, watering mode, and name");
+        } finally {
+            border.setCenter(oldX, oldZ);
+            border.setSize(oldSize);
+        }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void reservoirBucketAndUpgradeFeedbackMatchesTank(GameTestHelper h) {
+        var level = h.getLevel();
+        var core = h.absolutePos(new BlockPos(3, 105, 3));
+        var tank = tank(h, core);
+        var face = core.west();
+        var state = level.getBlockState(face);
+        var block = AEBlocks.WATER_RESERVOIR.get();
+        var player = new InspectingPlayer(level);
+        var hit = new BlockHitResult(Vec3.atCenterOf(face), Direction.WEST, face, false);
+        tank.takeBucket();
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BUCKET, 2));
+        block.useItemOn(player.getMainHandItem(), state, level, face, player, InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(player.message.contains("less than 1000 mB") && player.getMainHandItem().getCount() == 2 && tank.water() == 0,
+                "An empty tank explains the failed drain and preserves the bucket stack");
+
+        tank.fill(new FluidStack(Fluids.WATER, WaterReservoirBlockEntity.CAPACITY), FluidAction.EXECUTE);
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.WATER_BUCKET));
+        block.useItemOn(player.getMainHandItem(), state, level, face, player, InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(player.message.contains("needs space") && player.getMainHandItem().is(Items.WATER_BUCKET)
+                && tank.water() == WaterReservoirBlockEntity.CAPACITY, "A full tank explains the failed fill and keeps the held water");
+
+        block.useWithoutItem(state, level, face, player, hit);
+        h.assertTrue(player.message.contains("Use a Conduit to upgrade"), "Mk I inspection explains the upgrade");
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.CONDUIT, 2));
+        block.useItemOn(player.getMainHandItem(), state, level, face, player, InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(tank.renewable() && player.getMainHandItem().getCount() == 1, "Upgrading uses one Conduit");
+        block.useItemOn(player.getMainHandItem(), state, level, face, player, InteractionHand.MAIN_HAND, hit);
+        h.assertTrue(player.message.contains("already Mk II") && player.getMainHandItem().getCount() == 1,
+                "An upgraded tank explains the second attempt and keeps the spare Conduit");
+        block.useWithoutItem(state, level, face, player, hit);
+        h.assertTrue(player.message.contains("1000 mB / 10 sec") && player.message.contains("buckets") && !player.message.contains("Use a Conduit"),
+                "Mk II inspection shows operating controls and the generation rate");
+        h.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void reservoirDefersDismantlingUntilTheShellIsLoaded(GameTestHelper h) {
         var level = h.getLevel();
@@ -91,6 +200,7 @@ public final class ReservoirGameTests {
         var inlet = reservoir.setValue(WaterReservoirBlock.X, 0);
         int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
         var cases = List.of(ReservoirStructure.Status.UNLOADED, ReservoirStructure.Status.INCOMPLETE);
+        var player = new InspectingPlayer(level);
         for (var expected : cases) {
             var core = expected == ReservoirStructure.Status.UNLOADED ? edge : edge.west(6);
             var face = core.west();
@@ -101,6 +211,12 @@ public final class ReservoirGameTests {
             h.assertTrue(WaterReservoirBlock.inspectionStatus(level, face, inlet).equals(expected.message)
                     && FarmInspection.describe(level, face, true, false).contains(expected.message),
                     "Empty-hand inspection and the Spanner agree on reservoir availability");
+            var hit = new BlockHitResult(Vec3.atCenterOf(face), Direction.WEST, face, false);
+            for (var item : List.of(Items.WATER_BUCKET, Items.CONDUIT)) {
+                var held = new ItemStack(item);
+                AEBlocks.WATER_RESERVOIR.get().useItemOn(held, inlet, level, face, player, InteractionHand.MAIN_HAND, hit);
+                h.assertTrue(player.message.equals(expected.message) && held.is(item), "Unavailable shells explain the failure and preserve the item");
+            }
             var expectedFlow = expected == ReservoirStructure.Status.UNLOADED ? IrrigationNetwork.Flow.UNLOADED_CONNECTION
                     : IrrigationNetwork.Flow.INCOMPLETE_RESERVOIR;
             h.assertTrue(IrrigationNetwork.trace(level, valve).equals(new IrrigationNetwork.Route(List.of(valve, face), expectedFlow, null)),

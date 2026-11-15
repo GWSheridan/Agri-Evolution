@@ -2,6 +2,8 @@ package com.agrievolution.content;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -9,6 +11,8 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -63,16 +67,18 @@ public final class SpannerItem extends Item {
     }
 
     public static void onRightClick(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
-        var player=event.getEntity();var level=event.getLevel();var pos=event.getPos();var state=level.getBlockState(pos);
+        var player=event.getEntity();var level=event.getLevel();var pos=event.getPos();
         if(event.getHand()!=net.minecraft.world.InteractionHand.MAIN_HAND||!(player.getMainHandItem().getItem() instanceof SpannerItem)||!player.mayBuild())return;
+        if (!level.hasChunkAt(pos)) return;
+        var state = level.getBlockState(pos);
         if(!(state.getBlock() instanceof IrrigationPipeBlock)&&!(state.getBlock() instanceof IrrigationSprinklerBlock)
                 && !(state.getBlock() instanceof IrrigationValveBlock))return;
         event.setCanceled(true);event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
-        if(level.isClientSide)return;
+        var side = event.getHitVec().getDirection();
+        if (level.isClientSide || !canEdit(player, level, pos, side, player.getMainHandItem())) return;
         if(state.getBlock() instanceof IrrigationValveBlock){
-            if (level.mayInteract(player, pos)) inspectValve(player, level, pos, state);
+            inspectValve(player, level, pos, state);
         }else if(state.getBlock() instanceof IrrigationPipeBlock){
-            var side = event.getHitVec().getDirection();
             if (IrrigationPipeBlock.toggle(level, pos, side)) {
                 player.displayClientMessage(Component.literal(side.getName()+" pipe port: "+(IrrigationPipeBlock.enabled(level.getBlockState(pos),side)?"enabled":"disabled")),true);
             } else {
@@ -131,6 +137,10 @@ public final class SpannerItem extends Item {
     }
     public SpannerItem(Properties properties){super(properties);}
 
+    private static boolean canEdit(Player player, Level level, BlockPos pos, Direction side, ItemStack tool) {
+        return player.mayBuild() && level.mayInteract(player, pos) && player.mayUseItemAt(pos, side, tool);
+    }
+
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> lines, TooltipFlag flag) {
         lines.add(Component.literal("Crouch-use on an Agri crop to recover its sticks."));
         lines.add(Component.literal("Crouch and left-click an irrigation fitting to trace water."));
@@ -142,8 +152,7 @@ public final class SpannerItem extends Item {
         if (player == null) return InteractionResult.PASS;
         var state = level.getBlockState(pos);
         if (player.isShiftKeyDown() && CropSupportItem.tier(state) > 0) {
-            if (!player.mayBuild() || !level.mayInteract(player, pos)
-                    || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
+            if (!canEdit(player, level, pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
             if (!level.isClientSide) {
                 if (!(level.getBlockEntity(pos) instanceof AECropBlockEntity plant)) return InteractionResult.FAIL;
                 var recovered = plant.recoverSupport();
@@ -159,11 +168,15 @@ public final class SpannerItem extends Item {
         }
         if(!state.is(Blocks.COPPER_BLOCK))return InteractionResult.PASS;
         if (!level.isClientSide) {
-            boolean formed = ReservoirStructure.tryForm(level, pos);
-            if (formed) FarmingMilestones.RESERVOIR.award(player);
-            player.displayClientMessage(Component.literal(formed
-                    ? "Copper Reservoir formed: 1000 / 32000 mB. Connect pipes to its face-centre ports."
-                    : "Build a 3x3x3 shell of 26 fresh copper blocks around one water source, then use the Spanner."), true);
+            var result = ReservoirStructure.tryForm(level, pos,
+                    part -> canEdit(player, level, part, context.getClickedFace(), context.getItemInHand()));
+            if (result == ReservoirStructure.Formation.FORMED) FarmingMilestones.RESERVOIR.award(player);
+            String message = switch (result) {
+                case FORMED -> "Copper Reservoir formed with 1000 mB. Connect pipes to its face-centre ports.";
+                case PROTECTED -> "You need permission to edit the whole reservoir shell and its centre.";
+                case INVALID -> "Build a 3x3x3 shell of 26 fresh copper blocks around one water source, then use the Spanner.";
+            };
+            player.displayClientMessage(Component.literal(message), true);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

@@ -80,7 +80,8 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
         var status = ReservoirStructure.status(level, center);
         if (status == ReservoirStructure.Status.COMPLETE && level.getBlockEntity(center) instanceof WaterReservoirBlockEntity tank) {
             String tier = tank.renewable() ? "Reservoir Mk II (1000 mB / 10 sec)" : "Reservoir Mk I (finite)";
-            return tier + ": " + tank.water() + " / " + WaterReservoirBlockEntity.CAPACITY + " mB. Fill or drain with buckets. Use a Conduit to upgrade.";
+            String upgrade = tank.renewable() ? "" : " Use a Conduit to upgrade.";
+            return tier + " holds " + tank.water() + " / " + WaterReservoirBlockEntity.CAPACITY + " mB. Fill or drain with buckets." + upgrade;
         }
         return status.message;
     }
@@ -90,23 +91,32 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
-        if(stack.is(Items.CONDUIT)){
-            if(!level.isClientSide){var tank=tank(level,pos,state);boolean upgraded=tank!=null&&tank.upgrade();
-                if(upgraded&&!player.getAbilities().instabuild)stack.shrink(1);
-                player.displayClientMessage(Component.literal(upgraded?"Reservoir Mk II: generates 1000 mB every 10 seconds, no fuel required.":"Reservoir already upgraded or incomplete."),true);}
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        boolean upgrading = stack.is(Items.CONDUIT);
+        boolean filling = stack.is(Items.WATER_BUCKET);
+        if (!upgrading && !filling && !stack.is(Items.BUCKET)) {
+            return stack.getItem() instanceof BlockItem ? ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION
+                    : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if(!stack.is(Items.BUCKET)&&!stack.is(Items.WATER_BUCKET))return stack.getItem() instanceof BlockItem
-                ?ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION:ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        if(!level.isClientSide){
-            var tank=tank(level,pos,state);boolean fill=stack.is(Items.WATER_BUCKET);
-            if(tank!=null && (fill?tank.addBucket():tank.takeBucket())){
-                if(!player.getAbilities().instabuild){
-                    ItemStack result=new ItemStack(fill?Items.BUCKET:Items.WATER_BUCKET);stack.shrink(1);
-                    if(stack.isEmpty())player.setItemInHand(hand,result);
-                    else if(!player.getInventory().add(result))player.drop(result,false);
+        if (!level.isClientSide) {
+            var tank = tank(level, pos, state);
+            boolean transferred = tank != null && (upgrading ? tank.upgrade() : filling ? tank.addBucket() : tank.takeBucket());
+            if (transferred) {
+                if (upgrading) {
+                    if (!player.getAbilities().instabuild) stack.shrink(1);
+                    player.displayClientMessage(Component.literal("Reservoir Mk II generates 1000 mB every 10 seconds."), true);
+                } else if (!player.getAbilities().instabuild) {
+                    var result = new ItemStack(filling ? Items.BUCKET : Items.WATER_BUCKET);
+                    player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, result));
                 }
-            }else player.displayClientMessage(Component.literal("Reservoir incomplete, empty, or full."),true);
+            } else {
+                var status = ReservoirStructure.status(level, core(pos, state));
+                String message;
+                if (status != ReservoirStructure.Status.COMPLETE) message = status.message;
+                else if (upgrading) message = "The reservoir is already Mk II.";
+                else message = filling ? "Reservoir needs space for a full 1000 mB bucket."
+                            : "Reservoir has less than 1000 mB to collect.";
+                player.displayClientMessage(Component.literal(message), true);
+            }
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }

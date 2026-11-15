@@ -1,5 +1,6 @@
 package com.agrievolution.content;
 
+import java.util.function.Predicate;
 import net.minecraft.core.*;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -13,13 +14,23 @@ public final class ReservoirStructure {
         final String message;
         Status(String message) { this.message = message; }
     }
+    enum Formation { FORMED, PROTECTED, INVALID }
 
     private static boolean changing;
     public static boolean tryForm(Level level,BlockPos clicked) {
-        if(level.isClientSide)return false;
+        return tryForm(level, clicked, pos -> true) == Formation.FORMED;
+    }
+
+    static Formation tryForm(Level level, BlockPos clicked, Predicate<BlockPos> canEdit) {
+        if (level.isClientSide) return Formation.INVALID;
+        boolean protectedShell = false;
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++) {
             var core=clicked.offset(x,y,z);
             if(!validBlueprint(level,core))continue;
+            if (!canEditShell(core, canEdit)) {
+                protectedShell = true;
+                continue;
+            }
             changing=true;
             try {
                 for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++)
@@ -29,9 +40,16 @@ public final class ReservoirStructure {
             } finally {changing=false;}
             for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++)
                 level.updateNeighborsAt(core.offset(dx,dy,dz),AEBlocks.WATER_RESERVOIR.get());
-            return true;
+            return Formation.FORMED;
         }
-        return false;
+        return protectedShell ? Formation.PROTECTED : Formation.INVALID;
+    }
+
+    private static boolean canEditShell(BlockPos core, Predicate<BlockPos> canEdit) {
+        for (BlockPos pos : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(1, 1, 1))) {
+            if (!canEdit.test(pos)) return false;
+        }
+        return true;
     }
     private static boolean validBlueprint(Level level,BlockPos core) {
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++) {

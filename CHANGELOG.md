@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.18
+
+- The Spanner respects block permissions when changing pipes, sprinklers and valves.
+- Forming a Water Reservoir checks permission for the entire shell and centre before replacing any blocks.
+- Reservoirs explain why a bucket transfer failed, including when the shell is in an unloaded chunk.
+- Using a Conduit distinguishes an already upgraded tank from an unavailable shell.
+- Inspecting a Mk II tank shows its generation rate and bucket controls.
+
 ## 1.2.17
 
 - The Vertical Greenhouse shows when a pipe port is disabled.
