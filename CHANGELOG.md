@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.19
+
+- The sprinkler growth bonus applies to plots watered by the current spray and stops if their path becomes blocked.
+- The Spanner tells you when reachable farmland is waiting for its first spray.
+- A quick remote valve switch can resume the paid growth bonus without using more water.
+- Checking an individual crop for sprinkler coverage scans only its own column.
+- A sprinkler reuses the supply paths it just checked when it refills for a spray.
+
 ## 1.2.18
 
 - The Spanner respects block permissions when changing pipes, sprinklers and valves.

@@ -6,6 +6,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
@@ -48,7 +49,6 @@ public final class SprinklerGrowthGameTests {
     @GameTest(template="empty")
     public static void growsCropsAndRespectsRange(GameTestHelper h) {
         var level=h.getLevel(); var pos=h.absolutePos(new BlockPos(4,50,4));
-        var head=head(h,pos);
         var vanilla=pos.east(); var agri=pos.south(); var outside=pos.east(5);
         for(var p:new BlockPos[]{vanilla,agri,outside}) {
             level.setBlock(p.below(),Blocks.FARMLAND.defaultBlockState(),3);
@@ -56,6 +56,7 @@ public final class SprinklerGrowthGameTests {
             level.setBlock(p,Blocks.WHEAT.defaultBlockState(),3);
         }
         level.setBlock(agri,AEBlocks.AGRI_CROP.get().defaultBlockState(),3);
+        var head=head(h,pos);
         var rule=level.getGameRules().getRule(GameRules.RULE_RANDOMTICKING); int old=rule.get();
         try {
             rule.set(0,level.getServer()); SprinklerGrowth.boost(level);
@@ -65,6 +66,53 @@ public final class SprinklerGrowthGameTests {
             h.assertTrue(level.getBlockState(agri).getValue(CropBlock.AGE)>0,"Agri crop should grow using its own tick logic");
             h.assertTrue(level.getBlockState(outside).getValue(CropBlock.AGE)==0,"Outside crop must not receive extra ticks");
         } finally { rule.set(old,level.getServer()); head.setRemoved(); }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void growthRequiresWaterFromTheCurrentSpray(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 72, 4));
+        var watered = pos.east().below(3);
+        var added = pos.south().below(3);
+        level.setBlock(watered, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        var sprinkler = head(h, pos);
+        h.assertTrue(SprinklerGrowth.covers(level, watered.above()), "The first spray covers its farmland");
+
+        level.setBlock(added, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        h.assertTrue(sprinkler.wateredSoils().contains(added) && !SprinklerGrowth.covers(level, added.above()),
+                "The preview can see new farmland before a spray waters it");
+        level.setBlock(watered.above(2), Blocks.GLASS.defaultBlockState(), Block.UPDATE_ALL);
+        var plots = SprinklerGrowth.coveredPlots(level);
+        h.assertTrue(!SprinklerGrowth.covers(level, watered.above()) && !plots.contains(watered.above()) && !plots.contains(added.above()),
+                "Blocked and newly added farmland both wait");
+        h.assertTrue(sprinkler.inspectionStatus().equals("Reachable farmland waits for the next spray"),
+                "The report explains why the reachable farmland has no bonus");
+
+        sprinkler.irrigateCycle();
+        h.assertTrue(SprinklerGrowth.covers(level, added.above()) && SprinklerGrowth.coveredPlots(level).contains(added.above()),
+                "The next spray starts the bonus for the new plot");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void quickRemoteValveSwitchPreservesPaidGrowth(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 78, 4));
+        var soil = pos.south().below(2);
+        var valve = pos.east(2);
+        level.setBlock(soil, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        var sprinkler = head(h, pos);
+        level.setBlock(pos.east(), AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(valve, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(pos.east(3), AEBlocks.IRRIGATION_BASIN.get().defaultBlockState(), Block.UPDATE_ALL);
+        var open = level.getBlockState(valve);
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(valve, open.setValue(IrrigationValveBlock.OPEN, false), quietUpdate);
+        h.assertFalse(SprinklerGrowth.coveredPlots(level).contains(soil.above()), "The remote shutoff immediately blocks the bonus");
+        level.setBlock(valve, open, quietUpdate);
+        h.assertTrue(SprinklerGrowth.covers(level, soil.above()) && SprinklerGrowth.coveredPlots(level).contains(soil.above())
+                && sprinkler.water() == 975, "Reopening before the next sprinkler tick restores the paid bonus");
         h.succeed();
     }
 }

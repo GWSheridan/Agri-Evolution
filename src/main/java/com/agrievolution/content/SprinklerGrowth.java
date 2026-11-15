@@ -40,7 +40,7 @@ public final class SprinklerGrowth {
         for(int x=-4;x<=4;x++)for(int z=-4;z<=4;z++)for(int up=0;up<8;up++){
             var pos=crop.offset(x,up,z);
             if(positions.contains(pos)&&level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head
-                    &&head.growthActive()&&head.wateredSoils().contains(crop.below()))return true;
+                    && head.watersPlot(crop.below()) && head.growthActive()) return true;
         }
         return false;
     }
@@ -48,13 +48,17 @@ public final class SprinklerGrowth {
         var result = new HashSet<BlockPos>();
         var positions = ACTIVE.get(level);
         if (positions == null) return result;
-        positions.removeIf(pos -> !level.hasChunkAt(pos)
-                || !(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler)
-                || !sprinkler.growthActive());
-        for (BlockPos pos : positions) {
-            var sprinkler=(IrrigationSprinklerBlockEntity)level.getBlockEntity(pos);
-            for(BlockPos soil:sprinkler.wateredSoils()) result.add(soil.above());
+        var iterator = positions.iterator();
+        while (iterator.hasNext()) {
+            var pos = iterator.next();
+            if (!level.hasChunkAt(pos) || !(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler)
+                    || !sprinkler.hasCurrentSpray()) {
+                iterator.remove();
+            } else if (sprinkler.growthActive()) {
+                for (BlockPos soil : sprinkler.growthSoils()) result.add(soil.above());
+            }
         }
+        if (positions.isEmpty()) ACTIVE.remove(level);
         return result;
     }
     static int extraTicks(int randomTickSpeed, RandomSource random) {
