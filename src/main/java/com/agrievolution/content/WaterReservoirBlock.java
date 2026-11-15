@@ -74,8 +74,19 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
     private WaterReservoirBlockEntity tank(Level level,BlockPos pos,BlockState state){
         var center=core(pos,state);return level.hasChunkAt(center)&&level.getBlockEntity(center) instanceof WaterReservoirBlockEntity tank?tank:null;
     }
+
+    static String inspectionStatus(Level level, BlockPos pos, BlockState state) {
+        var center = core(pos, state);
+        var status = ReservoirStructure.status(level, center);
+        if (status == ReservoirStructure.Status.COMPLETE && level.getBlockEntity(center) instanceof WaterReservoirBlockEntity tank) {
+            String tier = tank.renewable() ? "Reservoir Mk II (1000 mB / 10 sec)" : "Reservoir Mk I (finite)";
+            return tier + ": " + tank.water() + " / " + WaterReservoirBlockEntity.CAPACITY + " mB. Fill or drain with buckets. Use a Conduit to upgrade.";
+        }
+        return status.message;
+    }
+
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){
-        if(!level.isClientSide){var tank=tank(level,pos,state);player.displayClientMessage(Component.literal(tank==null?"Reservoir incomplete":(tank.renewable()?"Reservoir Mk II (1000 mB / 10 sec)":"Reservoir Mk I (finite)")+": "+tank.water()+" / 32000 mB. Buckets fill/drain; Conduit upgrades."),true);}
+        if (!level.isClientSide) player.displayClientMessage(Component.literal(inspectionStatus(level, pos, state)), true);
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){

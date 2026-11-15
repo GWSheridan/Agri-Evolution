@@ -3,6 +3,7 @@ package com.agrievolution.content;
 import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.SignalGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -67,6 +68,18 @@ public final class IrrigationNetwork {
                 || state.getBlock() instanceof WaterReservoirBlock && WaterReservoirBlock.port(state,side)
                 || IrrigationValveBlock.connects(state,side);
     }
+
+    static BlockState loadedConnections(BlockState state, LevelAccessor level, BlockPos pos) {
+        for (Direction side : Direction.values()) {
+            BlockPos neighbor = pos.relative(side);
+            if (level.hasChunkAt(neighbor)) {
+                state = state.setValue(IrrigationSprinklerBlock.connection(side),
+                        port(state, side) && port(level.getBlockState(neighbor), side.getOpposite()));
+            }
+        }
+        return state;
+    }
+
     public record Supply(BlockPos basin,WaterReservoirBlockEntity reservoir) {
         int water(Level level) {
             if (reservoir != null) return reservoir.water();
@@ -90,17 +103,17 @@ public final class IrrigationNetwork {
         }
     }
     public record Search(boolean attached,List<Supply> supplies,boolean overflow,boolean blockedValve) {}
-    public enum Flow { READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE, UNLOADED_CONNECTION }
+    public enum Flow { READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE, UNLOADED_CONNECTION, INCOMPLETE_RESERVOIR }
     public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {}
     record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, boolean blockedPath,
-                      boolean unloadedConnection) {}
+                      boolean unloadedConnection, boolean incompleteReservoir) {}
     private record Endpoint(BlockPos pos, Supply supply) {}
     private record ClosedPort(BlockPos from, BlockPos pipe, Direction side) {}
     private static final class Trace {
         final Map<BlockPos, BlockPos> parents = new HashMap<>();
         final List<Endpoint> endpoints = new ArrayList<>();
         final List<BlockPos> sprinklers = new ArrayList<>();
-        BlockPos valve, lastFitting, unloadedFitting;
+        BlockPos valve, lastFitting, unloadedFitting, incompleteReservoir;
         ClosedPort port;
     }
 
@@ -127,6 +140,7 @@ public final class IrrigationNetwork {
             return new Route(List.copyOf(blocks), Flow.DISABLED_PORT, trace.port.side());
         }
         if (trace.unloadedFitting != null) return route(trace, trace.unloadedFitting, Flow.UNLOADED_CONNECTION);
+        if (trace.incompleteReservoir != null) return route(trace, trace.incompleteReservoir, Flow.INCOMPLETE_RESERVOIR);
         return route(trace, trace.lastFitting == null ? head : trace.lastFitting, Flow.DISCONNECTED);
     }
 
@@ -134,7 +148,7 @@ public final class IrrigationNetwork {
         var trace = new Trace();
         var network = search(level, valve, trace, true);
         return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), network.overflow(),
-                network.blockedValve() || trace.port != null, trace.unloadedFitting != null);
+                network.blockedValve() || trace.port != null, trace.unloadedFitting != null, trace.incompleteReservoir != null);
     }
 
     private static Route route(Trace trace, BlockPos end, Flow flow) {
@@ -201,10 +215,15 @@ public final class IrrigationNetwork {
                 } else if(neighbor.getBlock() instanceof IrrigationBasinBlock) {
                     if(sources.add(next))addSupply(supplies, trace, next, new Supply(next,null));
                 } else if(neighbor.getBlock() instanceof WaterReservoirBlock) {
-                    var core=WaterReservoirBlock.core(next,neighbor);
-                    if(sources.add(core) && level.hasChunkAt(core)
-                            && level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank && tank.complete())
-                        addSupply(supplies, trace, next, new Supply(null,tank));
+                    var core = WaterReservoirBlock.core(next, neighbor);
+                    if (!sources.add(core)) continue;
+                    var status = ReservoirStructure.status(level, core);
+                    if (status == ReservoirStructure.Status.COMPLETE && level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank) {
+                        addSupply(supplies, trace, next, new Supply(null, tank));
+                    } else if (trace != null) {
+                        if (status == ReservoirStructure.Status.UNLOADED && trace.unloadedFitting == null) trace.unloadedFitting = next;
+                        if (status == ReservoirStructure.Status.INCOMPLETE && trace.incompleteReservoir == null) trace.incompleteReservoir = next;
+                    }
                 } else if (trace != null && neighbor.getBlock() instanceof IrrigationSprinklerBlock) {
                     trace.sprinklers.add(next);
                 }

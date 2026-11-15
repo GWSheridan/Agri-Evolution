@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
@@ -614,11 +615,70 @@ public final class IrrigationGameTests {
         h.succeed();
     }
     @GameTest(template="empty")
+    public static void fittingPlacementChecksOnlyLoadedConnections(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(2304, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var support = edge.west();
+        level.getChunkAt(edge);
+        var pipe = AEBlocks.IRRIGATION_PIPE.get();
+        var head = AEBlocks.IRRIGATION_SPRINKLER.get();
+        level.setBlock(support, pipe.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var hit = new BlockHitResult(Vec3.atCenterOf(support), Direction.EAST, support, false);
+        h.assertFalse(level.hasChunkAt(edge.east()), "The neighboring chunk must start unloaded");
+
+        var pipeContext = new BlockPlaceContext(player, InteractionHand.MAIN_HAND, new ItemStack(pipe), hit);
+        var headContext = new BlockPlaceContext(player, InteractionHand.MAIN_HAND, new ItemStack(head), hit);
+        h.assertTrue(pipeContext.getClickedPos().equals(edge) && headContext.getClickedPos().equals(edge), "Both placements target the edge");
+        for (var state : List.of(pipe.getStateForPlacement(pipeContext), head.getStateForPlacement(headContext))) {
+            h.assertTrue(state.getValue(IrrigationSprinklerBlock.connection(Direction.WEST))
+                    && !state.getValue(IrrigationSprinklerBlock.connection(Direction.EAST)), "The loaded fitting provides the only connection");
+        }
+        h.assertFalse(level.hasChunkAt(edge.east()), "Placement connection checks must leave the neighboring chunk unloaded");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void valveControlsLeaveTheNeighboringChunkUnloaded(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(2560, 100, 4)));
+        var valve = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var head = valve.west();
+        var outside = valve.east();
+        level.getChunkAt(valve);
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        var block = AEBlocks.IRRIGATION_VALVE.get();
+        level.setBlock(valve, block.defaultBlockState(), quietUpdate);
+        level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+        sprinkler.fillBucket();
+        sprinkler.irrigateCycle();
+        h.assertTrue(sprinkler.growthActive() && !level.hasChunkAt(outside), "The sprinkler starts with the neighboring chunk unloaded");
+
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var hit = new BlockHitResult(Vec3.atCenterOf(valve), Direction.UP, valve, false);
+        block.useWithoutItem(level.getBlockState(valve), level, valve, player, hit);
+        h.assertTrue(!sprinkler.growthActive() && !level.hasChunkAt(outside), "Manually closing the valve stops the head without loading a chunk");
+        block.useWithoutItem(level.getBlockState(valve), level, valve, player, hit);
+        sprinkler.irrigateCycle();
+        h.assertTrue(sprinkler.growthActive(), "The head can run with the valve open");
+        level.setBlock(valve.above(), Blocks.REDSTONE_BLOCK.defaultBlockState(), quietUpdate);
+        block.neighborChanged(level.getBlockState(valve), level, valve, Blocks.REDSTONE_BLOCK, valve.above(), false);
+        h.assertTrue(level.getBlockState(valve).getValue(IrrigationValveBlock.POWERED)
+                && !sprinkler.growthActive() && !level.hasChunkAt(outside), "Redstone stops the head without loading a chunk");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
     public static void valvePlacedFirstAutoAligns(GameTestHelper h) {
         var level=h.getLevel(); var pos=position(h); var valve=pos.above();
         level.setBlock(valve,AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(),3);
+        var originalFacing = level.getBlockState(valve).getValue(IrrigationValveBlock.FACING);
+        level.setBlock(valve.relative(originalFacing), AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), Block.UPDATE_ALL);
         var sprinkler=setup(h,false);
-        h.assertTrue(level.getBlockState(valve).getValue(IrrigationValveBlock.FACING).getAxis()==Direction.Axis.Y,"Adding head below must align old horizontal valve");
+        h.assertTrue(level.getBlockState(valve).getValue(IrrigationValveBlock.FACING).getAxis()==Direction.Axis.Y,
+                "Adding a sprinkler below takes priority over a pipe on the original axis");
         h.assertTrue(level.getBlockState(pos).getValue(IrrigationSprinklerBlock.connection(Direction.UP)),"Auto-aligned connection must render");
         sprinkler.fillBucket(); sprinkler.irrigateCycle();
         level.setBlock(pos.east(),Blocks.REDSTONE_BLOCK.defaultBlockState(),3);

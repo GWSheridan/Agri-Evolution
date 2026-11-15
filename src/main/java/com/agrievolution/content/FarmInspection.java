@@ -32,11 +32,13 @@ public final class FarmInspection {
             lines.add(state.getBlock().getName().getString());
             if(state.getBlock() instanceof WaterReservoirBlock){
                 var core=WaterReservoirBlock.core(pos,state);
-                if(level.hasChunkAt(core)&&level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank){
+                var status = ReservoirStructure.status(level, core);
+                if (status == ReservoirStructure.Status.COMPLETE && level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank) {
                     lines.add("Water: "+tank.water()+" / 32000 mB");lines.add("Comparator: "+tank.comparatorSignal()+" / 15");
                     lines.add(tank.renewable()?"Mk II: free 1000 mB / 10 seconds":"Mk I: finite water; install a Conduit for Mk II");
-                    lines.add(tank.complete()?"Structure complete; ports at face centres":"Structure incomplete");
-                }return lines;
+                }
+                lines.add(status.message);
+                return lines;
             }
             if(state.getBlock() instanceof IrrigationBasinBlock){
                 lines.add("Basin: "+(state.getValue(IrrigationBasinBlock.FILLED)?"1000 mB available":"empty"));

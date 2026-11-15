@@ -82,10 +82,7 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
         return shape;
     }
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
-        BlockState state=defaultBlockState();
-        for(Direction side:Direction.values()) state=state.setValue(connection(side),
-                IrrigationNetwork.port(context.getLevel().getBlockState(context.getClickedPos().relative(side)),side.getOpposite()));
-        return state;
+        return IrrigationNetwork.loadedConnections(defaultBlockState(), context.getLevel(), context.getClickedPos());
     }
     @Override protected BlockState updateShape(BlockState state,Direction side,BlockState neighbor,
                                                 LevelAccessor level,BlockPos pos,BlockPos neighborPos) {

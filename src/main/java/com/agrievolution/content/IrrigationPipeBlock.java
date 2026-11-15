@@ -60,10 +60,7 @@ public final class IrrigationPipeBlock extends Block {
         builder.add(BLOCKED);
     }
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
-        var state=defaultBlockState();
-        for(var d:Direction.values())state=state.setValue(IrrigationSprinklerBlock.connection(d),
-                IrrigationNetwork.port(context.getLevel().getBlockState(context.getClickedPos().relative(d)),d.getOpposite()));
-        return state;
+        return IrrigationNetwork.loadedConnections(defaultBlockState(), context.getLevel(), context.getClickedPos());
     }
     @Override protected BlockState updateShape(BlockState state,Direction side,BlockState neighbor,LevelAccessor level,BlockPos pos,BlockPos other) {
         return state.setValue(IrrigationSprinklerBlock.connection(side),enabled(state,side)&&IrrigationNetwork.port(neighbor,side.getOpposite()));

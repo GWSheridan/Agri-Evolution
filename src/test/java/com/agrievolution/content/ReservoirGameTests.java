@@ -39,6 +39,39 @@ public final class ReservoirGameTests {
         h.succeed();
     }
     @GameTest(template = "empty")
+    public static void reservoirDiagnosticsExplainUnavailableShells(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(2816, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        level.getChunkAt(edge);
+        var reservoir = AEBlocks.WATER_RESERVOIR.get().defaultBlockState();
+        var inlet = reservoir.setValue(WaterReservoirBlock.X, 0);
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        var cases = List.of(ReservoirStructure.Status.UNLOADED, ReservoirStructure.Status.INCOMPLETE);
+        for (var expected : cases) {
+            var core = expected == ReservoirStructure.Status.UNLOADED ? edge : edge.west(6);
+            var face = core.west();
+            var valve = core.west(2);
+            level.setBlock(core, reservoir, quietUpdate);
+            level.setBlock(face, inlet, quietUpdate);
+            level.setBlock(valve, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), quietUpdate);
+            h.assertTrue(WaterReservoirBlock.inspectionStatus(level, face, inlet).equals(expected.message)
+                    && FarmInspection.describe(level, face, true, false).contains(expected.message),
+                    "Empty-hand inspection and the Spanner agree on reservoir availability");
+            var expectedFlow = expected == ReservoirStructure.Status.UNLOADED ? IrrigationNetwork.Flow.UNLOADED_CONNECTION
+                    : IrrigationNetwork.Flow.INCOMPLETE_RESERVOIR;
+            h.assertTrue(IrrigationNetwork.trace(level, valve).equals(new IrrigationNetwork.Route(List.of(valve, face), expectedFlow, null)),
+                    "The trace points to the unavailable water inlet");
+            var zone = IrrigationNetwork.inspectZone(level, valve);
+            h.assertTrue(zone.supplies().isEmpty() && zone.unloadedConnection() == (expected == ReservoirStructure.Status.UNLOADED)
+                    && zone.incompleteReservoir() == (expected == ReservoirStructure.Status.INCOMPLETE),
+                    "The valve distinguishes unavailable sources from a disconnected pipe");
+        }
+        h.assertFalse(level.hasChunkAt(edge.east()), "Inspection must leave the unseen shell chunk unloaded");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void reservoirWaterChangesLeaveAdjacentChunkUnloaded(GameTestHelper h) {
         var level = h.getLevel();
         var chunk = new ChunkPos(h.absolutePos(new BlockPos(1792, 100, 4)));

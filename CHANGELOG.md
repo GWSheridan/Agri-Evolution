@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.16
+
+- Pipes and sprinklers check loaded neighbors when working out their connections on placement.
+- Manual and redstone valve changes leave neighboring unloaded chunks alone.
+- A valve with a sprinkler and a side pipe aligns with the sprinkler.
+- Reservoir inspection distinguishes a missing shell from one that extends into an unloaded chunk.
+- The Spanner points to unavailable reservoir inlets and explains the problem in valve reports.
+
 ## 1.2.15
 
 - Filling or draining a Water Reservoir keeps comparator updates in loaded chunks.

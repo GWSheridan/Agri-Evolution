@@ -5,6 +5,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 
 public final class ReservoirStructure {
+    enum Status {
+        COMPLETE("Structure complete; ports at face centres"),
+        UNLOADED("Reservoir extends into an unloaded chunk"),
+        INCOMPLETE("Reservoir is incomplete");
+
+        final String message;
+        Status(String message) { this.message = message; }
+    }
+
     private static boolean changing;
     public static boolean tryForm(Level level,BlockPos clicked) {
         if(level.isClientSide)return false;
@@ -38,12 +47,18 @@ public final class ReservoirStructure {
         return true;
     }
     public static boolean complete(Level level,BlockPos core) {
-        if(!loaded(level,core))return false;
+        return status(level, core) == Status.COMPLETE;
+    }
+
+    static Status status(Level level, BlockPos core) {
+        if (!loaded(level, core)) return Status.UNLOADED;
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++) {
             var p=core.offset(x,y,z);var s=level.getBlockState(p);
-            if(!(s.getBlock() instanceof WaterReservoirBlock)||!WaterReservoirBlock.core(p,s).equals(core))return false;
+            if (!(s.getBlock() instanceof WaterReservoirBlock) || !WaterReservoirBlock.core(p,s).equals(core))
+                return Status.INCOMPLETE;
         }
-        return level.getBlockEntity(core) instanceof WaterReservoirBlockEntity;
+        return level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank && !tank.isRemoved()
+                ? Status.COMPLETE : Status.INCOMPLETE;
     }
     public static void dismantle(Level level,BlockPos core,BlockPos removed) {
         if(changing||level.isClientSide)return;
