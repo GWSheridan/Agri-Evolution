@@ -115,6 +115,9 @@ public final class VerticalGreenhouseScreen extends AbstractContainerScreen<Vert
             case BLOCKED_VALVE -> "Valve blocking supply";
             case NETWORK_LIMIT -> "Pipe network too large";
             case INCOMPLETE -> "Column incomplete";
+            case BLOCKED_PORT -> "Pipe port disabled";
+            case UNLOADED_SUPPLY -> "Supply chunk unloaded";
+            case INCOMPLETE_RESERVOIR -> "Reservoir incomplete";
         };
         gui.drawString(font, status, leftPos + VerticalGreenhouseMenu.FIRST_OUTPUT_X, y + 3, INK, false);
     }

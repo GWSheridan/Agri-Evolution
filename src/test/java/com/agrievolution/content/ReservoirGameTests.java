@@ -5,6 +5,8 @@ import java.util.List;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -12,6 +14,7 @@ import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.gametest.*;
 
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
@@ -38,6 +41,46 @@ public final class ReservoirGameTests {
         h.assertTrue(level.getBlockState(core).is(Blocks.WATER),"Nonempty dismantled tank may return only its original source");
         h.succeed();
     }
+    @GameTest(template = "empty")
+    public static void reservoirDefersDismantlingUntilTheShellIsLoaded(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(3328, 100, 4)));
+        var core = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var outside = core.east();
+        var broken = core.west();
+        var remaining = core.north();
+        level.getChunkAt(core);
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        var block = AEBlocks.WATER_RESERVOIR.get();
+        var state = block.defaultBlockState();
+        level.setBlock(core, state, quietUpdate);
+        level.setBlock(broken, state.setValue(WaterReservoirBlock.X, 0), quietUpdate);
+        level.setBlock(remaining, state.setValue(WaterReservoirBlock.Z, 0), quietUpdate);
+        var tank = (WaterReservoirBlockEntity) level.getBlockEntity(core);
+        var saved = new CompoundTag();
+        saved.putInt("Water", 2500);
+        saved.putBoolean("Renewable", true);
+        tank.loadAdditional(saved, level.registryAccess());
+        h.assertFalse(level.hasChunkAt(outside), "The far side of the shell starts unloaded");
+
+        ReservoirStructure.dismantle(level, core, broken);
+        h.assertFalse(level.hasChunkAt(outside), "Dismantling must not load the far chunk");
+        level.setBlock(broken, Blocks.AIR.defaultBlockState(), quietUpdate);
+        h.assertTrue(level.getBlockEntity(core) == tank, "The same tank must stay in place while dismantling is deferred");
+        h.assertTrue(tank.water() == 2500 && tank.renewable(), "The deferred tank must keep its water and upgrade");
+        h.assertTrue(level.getBlockState(remaining).is(block), "The other loaded shell parts must stay in place");
+
+        level.getChunkAt(outside);
+        level.setBlock(outside, state.setValue(WaterReservoirBlock.X, 2), quietUpdate);
+        block.tick(level.getBlockState(core), level, core, level.random);
+        h.assertTrue(level.getBlockState(core).is(Blocks.WATER) && level.getBlockState(remaining).is(Blocks.COPPER_BLOCK)
+                && level.getBlockState(outside).is(Blocks.COPPER_BLOCK), "The loaded shell can now restore copper and the original source");
+        var drops = level.getEntitiesOfClass(ItemEntity.class, new AABB(core).inflate(3));
+        h.assertTrue(drops.stream().filter(drop -> drop.getItem().is(Items.CONDUIT)).mapToInt(drop -> drop.getItem().getCount()).sum() == 1,
+                "Deferred dismantling returns the Conduit once");
+        h.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void reservoirDiagnosticsExplainUnavailableShells(GameTestHelper h) {
         var level = h.getLevel();

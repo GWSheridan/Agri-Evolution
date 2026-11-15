@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.17
+
+- The Vertical Greenhouse shows when a pipe port is disabled.
+- It reports when its water supply crosses into an unloaded chunk.
+- It identifies incomplete reservoirs connected to its water intake.
+- Loaded valves refresh their redstone indicator from the current signal.
+- Breaking a reservoir shell across a chunk border leaves the remaining pieces and tank in place until every part can be dismantled together.
+
 ## 1.2.16
 
 - Pipes and sprinklers check loaded neighbors when working out their connections on placement.

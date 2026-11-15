@@ -71,7 +71,10 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         }
     }
 
-    public enum WaterStatus { CHECKING, OFF, WAITING, READY, REFILLING, NO_SOURCE, EMPTY_SOURCE, BLOCKED_VALVE, NETWORK_LIMIT, INCOMPLETE }
+    public enum WaterStatus {
+        CHECKING, OFF, WAITING, READY, REFILLING, NO_SOURCE, EMPTY_SOURCE, BLOCKED_VALVE, NETWORK_LIMIT, INCOMPLETE,
+        BLOCKED_PORT, UNLOADED_SUPPLY, INCOMPLETE_RESERVOIR
+    }
 
     private NonNullList<ItemStack> items = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
     private final NonNullList<ItemStack> tracked = NonNullList.withSize(TRAYS, ItemStack.EMPTY);
@@ -318,7 +321,13 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
             }
         }
         if (!network.supplies().isEmpty()) return WaterStatus.EMPTY_SOURCE;
-        return network.blockedValve() ? WaterStatus.BLOCKED_VALVE : WaterStatus.NO_SOURCE;
+        if (network.blockedValve()) return WaterStatus.BLOCKED_VALVE;
+        return switch (IrrigationNetwork.trace(server, worldPosition).flow()) {
+            case DISABLED_PORT -> WaterStatus.BLOCKED_PORT;
+            case UNLOADED_CONNECTION -> WaterStatus.UNLOADED_SUPPLY;
+            case INCOMPLETE_RESERVOIR -> WaterStatus.INCOMPLETE_RESERVOIR;
+            default -> WaterStatus.NO_SOURCE;
+        };
     }
 
     private Status grow(VerticalGreenhouseHarvests.Harvest[] harvests) {

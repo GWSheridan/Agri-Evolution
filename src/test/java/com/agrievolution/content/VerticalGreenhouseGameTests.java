@@ -14,6 +14,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
@@ -275,6 +277,44 @@ public final class VerticalGreenhouseGameTests {
         greenhouse.loadAdditional(saved, level.registryAccess());
         helper.assertTrue(menu.waterIntake() == VerticalGreenhouseBlockEntity.WaterIntake.DEMAND, "Existing saves default to demand");
         helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void greenhouseIntakeExplainsUnavailablePipeSupplies(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(3072, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var base = edge.west(4);
+        var greenhouse = place(h, base);
+        greenhouse.cycleWaterIntake();
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var menu = new VerticalGreenhouseMenu(1, player.getInventory(), greenhouse);
+        var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
+        var inlet = base.east();
+        var supply = inlet.east();
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(inlet, pipe, quietUpdate);
+        level.setBlock(supply, AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
+                .setValue(IrrigationBasinBlock.FILLED, true), quietUpdate);
+        IrrigationPipeBlock.toggle(level, inlet, Direction.EAST);
+        seconds(h, greenhouse, 1);
+        h.assertTrue(menu.waterStatus() == VerticalGreenhouseBlockEntity.WaterStatus.BLOCKED_PORT
+                && level.getBlockState(supply).getValue(IrrigationBasinBlock.FILLED), "A disabled port leaves its basin water in place");
+
+        IrrigationPipeBlock.toggle(level, inlet, Direction.EAST);
+        level.setBlock(supply, pipe, quietUpdate);
+        level.setBlock(edge.west(), pipe, quietUpdate);
+        level.setBlock(edge, pipe.setValue(IrrigationSprinklerBlock.connection(Direction.EAST), true), quietUpdate);
+        h.assertFalse(level.hasChunkAt(edge.east()), "The neighboring chunk must start unloaded");
+        seconds(h, greenhouse, 1);
+        h.assertTrue(menu.waterStatus() == VerticalGreenhouseBlockEntity.WaterStatus.UNLOADED_SUPPLY
+                && !level.hasChunkAt(edge.east()), "An unloaded supply is reported without loading the other chunk");
+
+        level.setBlock(supply, AEBlocks.WATER_RESERVOIR.get().defaultBlockState().setValue(WaterReservoirBlock.X, 0), quietUpdate);
+        seconds(h, greenhouse, 1);
+        h.assertTrue(menu.waterStatus() == VerticalGreenhouseBlockEntity.WaterStatus.INCOMPLETE_RESERVOIR
+                && greenhouse.water() == 0, "An incomplete shell is distinct from a disconnected pipe");
+        h.succeed();
     }
 
     @GameTest(template = "empty")

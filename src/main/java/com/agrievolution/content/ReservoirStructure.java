@@ -61,7 +61,9 @@ public final class ReservoirStructure {
                 ? Status.COMPLETE : Status.INCOMPLETE;
     }
     public static void dismantle(Level level,BlockPos core,BlockPos removed) {
-        if(changing||level.isClientSide)return;
+        if (changing || level.isClientSide) return;
+        // A remaining shell part will retry once every chunk is loaded, so the core can return its water and upgrade together.
+        if (!core.equals(removed) && !loaded(level, core)) return;
         changing=true;
         try {
             if(level.hasChunkAt(core)&&level.getBlockEntity(core) instanceof WaterReservoirBlockEntity upgraded&&upgraded.removeUpgrade())

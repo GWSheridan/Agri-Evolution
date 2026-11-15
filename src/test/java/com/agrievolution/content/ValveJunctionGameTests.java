@@ -11,6 +11,25 @@ import net.neoforged.neoforge.gametest.*;
 
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class ValveJunctionGameTests {
+    @GameTest(template = "empty")
+    public static void loadedValvesUseTheirCurrentRedstoneSignal(GameTestHelper h) {
+        var level = h.getLevel();
+        var unpowered = h.absolutePos(new BlockPos(3, 165, 3));
+        var powered = unpowered.east(3);
+        var valve = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState();
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(powered.above(), Blocks.REDSTONE_BLOCK.defaultBlockState(), quietUpdate);
+        level.setBlock(powered, valve, quietUpdate);
+        level.setBlock(unpowered, valve.setValue(IrrigationValveBlock.POWERED, true), quietUpdate);
+        h.assertTrue(!level.getBlockState(powered).getValue(IrrigationValveBlock.POWERED)
+                && level.getBlockState(unpowered).getValue(IrrigationValveBlock.POWERED), "Both valves start with stale power flags");
+        h.runAfterDelay(5, () -> {
+            h.assertTrue(level.getBlockState(powered).getValue(IrrigationValveBlock.POWERED)
+                    && !level.getBlockState(unpowered).getValue(IrrigationValveBlock.POWERED), "Loaded valves check the current signal");
+            h.succeed();
+        });
+    }
+
     @GameTest(template="empty") public static void refreshExistingValveAndPipeModels(GameTestHelper h) {
         var level=h.getLevel();var pos=h.absolutePos(new BlockPos(4,20,4));
         level.setBlock(pos.below(),AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),2);

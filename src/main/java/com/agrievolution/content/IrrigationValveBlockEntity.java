@@ -3,6 +3,7 @@ package com.agrievolution.content;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -11,6 +12,13 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
 
     public IrrigationValveBlockEntity(BlockPos pos, BlockState state) {
         super(AEBlockEntities.IRRIGATION_VALVE.get(), pos, state);
+    }
+
+    @Override public void onLoad() {
+        super.onLoad();
+        if (level instanceof ServerLevel server && getBlockState().getBlock() instanceof IrrigationValveBlock valve) {
+            server.scheduleTick(worldPosition, valve, 1);
+        }
     }
 
     String zone() { return zone.isEmpty() ? "Irrigation zone" : zone; }
