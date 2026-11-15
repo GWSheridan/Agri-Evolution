@@ -9,6 +9,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
+import net.minecraft.world.level.block.FarmBlock;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -82,6 +83,8 @@ public final class SprinklerGrowthGameTests {
         level.setBlock(added, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
         h.assertTrue(sprinkler.wateredSoils().contains(added) && !SprinklerGrowth.covers(level, added.above()),
                 "The preview can see new farmland before a spray waters it");
+        h.assertTrue(sprinkler.inspectionStatus().contains("Watering 1/2 reachable plots"),
+                "The report distinguishes watered and waiting plots in the same spray");
         level.setBlock(watered.above(2), Blocks.GLASS.defaultBlockState(), Block.UPDATE_ALL);
         var plots = SprinklerGrowth.coveredPlots(level);
         h.assertTrue(!SprinklerGrowth.covers(level, watered.above()) && !plots.contains(watered.above()) && !plots.contains(added.above()),
@@ -113,6 +116,59 @@ public final class SprinklerGrowthGameTests {
         level.setBlock(valve, open, quietUpdate);
         h.assertTrue(SprinklerGrowth.covers(level, soil.above()) && SprinklerGrowth.coveredPlots(level).contains(soil.above())
                 && sprinkler.water() == 975, "Reopening before the next sprinkler tick restores the paid bonus");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void valveResumeOnlyWatersPreviouslyPaidPlots(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 84, 4));
+        var watered = pos.south().below(3);
+        var blocked = pos.west().below(3);
+        var added = pos.north().below(3);
+        var valve = pos.east();
+        for (var soil : new BlockPos[] {watered, blocked}) {
+            level.setBlock(soil, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        }
+        level.setBlock(valve, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+        var sprinkler = head(h, pos);
+        var open = level.getBlockState(valve);
+        level.setBlock(valve, open.setValue(IrrigationValveBlock.OPEN, false), Block.UPDATE_ALL);
+        sprinkler.serverTick();
+        h.assertFalse(level.getBlockState(pos).getValue(IrrigationSprinklerBlock.ACTIVE), "The shut valve pauses the spray");
+        level.setBlock(blocked.above(2), Blocks.GLASS.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(added, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(valve, open, Block.UPDATE_ALL);
+        sprinkler.serverTick();
+
+        h.assertTrue(sprinkler.water() == 975 && SprinklerGrowth.covers(level, watered.above()),
+                "An already watered plot can resume without another charge");
+        h.assertFalse(SprinklerGrowth.covers(level, blocked.above()) || SprinklerGrowth.covers(level, added.above()),
+                "A blocked plot and a new plot both wait for a new spray");
+        h.assertTrue(level.getBlockState(added).getValue(FarmBlock.MOISTURE) == 0,
+                "The resumed spray leaves the new plot dry");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void chunkReloadDropsThePreviousSpray(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 90, 4));
+        var soil = pos.south().below(3);
+        level.setBlock(soil, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        var sprinkler = head(h, pos);
+        sprinkler.onChunkUnloaded();
+        sprinkler.onLoad();
+        h.assertFalse(sprinkler.hasCurrentSpray() || SprinklerGrowth.covers(level, soil.above()),
+                "Chunk reload clears the old spray and its growth bonus");
+        h.assertTrue(sprinkler.water() == 975, "The stored water survives the reload");
+        if (level.getGameTime() % 40 != 0) {
+            sprinkler.serverTick();
+            h.assertFalse(sprinkler.hasCurrentSpray(), "The old interval cannot restart after a reload");
+        }
+        sprinkler.irrigateCycle();
+        h.assertTrue(sprinkler.water() == 950 && SprinklerGrowth.covers(level, soil.above()),
+                "A fresh paid spray works after reload");
         h.succeed();
     }
 }

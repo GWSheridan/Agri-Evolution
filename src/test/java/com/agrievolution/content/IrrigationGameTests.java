@@ -471,6 +471,9 @@ public final class IrrigationGameTests {
         level.setBlock(basin, Blocks.AIR.defaultBlockState(), quietUpdate);
         var border = new IrrigationNetwork.Route(List.of(head, edge), IrrigationNetwork.Flow.UNLOADED_CONNECTION, null);
         h.assertTrue(IrrigationNetwork.trace(level, head).equals(border), "The route ends at the last loaded fitting");
+        var remoteHead = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+        h.assertTrue(remoteHead.inspectionStatus().equals("Refill path leads into an unloaded chunk"),
+                "The sprinkler names the unavailable refill path without loading it");
         level.setBlock(edge, pipe, quietUpdate);
         h.assertTrue(IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.DISCONNECTED,
                 "An unused port says disconnected even when it faces an unloaded chunk");

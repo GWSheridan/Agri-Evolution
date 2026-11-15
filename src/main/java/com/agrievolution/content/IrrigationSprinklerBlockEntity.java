@@ -1,6 +1,5 @@
 package com.agrievolution.content;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,6 +31,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public String controls(){return (smartWatering?"Dry-soil only":"Continuous")+" | "+switch(redstoneMode){case 1->"Requires redstone";case 2->"Ignores redstone";default->"Redstone pauses";};}
     public void configure(boolean redstone){if(redstone)redstoneMode=(redstoneMode+1)%3;else smartWatering=!smartWatering;setChanged();checkFlow();}
     private final Map<BlockPos, AABBTicket> tickets = new HashMap<>();
+    private Set<BlockPos> paidSoils = Set.of();
     private long growthUntil;
     public IrrigationSprinklerBlockEntity(BlockPos pos, BlockState state) {
         super(AEBlockEntities.IRRIGATION_SPRINKLER.get(), pos, state);
@@ -42,6 +42,10 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     @Override public void setChanged() {
         if (level == null || !level.hasChunkAt(worldPosition)) return;
         level.blockEntityChanged(worldPosition);
+    }
+
+    private void waterChanged() {
+        setChanged();
         IrrigationNetwork.updateComparators(level, worldPosition, getBlockState().getBlock());
     }
 
@@ -68,14 +72,14 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public boolean fillBucket() {
         if (!(level instanceof ServerLevel) || water > CAPACITY-1000) return false;
         water += 1000;
-        setChanged();
+        waterChanged();
         return true;
     }
 
     boolean takeBucket() {
         if (!(level instanceof ServerLevel) || water < 1000) return false;
         water -= 1000;
-        setChanged();
+        waterChanged();
         return true;
     }
 
@@ -104,7 +108,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     private static String networkBlockage(IrrigationNetwork.Search network) {
-        if (network.overflow()) return "Pipe network exceeds 512 nodes";
+        if (network.overflow()) return "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
         if (network.blockedValve() && network.supplies().isEmpty()) return "Valve shut along pipe network";
         return null;
     }
@@ -123,7 +127,10 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         var soils = inspectedSoils == null ? wateredSoils() : inspectedSoils;
         if (hasCurrentSpray()) {
             if (soils.isEmpty()) return "Spraying, no farmland in reach";
-            if (Collections.disjoint(soils, tickets.keySet())) return "Reachable farmland waits for the next spray";
+            long watered = soils.stream().filter(tickets::containsKey).count();
+            if (watered == 0) return "Reachable farmland waits for the next spray";
+            if (watered < soils.size()) return "Watering " + watered + "/" + soils.size()
+                    + " reachable plots; new plots wait for the next spray";
             return "Watering, x5 natural crop growth";
         }
         if (smartWatering) {
@@ -131,7 +138,15 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             if (!hasDrySoil(soils)) return "Dry-soil mode: soil already wet";
         }
         if (water >= WATER_PER_SPRAY) return soils.isEmpty() ? "Ready, no farmland in reach" : "Ready for next watering cycle";
-        if (network.supplies().isEmpty()) return water == 0 ? "Empty, no reachable water source" : "Too little water to spray, add a bucket";
+        if (network.supplies().isEmpty()) {
+            var route = IrrigationNetwork.trace(level, worldPosition);
+            return switch (route.flow()) {
+                case DISABLED_PORT -> "Refill blocked by disabled " + route.disabledSide().getName() + " pipe port";
+                case UNLOADED_CONNECTION -> "Refill path leads into an unloaded chunk";
+                case INCOMPLETE_RESERVOIR -> ReservoirStructure.Status.INCOMPLETE.message;
+                default -> water == 0 ? "Empty, no reachable water source" : "Too little water to spray, add a bucket";
+            };
+        }
         for (var supply : network.supplies()) {
             if (supply.hasBucket(level)) return "Connected source ready to refill";
         }
@@ -147,7 +162,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
     /** Loaded network check; closes water and growth tickets after valve/redstone changes. */
     public void checkFlow() {
-        if (level instanceof ServerLevel && !flowAllowed()) stopWatering();
+        if (hasCurrentSpray() && !flowAllowed()) stopWatering();
     }
 
     void serverTick() {
@@ -156,14 +171,16 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (now < growthUntil) {
             if (!flowAllowed()) stopWatering();
             else if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) {
-                // Reopening the valve can use the rest of the paid interval.
-                spray(server, wateredSoils(), growthUntil);
+                var reachable = new HashSet<>(paidSoils);
+                reachable.removeIf(soil -> !SprinklerCoverage.reaches(server, worldPosition, soil));
+                spray(server, reachable, growthUntil);
             }
             return;
         }
         if (growthUntil == 0 && now % WATERING_INTERVAL != 0) return;
         // Finish the current interval before charging for another. Idle heads retry on the world clock.
         growthUntil = 0;
+        paidSoils = Set.of();
         irrigateCycle();
     }
 
@@ -194,7 +211,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         refillForSpray(network);
         if (water < WATER_PER_SPRAY) { stopWatering(); return; }
         water -= WATER_PER_SPRAY;
-        setChanged();
+        waterChanged();
+        paidSoils = Set.copyOf(soils);
         spray(server, soils, server.getGameTime() + WATERING_INTERVAL);
     }
 
@@ -233,16 +251,25 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         water = Math.max(0, Math.min(CAPACITY,tag.getInt("SprinklerWater")));
         smartWatering=tag.getBoolean("SmartWatering");redstoneMode=Math.clamp(tag.getInt("RedstoneMode"),0,2);
     }
-    @Override public void onLoad() { super.onLoad(); if (level instanceof ServerLevel) setActive(false); }
+    @Override public void onLoad() {
+        super.onLoad();
+        // A fresh placement can already have started a spray before its first load callback.
+        if (level instanceof ServerLevel && growthUntil == 0) setActive(false);
+    }
     @Override public void onChunkUnloaded() {
-        if (level instanceof ServerLevel server) SprinklerGrowth.deactivate(server, worldPosition);
-        clearTickets();
+        resetSpray();
         super.onChunkUnloaded();
     }
     @Override public void setRemoved() {
+        resetSpray();
+        super.setRemoved();
+    }
+
+    private void resetSpray() {
         if (level instanceof ServerLevel server) SprinklerGrowth.deactivate(server, worldPosition);
         clearTickets();
-        super.setRemoved();
+        growthUntil = 0;
+        paidSoils = Set.of();
     }
 
     private void clearTickets() {

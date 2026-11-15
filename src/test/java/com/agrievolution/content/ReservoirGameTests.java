@@ -225,6 +225,12 @@ public final class ReservoirGameTests {
             h.assertTrue(zone.supplies().isEmpty() && zone.unloadedConnection() == (expected == ReservoirStructure.Status.UNLOADED)
                     && zone.incompleteReservoir() == (expected == ReservoirStructure.Status.INCOMPLETE),
                     "The valve distinguishes unavailable sources from a disconnected pipe");
+            var head = valve.west();
+            level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
+            var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+            String refillStatus = expected == ReservoirStructure.Status.UNLOADED
+                    ? "Refill path leads into an unloaded chunk" : expected.message;
+            h.assertTrue(sprinkler.inspectionStatus().equals(refillStatus), "The sprinkler explains the unavailable reservoir");
         }
         h.assertFalse(level.hasChunkAt(edge.east()), "Inspection must leave the unseen shell chunk unloaded");
         h.succeed();

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.20
+
+- Reopening a valve mid-spray resumes watering only on plots the sprinkler already reached and can still reach.
+- Loading a sprinkler chunk starts with a fresh spray cycle. The sprinkler keeps its stored water.
+- Sprinkler inspection shows how many reachable plots are being watered and which are waiting for the next spray.
+- An empty sprinkler reports a disabled pipe port, an unloaded supply path, or an incomplete reservoir when it cannot refill.
+- Idle sprinkler heads skip flow checks on neighbor updates. Changing sprinkler modes leaves comparators alone because the tank level stays the same.
+
 ## 1.2.19
 
 - The sprinkler growth bonus applies to plots watered by the current spray and stops if their path becomes blocked.

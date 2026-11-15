@@ -99,6 +99,9 @@ public final class IrrigationControlGameTests {
   IrrigationPipeBlock.toggle(level,pipe,Direction.WEST);
   h.assertTrue(IrrigationNetwork.search(level,head).supplies().isEmpty(),"Disabled source port isolates zone");
   h.assertFalse(level.getBlockState(pipe).getValue(IrrigationSprinklerBlock.connection(Direction.WEST)),"Disabled connector disappears visually");
+  var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+  h.assertTrue(sprinkler.inspectionStatus().equals("Refill blocked by disabled west pipe port"),
+          "The sprinkler explains which pipe face needs opening");
   IrrigationPipeBlock.toggle(level,pipe,Direction.WEST);
   h.assertTrue(IrrigationNetwork.search(level,head).supplies().size()==1,"Reenabled port reconnects");h.succeed();
  }

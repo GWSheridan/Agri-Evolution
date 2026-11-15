@@ -4,7 +4,7 @@ I built Agri Evolution around the kind of farm I wanted to play in Minecraft. St
 
 ## Install
 
-Agri Evolution **1.2.1** is built for **Minecraft 1.21.1**, **NeoForge 21.1.265**, and **Java 21**. Put the release JAR in your NeoForge profile’s `mods` folder. For multiplayer, install the same version on the server and every client. [Download 1.2.1](https://github.com/GWSheridan/Agri-Evolution/releases/tag/v1.2.1) · [Changelog](CHANGELOG.md)
+Agri Evolution is built for **Minecraft 1.21.1**, **NeoForge 21.1.265**, and **Java 21**. Put the release JAR in your NeoForge profile’s `mods` folder. For multiplayer, install the same version on the server and every client. [Download the latest release](https://github.com/GWSheridan/Agri-Evolution/releases/latest) · [Changelog](CHANGELOG.md)
 
 ## Start your first garden
 
