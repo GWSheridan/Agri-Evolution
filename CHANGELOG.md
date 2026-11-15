@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1 — 15 November 2026
+
+- Fixed the gap under Agri Evolution crops on farmland. Seedlings and mature plants now sit on the soil.
+
 ## 1.2.0 — 14 November 2026
 
 - Name a seed at an anvil and the seeds you harvest from that plant keep the name. Right-click the crop with Grandmas Journal to record the variety, its best traits and any known parents. You can find named seeds in the Seed Vault search.

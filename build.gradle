@@ -212,16 +212,35 @@ tasks.named('processResources') {
 // 0.32.0: enforce a unified 64x64 standard for block/crop textures so future art stays consistent.
 tasks.register('verifyBlockTextureStandard') {
     group = 'verification'
-    description = 'Check every Agri Evolution block texture is a crisp 64x64 PNG.'
+    description = 'Check block texture sizes and crop sprite contact with farmland.'
     doLast {
-        def root = file('src/main/resources/assets/agri_evolution/textures/block')
-        def files = root.listFiles().findAll { it.name.endsWith('.png') }.sort { a, b -> a.name <=> b.name }
+        def assets = file('src/main/resources/assets/agri_evolution')
+        def models = new File(assets, 'models/block')
+        def parser = new groovy.json.JsonSlurper()
+        def cropPlanes = parser.parse(new File(models, 'crop_cross.json')).elements
+        def soilTops = models.listFiles().findAll { it.name ==~ /.+_farmland_(wet|dry)\.json/ }.collect { model ->
+            parser.parse(model).elements.collect { it.to[1] }.max()
+        }
+        def soilSurface = (soilTops + [15]).min() - 16
+        def files = new File(assets, 'textures/block').listFiles().findAll { it.name.endsWith('.png') }.sort { a, b -> a.name <=> b.name }
+        int cropStages = 0
         files.each { file ->
             def image = javax.imageio.ImageIO.read(file)
             if (image == null || image.width != 64 || image.height != 64)
                 throw new GradleException("Block texture must be 64x64: ${file.name}")
+            if (file.name ==~ /.+_crop_stage[0-7]\.png/) {
+                // Minecraft's cutout shader discards alpha below 0.1.
+                def bottom = (63..0).find { y -> (0..63).any { x -> (image.getRGB(x, y) >>> 24) >= 26 } }
+                if (bottom == null || cropPlanes.any { plane ->
+                    plane.from[1] + (63 - bottom) * (plane.to[1] - plane.from[1]) / 64 > soilSurface
+                }) {
+                    throw new GradleException("Crop sprite does not reach farmland: ${file.name}")
+                }
+                cropStages++
+            }
         }
         logger.lifecycle("Agri Evolution: verified ${files.size()} unified 64x64 block textures")
+        logger.lifecycle("Agri Evolution: all ${cropStages} crop sprites reach farmland")
     }
 }
 tasks.named('processResources') { dependsOn(tasks.named('verifyBlockTextureStandard')) }

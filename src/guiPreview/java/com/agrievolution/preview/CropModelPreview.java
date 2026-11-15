@@ -26,7 +26,7 @@ public final class CropModelPreview {
         if(mc.screen==null||mc.getOverlay()!=null||++ticks<40)return;
         ticks=0;
         if(index>=0)Screenshot.grab(mc.gameDirectory,"crossed-crops-"+index+".png",mc.getMainRenderTarget(),m->System.out.println(m.getString()));
-        if(++index>=4){mc.stop();return;}
+        if(++index>=5){mc.stop();return;}
         mc.options.guiScale().set(2);mc.resizeDisplay();mc.setScreen(new Preview(index));
     }
     private static final class Preview extends Screen {
@@ -34,6 +34,10 @@ public final class CropModelPreview {
         Preview(int scene){super(Component.literal("Crossed crop model QA"));this.scene=scene;}
         @Override public void render(GuiGraphics g,int mx,int my,float partial){
             g.fill(0,0,width,height,0xFFBAC9B0);
+            if (scene == 4) {
+                farmlandContact(g);
+                return;
+            }
             g.drawCenteredString(font,scene==0?"Centred plants: Diamond / Amethyst / Tomato":scene==1?"Overhead: two intersecting planes":scene==2?"Eight growth stages":"Supports and weeds retained",width/2,12,0xFF203B27);
             g.flush();Lighting.setupFor3DItems();var pose=g.pose();pose.pushPose();
             pose.translate(width/2.0,height/2.0+40,150);float size=scene==2?48:85;pose.scale(size,-size,size);
@@ -48,6 +52,37 @@ public final class CropModelPreview {
                 }
             }
             pose.popPose();Lighting.setupForFlatItems();
+        }
+        private void farmlandContact(GuiGraphics g) {
+            g.drawCenteredString(font, "Crop contact on all farmland tiers", width / 2, 9, 0xFF203B27);
+            var soils = new BlockState[]{Blocks.FARMLAND.defaultBlockState(),
+                    AEBlocks.CULTIVATED_FARMLAND.get().defaultBlockState(), AEBlocks.NUTRIENT_FARMLAND.get().defaultBlockState(),
+                    AEBlocks.MYTHIC_FARMLAND.get().defaultBlockState(), AEBlocks.ARCANE_FARMLAND.get().defaultBlockState(),
+                    AEBlocks.CELESTIAL_FARMLAND.get().defaultBlockState()};
+            var labels = new String[]{"Vanilla", "Cultivated", "Nutrient", "Mythic", "Arcane", "Celestial"};
+            var crops = new BlockState[]{AEBlocks.TOMATO_CROP.get().defaultBlockState(),
+                    AEBlocks.DIAMOND_CROP.get().getStateForAge(4), AEBlocks.HANGING_ROOTS_CROP.get().getStateForAge(7)};
+            var stages = new String[]{"Stage 0", "Stage 4", "Stage 7"};
+            int spacing = Math.min(71, (width - 60) / soils.length);
+            int firstX = width / 2 - spacing * (soils.length - 1) / 2 + 26;
+            for (int col = 0; col < soils.length; col++) {
+                g.drawCenteredString(font, labels[col], firstX + col * spacing, 24, 0xFF203B27);
+            }
+            for (int row = 0; row < crops.length; row++) g.drawString(font, stages[row], 10, 83 + row * 76, 0xFF203B27, false);
+            g.flush();
+            Lighting.setupFor3DItems();
+            var pose = g.pose();
+            for (int row = 0; row < crops.length; row++) for (int col = 0; col < soils.length; col++) {
+                pose.pushPose();
+                pose.translate(firstX + col * spacing, 86 + row * 76, 150);
+                pose.scale(35, -35, 35);
+                pose.mulPose(Axis.XP.rotationDegrees(10));
+                pose.mulPose(Axis.YP.rotationDegrees(-18));
+                draw(g, soils[col], 0, -1);
+                draw(g, crops[row], 0, 0);
+                pose.popPose();
+            }
+            Lighting.setupForFlatItems();
         }
         private void plant(GuiGraphics g,BlockState crop,double x){draw(g,Blocks.FARMLAND.defaultBlockState(),x,-1);draw(g,crop,x,0);}
         private void draw(GuiGraphics g,BlockState state,double x,double y){
