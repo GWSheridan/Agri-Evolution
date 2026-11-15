@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.14
+
+- Valve inspection counts water and capacity from both basins and reservoirs.
+- The valve report counts sprinklers that are currently spraying. The Journal explains when a closed valve can be bypassed.
+- Builds keep the retired texture notice out of the JAR, including when it is left in the generated resources folder.
+
 ## 1.2.13
 
 - Collecting water from a basin uses one empty bucket and keeps the rest of the stack.

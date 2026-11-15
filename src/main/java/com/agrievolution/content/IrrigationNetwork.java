@@ -39,10 +39,17 @@ public final class IrrigationNetwork {
                 || IrrigationValveBlock.connects(state,side);
     }
     public record Supply(BlockPos basin,WaterReservoirBlockEntity reservoir) {
-        boolean hasBucket(Level level) {
-            if (reservoir != null) return reservoir.water() >= 1000;
+        int water(Level level) {
+            if (reservoir != null) return reservoir.water();
+            if (!level.hasChunkAt(basin)) return 0;
             var state = level.getBlockState(basin);
-            return state.getBlock() instanceof IrrigationBasinBlock && state.getValue(IrrigationBasinBlock.FILLED);
+            return state.getBlock() instanceof IrrigationBasinBlock && state.getValue(IrrigationBasinBlock.FILLED) ? 1000 : 0;
+        }
+
+        int capacity() { return reservoir == null ? 1000 : WaterReservoirBlockEntity.CAPACITY; }
+
+        boolean hasBucket(Level level) {
+            return water(level) >= 1000;
         }
 
         boolean takeBucket(Level level) {

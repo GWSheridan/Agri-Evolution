@@ -43,7 +43,7 @@ public final class FarmInspection {
                 lines.add("Aim at the sprinkler for operating status");return lines;
             }
             var network=IrrigationNetwork.search(level,pos);
-            int water=0;for(var supply:network.supplies())water+=supply.reservoir()!=null?supply.reservoir().water():level.getBlockState(supply.basin()).getValue(IrrigationBasinBlock.FILLED)?1000:0;
+            int water = network.supplies().stream().mapToInt(supply -> supply.water(level)).sum();
             lines.add("Reachable sources: "+network.supplies().size()+" | "+water+" mB");
             if(network.overflow())lines.add("Network exceeds 512 nodes");
             if(state.getBlock() instanceof IrrigationPipeBlock){

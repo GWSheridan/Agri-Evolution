@@ -1,5 +1,7 @@
 package com.agrievolution.content;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -90,8 +92,15 @@ public final class SpannerItem extends Item {
             var name = player.getMainHandItem().get(DataComponents.CUSTOM_NAME);
             valve.rename(name == null ? "" : name.getString());
         }
-        var status = IrrigationNetwork.inspectZone(level, pos);
         String name = valve == null ? "Irrigation zone" : valve.zone();
+        for (String line : describeZone(level, pos, state, name)) {
+            player.displayClientMessage(Component.literal(line), false);
+        }
+    }
+
+    static List<String> describeZone(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos,
+            net.minecraft.world.level.block.state.BlockState state, String name) {
+        var status = IrrigationNetwork.inspectZone(level, pos);
         String flow;
         if (!state.getValue(IrrigationValveBlock.OPEN)) flow = "Valve closed";
         else if (!IrrigationValveBlock.permitsFlow(level, pos, state)) flow = "Valve paused by redstone";
@@ -104,18 +113,19 @@ public final class SpannerItem extends Item {
         else flow = "Water supply ready";
         int water = 0, capacity = 0;
         for (var supply : status.supplies()) {
-            if (supply.reservoir() == null) continue;
-            water += supply.reservoir().water();
-            capacity += WaterReservoirBlockEntity.CAPACITY;
+            water += supply.water(level);
+            capacity += supply.capacity();
         }
-        String tanks = capacity == 0 ? "No reservoir" : "Reservoirs: " + water + " / " + capacity + " mB";
-        long active = status.sprinklers().stream().filter(head -> level.getBlockState(head).getValue(IrrigationSprinklerBlock.ACTIVE)).count();
-        player.displayClientMessage(Component.literal(name + " | " + flow + " | " + tanks + " | Sprinklers: "
-                + active + "/" + status.sprinklers().size() + " active"), false);
+        String tanks = capacity == 0 ? "No reachable water storage" : "Supply water: " + water + " / " + capacity + " mB";
+        long active = status.sprinklers().stream().map(level::getBlockEntity)
+                .filter(entity -> entity instanceof IrrigationSprinklerBlockEntity head && head.growthActive()).count();
+        var lines = new ArrayList<String>();
+        lines.add(name + " | " + flow + " | " + tanks + " | Sprinklers: " + active + "/" + status.sprinklers().size() + " active");
         if (active == 0 && !status.sprinklers().isEmpty()
                 && level.getBlockEntity(status.sprinklers().getFirst()) instanceof IrrigationSprinklerBlockEntity head) {
-            player.displayClientMessage(Component.literal("Nearest sprinkler: " + head.inspectionStatus()), false);
+            lines.add("Nearest sprinkler: " + head.inspectionStatus());
         }
+        return List.copyOf(lines);
     }
     public SpannerItem(Properties properties){super(properties);}
 

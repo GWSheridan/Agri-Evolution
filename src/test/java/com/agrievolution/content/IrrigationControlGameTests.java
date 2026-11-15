@@ -27,6 +27,35 @@ public final class IrrigationControlGameTests {
           "Zone names persist and inspection can see supply and heads around a closed valve without moving water");
   helper.succeed();
  }
+
+ @GameTest(template="empty")
+ public static void valveReportIncludesBasinsAndChecksWhetherHeadsAreSpraying(GameTestHelper h) {
+  var level = h.getLevel();
+  var core = h.absolutePos(new BlockPos(3, 110, 3));
+  var tank = ReservoirGameTests.tank(h, core);
+  var valve = core.east(2);
+  var basin = valve.south();
+  var head = valve.east();
+  level.setBlock(valve, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+  level.setBlock(basin, AEBlocks.IRRIGATION_BASIN.get().defaultBlockState().setValue(IrrigationBasinBlock.FILLED, true), Block.UPDATE_ALL);
+  level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), Block.UPDATE_ALL);
+  // A saved activity flag without a current spray interval must not count as active.
+  level.setBlock(head, level.getBlockState(head).setValue(IrrigationSprinklerBlock.ACTIVE, true), Block.UPDATE_ALL);
+  var report = SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden");
+  h.assertTrue(report.getFirst().contains("Supply water: 2000 / 33000 mB"), "The total includes the basin and the reservoir");
+  h.assertTrue(report.getFirst().contains("Sprinklers: 0/1 active"), "The activity flag alone must not count as watering");
+  h.assertTrue(tank.water() == 1000 && level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED), "Reading the zone must not move water");
+
+  var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+  sprinkler.fillBucket();
+  sprinkler.irrigateCycle();
+  level.setBlock(basin, level.getBlockState(basin).setValue(IrrigationBasinBlock.FILLED, false), Block.UPDATE_ALL);
+  var watering = SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden");
+  h.assertTrue(watering.getFirst().contains("Supply water: 1000 / 33000 mB"), "An empty basin adds capacity and no water");
+  h.assertTrue(watering.getFirst().contains("Sprinklers: 1/1 active"), "A current spray counts as active");
+  h.succeed();
+ }
+
  @GameTest(template="empty") public static void drySoilModeAndPowerModes(GameTestHelper h){
   var level=h.getLevel();var pos=h.absolutePos(new BlockPos(4,20,4));
   level.setBlock(pos,AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),3);

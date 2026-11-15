@@ -44,8 +44,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
 
     boolean growthActive() {
         return level instanceof ServerLevel server && server.getGameTime() < growthUntil
-                && !isRemoved() && flowAllowed()
-                && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE);
+                && !isRemoved() && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)
+                && flowAllowed();
     }
     public boolean fillBucket() {
         if (!(level instanceof ServerLevel) || water > CAPACITY-1000) return false;

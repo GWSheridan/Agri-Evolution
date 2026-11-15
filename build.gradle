@@ -91,12 +91,16 @@ if (project.hasProperty('gameplayTests')) {
     }
 }
 
+// Archived texture libraries and their notice stay out of generated resources and release JARs.
+def legacyTextureEntries = [
+    'assets/agri_evolution/textures/plant/**',
+    'assets/agri_evolution/textures/seed/**',
+    'assets/agri_evolution/textures/THIRD_PARTY_TEXTURE_LICENSE.txt'
+]
+
 sourceSets.main.resources {
     srcDir 'src/generated/resources'
-    // Archival imported libraries: no current model or renderer uses these paths.
-    // Keep the source originals for provenance, but never distribute them again.
-    exclude 'assets/agri_evolution/textures/plant/**'
-    exclude 'assets/agri_evolution/textures/seed/**'
+    exclude legacyTextureEntries
 }
 
 tasks.register('verifyLegacyTextureExclusion') {
@@ -104,11 +108,10 @@ tasks.register('verifyLegacyTextureExclusion') {
     dependsOn tasks.named('jar')
     doLast {
         def forbidden = zipTree(tasks.named('jar').get().archiveFile.get().asFile).matching {
-            include 'assets/agri_evolution/textures/plant/**'
-            include 'assets/agri_evolution/textures/seed/**'
+            include legacyTextureEntries
         }
-        if (!forbidden.isEmpty()) throw new GradleException('Legacy imported texture library leaked into JAR')
-        logger.lifecycle('Agri Evolution: legacy plant/seed libraries excluded from distribution')
+        if (!forbidden.isEmpty()) throw new GradleException('Archived texture files found in the JAR')
+        logger.lifecycle('Agri Evolution: archived texture libraries and notice excluded from distribution')
     }
 }
 tasks.named('check') { dependsOn tasks.named('verifyLegacyTextureExclusion') }
@@ -140,6 +143,7 @@ tasks.register('verifyGardenGui') {
 tasks.named('processResources') { dependsOn tasks.named('verifyGardenGui') }
 
 tasks.named('jar', Jar) {
+    exclude legacyTextureEntries
     from(layout.projectDirectory.file('LICENSE'))
 }
 
