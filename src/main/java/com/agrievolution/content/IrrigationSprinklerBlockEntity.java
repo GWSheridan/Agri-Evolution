@@ -6,6 +6,8 @@ import net.minecraft.core.HolderLookup;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -16,6 +18,7 @@ import net.neoforged.neoforge.common.ticket.AABBTicket;
 /** Finite reservoir; never loads chunks or copies water from a filled basin. */
 public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public static final int CAPACITY=4000;
+    private static final int WATERING_INTERVAL = 40;
     private int water;
     private boolean smartWatering;
     private int redstoneMode; // 0: powered pauses (legacy), 1: powered enables, 2: ignore
@@ -47,12 +50,15 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
 
     private String localBlockage() {
         if (!(level instanceof ServerLevel)) return "Sprinkler unavailable";
-        boolean powered = level.hasNeighborSignal(worldPosition);
+        boolean powered = redstoneMode != 2 && IrrigationNetwork.hasLoadedNeighborSignal(level, worldPosition);
         if (redstoneMode == 0 && powered) return "Paused by redstone";
         if (redstoneMode == 1 && !powered) return "Waiting for redstone";
         for (Direction side : Direction.values()) {
             BlockPos pos = worldPosition.relative(side);
-            if (!level.hasChunkAt(pos)) return "Adjacent chunk not loaded";
+            if (!level.hasChunkAt(pos)) {
+                if (getBlockState().getValue(IrrigationSprinklerBlock.connection(side))) return "Connected chunk not loaded";
+                continue;
+            }
             BlockState state = level.getBlockState(pos);
             if (IrrigationValveBlock.connects(state, side)
                     && !IrrigationValveBlock.permitsFlow(level, pos, state)) {
@@ -103,6 +109,22 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public void checkFlow() {
         if (level instanceof ServerLevel && !flowAllowed()) stopWatering();
     }
+
+    void serverTick() {
+        checkFlow();
+        long now = level.getGameTime();
+        if (now < growthUntil || (growthUntil == 0 && now % WATERING_INTERVAL != 0)) return;
+        // Finish the current interval before charging for another. Idle heads retry on the world clock.
+        growthUntil = 0;
+        irrigateCycle();
+    }
+
+    void startAfterFill() {
+        if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE) && level.getGameTime() >= growthUntil) {
+            irrigateCycle();
+        }
+    }
+
     private void drawFromBasin() {
         if (water != 0 || !(level instanceof ServerLevel)) return;
         var network=IrrigationNetwork.search(level,worldPosition);
@@ -126,19 +148,28 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             tickets.add(FarmlandWaterManager.addAABBTicket(server,new AABB(soil)));
             BlockState state = server.getBlockState(soil);
             if (state.getBlock() instanceof FarmBlock && state.getValue(FarmBlock.MOISTURE) != 7)
-                server.setBlock(soil, state.setValue(FarmBlock.MOISTURE,7), 2);
+                server.setBlock(soil, state.setValue(FarmBlock.MOISTURE,7), loadedUpdateFlags(server, soil, Block.UPDATE_CLIENTS));
         }
         water -= 25;
         setChanged();
         setActive(true);
         // A loaded but no-longer-ticking chunk cannot retain a free growth bonus.
-        growthUntil = server.getGameTime() + 40;
+        growthUntil = server.getGameTime() + WATERING_INTERVAL;
         SprinklerGrowth.activate(server, worldPosition);
     }
     private void setActive(boolean active) {
         if (level instanceof ServerLevel && !isRemoved() && getBlockState().getBlock() instanceof IrrigationSprinklerBlock
                 && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE) != active)
-            level.setBlock(worldPosition, getBlockState().setValue(IrrigationSprinklerBlock.ACTIVE, active), 3);
+            level.setBlock(worldPosition, getBlockState().setValue(IrrigationSprinklerBlock.ACTIVE, active),
+                    loadedUpdateFlags(level, worldPosition, Block.UPDATE_ALL));
+    }
+
+    private static int loadedUpdateFlags(Level level, BlockPos pos, int flags) {
+        // Moisture and spray state leave the block shape alone. Avoid notifying unloaded neighbors.
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            if (!level.hasChunkAt(pos.relative(side))) return Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        }
+        return flags;
     }
     private void stopWatering() {
         if (level instanceof ServerLevel server) SprinklerGrowth.deactivate(server, worldPosition);

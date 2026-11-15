@@ -44,6 +44,7 @@ public final class SpannerItem extends Item {
             case DISABLED_PORT -> "Disabled " + route.disabledSide().getName() + " pipe port";
             case DISCONNECTED -> "No connected water source";
             case TOO_LARGE -> "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
+            case UNLOADED_CONNECTION -> "Connection leads into an unloaded chunk";
         };
         player.displayClientMessage(Component.literal(status + " [" + end.toShortString() + "]"), true);
         var routeColor = new DustParticleOptions(new Vector3f(0.20f, 0.77f, 1.0f), 0.95f);
@@ -89,10 +90,13 @@ public final class SpannerItem extends Item {
         String name = valve == null ? "Irrigation zone" : valve.zone();
         String flow;
         if (!state.getValue(IrrigationValveBlock.OPEN)) flow = "Valve closed";
-        else if (level.hasNeighborSignal(pos)) flow = "Valve paused by redstone";
+        else if (!IrrigationValveBlock.permitsFlow(level, pos, state)) flow = "Valve paused by redstone";
         else if (status.limit()) flow = "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
-        else if (status.supplies().isEmpty()) flow = status.blockedPath() ? "Supply path blocked" : "No connected water source";
-        else if (status.supplies().stream().noneMatch(supply -> supply.hasBucket(level))) flow = "Connected sources short of a full bucket";
+        else if (status.supplies().isEmpty()) {
+            if (status.blockedPath()) flow = "Supply path blocked";
+            else if (status.unloadedConnection()) flow = "Connection leads into an unloaded chunk";
+            else flow = "No connected water source";
+        } else if (status.supplies().stream().noneMatch(supply -> supply.hasBucket(level))) flow = "Connected sources short of a full bucket";
         else flow = "Water supply ready";
         int water = 0, capacity = 0;
         for (var supply : status.supplies()) {

@@ -20,6 +20,27 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
     public static final IntegerProperty FILL=IntegerProperty.create("fill",0,4);
     public WaterReservoirBlock(Properties properties){super(properties);registerDefaultState(defaultBlockState().setValue(X,1).setValue(Y,1).setValue(Z,1).setValue(FILL,0));}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(X,Y,Z,FILL);}
+
+    @Override protected BlockState rotate(BlockState state, Rotation rotation) {
+        int x = state.getValue(X);
+        int z = state.getValue(Z);
+        // X and Z locate this part within the shell, with the tank at (1, 1, 1).
+        return switch (rotation) {
+            case CLOCKWISE_90 -> state.setValue(X, 2 - z).setValue(Z, x);
+            case CLOCKWISE_180 -> state.setValue(X, 2 - x).setValue(Z, 2 - z);
+            case COUNTERCLOCKWISE_90 -> state.setValue(X, z).setValue(Z, 2 - x);
+            case NONE -> state;
+        };
+    }
+
+    @Override protected BlockState mirror(BlockState state, Mirror mirror) {
+        return switch (mirror) {
+            case LEFT_RIGHT -> state.setValue(Z, 2 - state.getValue(Z));
+            case FRONT_BACK -> state.setValue(X, 2 - state.getValue(X));
+            case NONE -> state;
+        };
+    }
+
     public static BlockPos core(BlockPos pos,BlockState state){return pos.offset(1-state.getValue(X),1-state.getValue(Y),1-state.getValue(Z));}
     public static boolean port(BlockState state,Direction side){
         int x=state.getValue(X),y=state.getValue(Y),z=state.getValue(Z);

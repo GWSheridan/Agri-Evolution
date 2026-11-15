@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.8
+
+- Inspecting a valve leaves neighboring chunks unloaded and tells you if the line continues into one.
+- The Spanner shows where a pipe connection leads into an unloaded chunk.
+- The Spanner points to the valve shutting off a sprinkler, even if another pipe leads to a full water source.
+- Filling a sprinkler with a water bucket starts the spray right away. It now waits two seconds before using water for the next spray.
+- Hand-filled sprinklers can water loaded farmland at the edge of a chunk. Sprinklers pause if a connected fitting is in an unloaded chunk next door.
+- Saved pipes, valves and sprinklers keep their connections when you rotate or mirror a structure. Disabled pipe ports turn with the rest of the layout.
+- Formed Water Reservoirs stay assembled when a saved structure is rotated or mirrored. Their outlets move with the shell, and the tank keeps its stored water and Mk II upgrade.
+
 ## 1.2.1 — 15 November 2026
 
 - Fixed the gap under Agri Evolution crops on farmland. Seedlings and mature plants now sit on the soil.

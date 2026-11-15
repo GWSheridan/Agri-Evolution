@@ -13,6 +13,8 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -46,6 +48,16 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
         for(var d:Direction.values())builder.add(IrrigationSprinklerBlock.connection(d));
     }
 
+    @Override protected BlockState rotate(BlockState state, Rotation rotation) {
+        return IrrigationSprinklerBlock.remapConnections(state, rotation::rotate)
+                .setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override protected BlockState mirror(BlockState state, Mirror mirror) {
+        return IrrigationSprinklerBlock.remapConnections(state, mirror::mirror)
+                .setValue(FACING, mirror.mirror(state.getValue(FACING)));
+    }
+
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
         Direction direction = context.getHorizontalDirection().getOpposite();
         BlockPos pos = context.getClickedPos();
@@ -66,15 +78,19 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
                 break;
             }
         }
-        return connections(defaultBlockState().setValue(FACING, direction).setValue(POWERED,context.getLevel().hasNeighborSignal(pos)),context.getLevel(),pos);
+        return connections(defaultBlockState().setValue(FACING, direction)
+                .setValue(POWERED, IrrigationNetwork.hasLoadedNeighborSignal(context.getLevel(), pos)), context.getLevel(), pos);
     }
 
     public static boolean connects(BlockState state, Direction side) {
         return state.getBlock() instanceof IrrigationValveBlock;
     }
     private static BlockState connections(BlockState state,net.minecraft.world.level.LevelAccessor level,BlockPos pos) {
-        for(var d:Direction.values())state=state.setValue(IrrigationSprinklerBlock.connection(d),
-                IrrigationNetwork.port(level.getBlockState(pos.relative(d)),d.getOpposite()));
+        for (Direction side : Direction.values()) {
+            BlockPos neighbor = pos.relative(side);
+            if (level.hasChunkAt(neighbor)) state = state.setValue(IrrigationSprinklerBlock.connection(side),
+                    IrrigationNetwork.port(level.getBlockState(neighbor), side.getOpposite()));
+        }
         return state;
     }
     @Override protected BlockState updateShape(BlockState state,Direction side,BlockState neighbor,
@@ -95,7 +111,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     public static boolean permitsFlow(Level level, BlockPos pos, BlockState state) {
-        return state.getValue(OPEN) && !level.hasNeighborSignal(pos);
+        return state.getValue(OPEN) && !IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
     }
 
     private static void notifySprinklers(Level level, BlockPos pos) {
@@ -109,7 +125,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     @Override protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighbor,
                                               BlockPos fromPos, boolean movedByPiston) {
         if (!level.isClientSide) {
-            boolean powered=level.hasNeighborSignal(pos);
+            boolean powered=IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
             BlockState next=connections(state.setValue(POWERED,powered).setValue(FACING,alignToSprinkler(level,pos,state.getValue(FACING))),level,pos);
             if (state!=next) level.setBlock(pos,next,3);
             notifySprinklers(level,pos);
@@ -119,7 +135,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                          Player player, BlockHitResult hit) {
         if (!level.isClientSide) {
-            BlockState next = connections(state.cycle(OPEN).setValue(POWERED,level.hasNeighborSignal(pos))
+            BlockState next = connections(state.cycle(OPEN).setValue(POWERED,IrrigationNetwork.hasLoadedNeighborSignal(level, pos))
                     .setValue(FACING,alignToSprinkler(level,pos,state.getValue(FACING))),level,pos);
             level.setBlock(pos, next, 3);
             player.displayClientMessage(Component.literal(!next.getValue(OPEN) ? "Valve closed - flow through this valve stopped"

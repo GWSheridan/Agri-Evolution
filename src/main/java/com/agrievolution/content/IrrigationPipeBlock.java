@@ -1,5 +1,6 @@
 package com.agrievolution.content;
 
+import java.util.function.UnaryOperator;
 import net.minecraft.core.*;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.*;
@@ -15,6 +16,23 @@ public final class IrrigationPipeBlock extends Block {
         next=next.setValue(IrrigationSprinklerBlock.connection(side),enabled(next,side)&&IrrigationNetwork.port(level.getBlockState(pos.relative(side)),side.getOpposite()));
         level.setBlock(pos,next,3);
     }
+
+    @Override protected BlockState rotate(BlockState state, Rotation rotation) {
+        return remapPorts(state, rotation::rotate);
+    }
+
+    @Override protected BlockState mirror(BlockState state, Mirror mirror) {
+        return remapPorts(state, mirror::mirror);
+    }
+
+    private static BlockState remapPorts(BlockState state, UnaryOperator<Direction> transform) {
+        BlockState result = IrrigationSprinklerBlock.remapConnections(state, transform);
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            result = result.setValue(BLOCKED[transform.apply(side).ordinal()], state.getValue(BLOCKED[side.ordinal()]));
+        }
+        return result;
+    }
+
     public IrrigationPipeBlock(Properties props) {
         super(props);
         BlockState state=defaultBlockState();

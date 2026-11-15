@@ -1,5 +1,6 @@
 package com.agrievolution.content;
 
+import java.util.function.UnaryOperator;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -15,6 +16,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -36,6 +39,23 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
             case UP -> BlockStateProperties.UP; case DOWN -> BlockStateProperties.DOWN;
         };
     }
+
+    static BlockState remapConnections(BlockState state, UnaryOperator<Direction> transform) {
+        BlockState result = state;
+        for (Direction side : Direction.Plane.HORIZONTAL) {
+            result = result.setValue(connection(transform.apply(side)), state.getValue(connection(side)));
+        }
+        return result;
+    }
+
+    @Override protected BlockState rotate(BlockState state, Rotation rotation) {
+        return remapConnections(state, rotation::rotate);
+    }
+
+    @Override protected BlockState mirror(BlockState state, Mirror mirror) {
+        return remapConnections(state, mirror::mirror);
+    }
+
     private static final VoxelShape SHAPE = Shapes.or(Block.box(3,14,3,13,16,13),
             Block.box(6,3,6,10,14,10),Block.box(1,1,7,15,5,9),Block.box(7,1,1,9,5,15));
 
@@ -94,10 +114,7 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
             }
         };
         return (world, pos, current, entity) -> {
-            if (entity instanceof IrrigationSprinklerBlockEntity sprinkler) {
-                sprinkler.checkFlow();
-                if (world.getGameTime() % 40 == 0) sprinkler.irrigateCycle();
-            }
+            if (entity instanceof IrrigationSprinklerBlockEntity sprinkler) sprinkler.serverTick();
         };
     }
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
@@ -120,7 +137,7 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
                     if(stack.isEmpty())player.setItemInHand(hand,empty);
                     else if(!player.getInventory().add(empty))player.drop(empty,false);
                 }
-                if(!state.getValue(ACTIVE))sprinkler.irrigateCycle();
+                sprinkler.startAfterFill();
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }

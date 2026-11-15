@@ -1,9 +1,16 @@
 package com.agrievolution.content;
 
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.neoforged.neoforge.gametest.*;
 
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
@@ -90,6 +97,48 @@ public final class ReservoirGameTests {
         var head=(IrrigationSprinklerBlockEntity)level.getBlockEntity(pos);head.irrigateCycle();
         h.assertTrue(head.water()==975&&tank.water()==0,"Unrelated closed branch must not shut off an open supply path");h.succeed();
     }
+    @GameTest(template = "empty")
+    public static void savedReservoirSurvivesRotationAndMirroring(GameTestHelper h) {
+        var level = h.getLevel();
+        var core = h.absolutePos(new BlockPos(3, 150, 3));
+        var tank = tank(h, core);
+        for (int i = 0; i < 8; i++) h.assertTrue(tank.addBucket(), "Fill the tank above the first display level");
+        h.assertTrue(tank.upgrade(), "The tank has the Mk II upgrade to save");
+        level.setBlock(core.east(2), AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(core.east(3), AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(core.east(4), AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), Block.UPDATE_ALL);
+
+        var template = new StructureTemplate();
+        template.fillFromWorld(level, core.offset(-1, -1, -1), new Vec3i(6, 3, 3), false, null);
+        var placements = List.of(
+                new StructurePlaceSettings().setRotation(Rotation.CLOCKWISE_90),
+                new StructurePlaceSettings().setRotation(Rotation.CLOCKWISE_180).setMirror(Mirror.LEFT_RIGHT),
+                new StructurePlaceSettings().setRotation(Rotation.COUNTERCLOCKWISE_90).setMirror(Mirror.FRONT_BACK));
+        var copies = new ArrayList<WaterReservoirBlockEntity>();
+        for (var placement : placements) {
+            var origin = core.above(7 + copies.size() * 5);
+            h.assertTrue(template.placeInWorld(level, origin, origin, placement.setKnownShape(true), level.random,
+                    Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE), "Saved reservoir can be placed");
+            var pastedCore = origin.offset(StructureTemplate.calculateRelativePosition(placement, new BlockPos(1, 1, 1)));
+            var copy = (WaterReservoirBlockEntity) level.getBlockEntity(pastedCore);
+            h.assertTrue(copy != null && copy.complete() && copy.water() == 9000 && copy.renewable()
+                    && level.getBlockState(pastedCore).getValue(WaterReservoirBlock.FILL) == 2,
+                    "Rotated shell, stored water, fill display and Mk II upgrade survive placement");
+            copies.add(copy);
+
+            var outlet = placement.getRotation().rotate(placement.getMirror().mirror(Direction.EAST));
+            var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(pastedCore.relative(outlet, 4));
+            sprinkler.irrigateCycle();
+            h.assertTrue(sprinkler.water() == 975 && copy.water() == 8000 && tank.water() == 9000,
+                    "The pasted sprinkler draws from its own tank through the transformed outlet");
+        }
+        h.runAfterDelay(21, () -> {
+            h.assertTrue(copies.stream().allMatch(WaterReservoirBlockEntity::complete),
+                    "Copied shells stay intact after the reservoir checks its structure");
+            h.succeed();
+        });
+    }
+
     @GameTest(template="empty") public static void oversizedNetworkFailsClosed(GameTestHelper h){
         var level=h.getLevel();var origin=h.absolutePos(new BlockPos(1,90,1));
         for(int x=0;x<9;x++)for(int y=0;y<7;y++)for(int z=0;z<9;z++)
