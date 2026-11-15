@@ -116,10 +116,10 @@ public final class InspectionGameTests {
         level.setBlock(pos,AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),3);
         var head=(IrrigationSprinklerBlockEntity)level.getBlockEntity(pos);
         String ready=String.join(" ",FarmInspection.describe(level,pos,true,false));
-        h.assertTrue(ready.contains("1000 mB")&&ready.contains("Ready"),"Report source and ready status");
+        h.assertTrue(ready.contains("1000 mB")&&ready.contains("Connected source ready to refill"),"Report source and ready status");
         h.assertTrue(tank.water()==1000&&head.water()==0,"Inspection cannot transfer water");
         level.setBlock(valve,level.getBlockState(valve).setValue(IrrigationValveBlock.OPEN,false),3);
-        h.assertTrue(String.join(" ",FarmInspection.describe(level,pos,true,false)).contains("adjacent valve"),"Explain closed valve");
+        h.assertTrue(FarmInspection.describe(level,pos,true,false).contains("Adjacent valve closed"),"Explain closed valve");
         h.assertTrue(IrrigationNetwork.search(level,valve).supplies().isEmpty(),"Closed starting valve must not claim reachable source");h.succeed();
     }
 

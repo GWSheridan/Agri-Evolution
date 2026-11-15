@@ -216,6 +216,10 @@ public final class IrrigationGameTests {
         h.assertTrue(sprinkler.water() == 975 && sprinkler.growthActive()
                 && level.getBlockState(soil).getValue(FarmBlock.MOISTURE) == 7, "Stored water still reaches loaded farmland");
         h.assertFalse(level.hasChunkAt(outside), "Irrigation must not load the neighboring chunk");
+        var watering = FarmInspection.describe(level, pos, true, false);
+        h.assertTrue(watering.contains("Watering, x5 natural crop growth") && watering.contains("Reachable farmland: 1 / 81"),
+                "The coverage panel shows the loaded plot being watered");
+        h.assertFalse(level.hasChunkAt(outside), "Inspecting the active head must leave the neighboring chunk unloaded");
 
         var conductor = pos.west();
         var lever = conductor.below();
@@ -232,6 +236,8 @@ public final class IrrigationGameTests {
         sprinkler.irrigateCycle();
         h.assertTrue(sprinkler.water() == 975 && sprinkler.inspectionStatus().equals("Connected chunk not loaded"),
                 "A remembered fitting across the boundary must not be bypassed");
+        h.assertTrue(FarmInspection.describe(level, pos, true, false).contains("Connected chunk not loaded"),
+                "The coverage panel shows the missing connection when it actually stops the spray");
         h.assertFalse(level.hasChunkAt(outside), "Inspecting the connection must leave the neighboring chunk unloaded");
         h.succeed();
     }

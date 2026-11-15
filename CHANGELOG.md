@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.10
+
+- The Spanner's sprinkler panel shows whether the head is watering or why it stopped, including at chunk edges.
+
 ## 1.2.9
 
 - Reopen a valve during a sprinkler's two-second spray to resume it without using extra water.

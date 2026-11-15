@@ -1,5 +1,6 @@
 package com.agrievolution.content;
 
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -74,14 +75,18 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         return null;
     }
 
-    /** Read-only status for an empty-hand inspection. */
+    /** Read-only status for empty-hand inspection and the Spanner preview. */
     String inspectionStatus() {
+        return inspectionStatus(null, null);
+    }
+
+    String inspectionStatus(IrrigationNetwork.Search inspectedNetwork, Set<BlockPos> inspectedSoils) {
         String blockage = localBlockage();
         if (blockage != null) return blockage;
-        var network = IrrigationNetwork.search(level, worldPosition);
+        var network = inspectedNetwork == null ? IrrigationNetwork.search(level, worldPosition) : inspectedNetwork;
         blockage = networkBlockage(network);
         if (blockage != null) return blockage;
-        var soils = wateredSoils();
+        var soils = inspectedSoils == null ? wateredSoils() : inspectedSoils;
         if (level.getGameTime() < growthUntil && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) {
             return soils.isEmpty() ? "Spraying, no farmland in reach" : "Watering, x5 natural crop growth";
         }
@@ -98,7 +103,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         return "Connected sources short of a full bucket";
     }
 
-    private boolean hasDrySoil(java.util.Set<BlockPos> soils) {
+    private boolean hasDrySoil(Set<BlockPos> soils) {
         for (var pos : soils) {
             var state = level.getBlockState(pos);
             if (state.getBlock() instanceof FarmBlock && state.getValue(FarmBlock.MOISTURE) < 7) return true;
@@ -157,7 +162,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         spray(server, soils, server.getGameTime() + WATERING_INTERVAL);
     }
 
-    private void spray(ServerLevel server, java.util.Set<BlockPos> soils, long until) {
+    private void spray(ServerLevel server, Set<BlockPos> soils, long until) {
         clearTickets();
         for (BlockPos soil : soils) {
             tickets.add(FarmlandWaterManager.addAABBTicket(server,new AABB(soil)));
@@ -217,7 +222,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     /** First reachable farmland in each column; never water through roofs or load chunks. */
-    java.util.Set<BlockPos> wateredSoils() {
+    Set<BlockPos> wateredSoils() {
         var result=new java.util.HashSet<BlockPos>();
         if(level!=null) for(var cell:SprinklerCoverage.scan(level,worldPosition)) if(cell.watered())result.add(cell.pos());
         return result;

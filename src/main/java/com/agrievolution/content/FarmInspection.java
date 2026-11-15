@@ -54,17 +54,9 @@ public final class FarmInspection {
             if(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head){
                 lines.add("Head: "+head.water()+" / 4000 mB");
                 lines.add(head.controls());
-                String reason=head.redstoneMode()==0&&level.hasNeighborSignal(pos)?"Paused: redstone at sprinkler":head.redstoneMode()==1&&!level.hasNeighborSignal(pos)?"Paused: requires redstone":null;
-                for(var side:Direction.values()){
-                    var next=pos.relative(side);if(!level.hasChunkAt(next)){reason="Paused: unloaded connection";break;}
-                    var other=level.getBlockState(next);
-                    if(IrrigationValveBlock.connects(other,side)&&!IrrigationValveBlock.permitsFlow(level,next,other))reason="Paused: adjacent valve closed/powered";
-                }
-                if(reason==null)reason=network.overflow()?"Paused: network too large":network.supplies().isEmpty()&&network.blockedValve()?"Paused: closed valve in pipe network":head.water()<25&&water<1000&&!head.growthActive()?"Empty: add bucket or refill supply":head.growthActive()?"Sprinkling: x5 growth opportunities":"Ready: next cycle within 2 seconds";
-                lines.add(reason);
-                if(head.smartWatering()&&!head.growthActive())lines.add("Dry-soil mode also waits when all soil is wet");
-                long count=SprinklerCoverage.scan(level,pos).stream().filter(SprinklerCoverage.Cell::watered).count();
-                lines.add("Reachable farmland: "+count+" / 81");
+                var soils = head.wateredSoils();
+                lines.add(head.inspectionStatus(network, soils));
+                lines.add("Reachable farmland: "+soils.size()+" / 81");
                 lines.add("Preview: green soil; red blocked; amber no soil");
             }else lines.add("Aim at the sprinkler for operating status");
         }else if(sampler && (state.getBlock() instanceof CropBlock || state.is(net.minecraft.tags.BlockTags.CROPS))){
