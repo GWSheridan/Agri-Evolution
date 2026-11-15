@@ -111,9 +111,17 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     void serverTick() {
-        checkFlow();
-        long now = level.getGameTime();
-        if (now < growthUntil || (growthUntil == 0 && now % WATERING_INTERVAL != 0)) return;
+        if (!(level instanceof ServerLevel server)) return;
+        long now = server.getGameTime();
+        if (now < growthUntil) {
+            if (!flowAllowed()) stopWatering();
+            else if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) {
+                // Reopening the valve can use the rest of the paid interval.
+                spray(server, wateredSoils(), growthUntil);
+            }
+            return;
+        }
+        if (growthUntil == 0 && now % WATERING_INTERVAL != 0) return;
         // Finish the current interval before charging for another. Idle heads retry on the world clock.
         growthUntil = 0;
         irrigateCycle();
@@ -137,12 +145,19 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public void irrigateCycle() {
         if (!(level instanceof ServerLevel server) || isRemoved()) return;
         if (!flowAllowed()) { stopWatering(); return; }
+        growthUntil = 0;
         var soils=wateredSoils();
         if (smartWatering && !hasDrySoil(soils)) {
             stopWatering();return;
         }
         drawFromBasin();
         if (water < 25) { stopWatering(); return; }
+        water -= 25;
+        setChanged();
+        spray(server, soils, server.getGameTime() + WATERING_INTERVAL);
+    }
+
+    private void spray(ServerLevel server, java.util.Set<BlockPos> soils, long until) {
         clearTickets();
         for (BlockPos soil : soils) {
             tickets.add(FarmlandWaterManager.addAABBTicket(server,new AABB(soil)));
@@ -150,11 +165,9 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             if (state.getBlock() instanceof FarmBlock && state.getValue(FarmBlock.MOISTURE) != 7)
                 server.setBlock(soil, state.setValue(FarmBlock.MOISTURE,7), loadedUpdateFlags(server, soil, Block.UPDATE_CLIENTS));
         }
-        water -= 25;
-        setChanged();
         setActive(true);
         // A loaded but no-longer-ticking chunk cannot retain a free growth bonus.
-        growthUntil = server.getGameTime() + WATERING_INTERVAL;
+        growthUntil = until;
         SprinklerGrowth.activate(server, worldPosition);
     }
     private void setActive(boolean active) {

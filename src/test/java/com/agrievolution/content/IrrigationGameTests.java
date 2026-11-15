@@ -166,6 +166,39 @@ public final class IrrigationGameTests {
     }
 
     @GameTest(template="empty")
+    public static void sprinklerResumesPaidSprayWhenValveReopens(GameTestHelper h) {
+        var sprinkler = setup(h, false);
+        var level = h.getLevel();
+        var pos = position(h);
+        var valve = pos.above();
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var block = AEBlocks.IRRIGATION_VALVE.get();
+        var hit = new BlockHitResult(Vec3.atCenterOf(valve), Direction.UP, valve, false);
+        level.setBlock(valve, block.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(pos.below(2), Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        sprinkler.fillBucket();
+        sprinkler.startAfterFill();
+        h.assertTrue(sprinkler.water() == 975 && sprinkler.growthActive(), "The first spray costs 25 mB");
+
+        h.runAfterDelay(5, () -> {
+            block.useWithoutItem(level.getBlockState(valve), level, valve, player, hit);
+            h.assertFalse(sprinkler.growthActive(), "The valve immediately stops the crop boost");
+        });
+        h.runAfterDelay(10, () -> {
+            h.assertTrue(sprinkler.water() == 975 && !sprinkler.growthActive(), "The closed valve holds the spray");
+            block.useWithoutItem(level.getBlockState(valve), level, valve, player, hit);
+        });
+        h.runAfterDelay(12, () -> h.assertTrue(sprinkler.water() == 975 && sprinkler.growthActive(),
+                "The spray resumes without a second charge after the valve opens"));
+        h.runAfterDelay(39, () -> h.assertTrue(sprinkler.water() == 975 && sprinkler.growthActive(),
+                "Resuming keeps the original watering deadline"));
+        h.runAfterDelay(41, () -> {
+            h.assertTrue(sprinkler.water() == 950 && sprinkler.growthActive(), "The next spray is charged on schedule");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template="empty")
     public static void sprinklerWatersLoadedSoilAtChunkEdge(GameTestHelper h) {
         var level = h.getLevel();
         var isolatedChunk = new ChunkPos(h.absolutePos(new BlockPos(512, 100, 4)));

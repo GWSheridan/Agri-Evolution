@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.9
+
+- Reopen a valve during a sprinkler's two-second spray to resume it without using extra water.
+
 ## 1.2.8
 
 - Inspecting a valve leaves neighboring chunks unloaded and tells you if the line continues into one.
