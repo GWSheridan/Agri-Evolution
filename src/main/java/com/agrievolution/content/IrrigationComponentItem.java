@@ -30,7 +30,7 @@ public final class IrrigationComponentItem extends BlockItem {
             lines.add(Component.literal("Auto-aligns to the head, including above or below."));
             lines.add(Component.literal("Right-click toggles flow; sneak-click to place against it."));
             lines.add(Component.literal("External redstone power shuts off spray and x5 growth."));
-            lines.add(Component.literal("Straight valve: connect pipes at its two ends."));
+            lines.add(Component.literal("Connect pipes on any face, including side branches."));
         }
     }
 }

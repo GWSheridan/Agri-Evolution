@@ -108,13 +108,21 @@ public final class IrrigationNetwork {
     record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, boolean blockedPath,
                       boolean unloadedConnection, boolean incompleteReservoir) {}
     private record Endpoint(BlockPos pos, Supply supply) {}
-    private record ClosedPort(BlockPos from, BlockPos pipe, Direction side) {}
+    private record ClosedPort(BlockPos from, BlockPos to, BlockPos pipe, Direction side) {}
     private static final class Trace {
         final Map<BlockPos, BlockPos> parents = new HashMap<>();
         final List<Endpoint> endpoints = new ArrayList<>();
         final List<BlockPos> sprinklers = new ArrayList<>();
         BlockPos valve, lastFitting, unloadedFitting, incompleteReservoir;
-        ClosedPort port;
+        final List<ClosedPort> closedPorts = new ArrayList<>();
+
+        ClosedPort blockingPort() {
+            // A loop may reach the other fitting after this closed face was first seen.
+            for (ClosedPort port : closedPorts) {
+                if (!parents.containsKey(port.to())) return port;
+            }
+            return null;
+        }
     }
 
     public static Route trace(Level level, BlockPos head) {
@@ -134,10 +142,11 @@ public final class IrrigationNetwork {
         }
         if (!trace.endpoints.isEmpty()) return route(trace, trace.endpoints.getFirst().pos(), Flow.EMPTY);
         if (trace.valve != null) return route(trace, trace.valve, Flow.CLOSED_VALVE);
-        if (trace.port != null) {
-            var blocks = new ArrayList<>(route(trace, trace.port.from(), Flow.DISABLED_PORT).blocks());
-            if (!blocks.getLast().equals(trace.port.pipe())) blocks.add(trace.port.pipe());
-            return new Route(List.copyOf(blocks), Flow.DISABLED_PORT, trace.port.side());
+        ClosedPort port = trace.blockingPort();
+        if (port != null) {
+            var blocks = new ArrayList<>(route(trace, port.from(), Flow.DISABLED_PORT).blocks());
+            if (!blocks.getLast().equals(port.pipe())) blocks.add(port.pipe());
+            return new Route(List.copyOf(blocks), Flow.DISABLED_PORT, port.side());
         }
         if (trace.unloadedFitting != null) return route(trace, trace.unloadedFitting, Flow.UNLOADED_CONNECTION);
         if (trace.incompleteReservoir != null) return route(trace, trace.incompleteReservoir, Flow.INCOMPLETE_RESERVOIR);
@@ -148,7 +157,7 @@ public final class IrrigationNetwork {
         var trace = new Trace();
         var network = search(level, valve, trace, true);
         return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), network.overflow(),
-                network.blockedValve() || trace.port != null, trace.unloadedFitting != null, trace.incompleteReservoir != null);
+                network.blockedValve() || trace.blockingPort() != null, trace.unloadedFitting != null, trace.incompleteReservoir != null);
     }
 
     private static Route route(Trace trace, BlockPos end, Flow flow) {
@@ -195,12 +204,12 @@ public final class IrrigationNetwork {
                 var neighbor=level.getBlockState(next);
                 boolean incoming = port(neighbor,side.getOpposite());
                 if (!outgoing || !incoming) {
-                    if (trace != null && trace.port == null) {
-                        if (!outgoing && incoming) trace.port = new ClosedPort(pos, pos, side);
+                    if (trace != null) {
+                        if (!outgoing && incoming) trace.closedPorts.add(new ClosedPort(pos, next, pos, side));
                         else if (outgoing && neighbor.getBlock() instanceof IrrigationPipeBlock) {
-                            trace.port = new ClosedPort(pos, next, side.getOpposite());
+                            trace.closedPorts.add(new ClosedPort(pos, next, next, side.getOpposite()));
                         } else if (!outgoing && neighbor.getBlock() instanceof IrrigationPipeBlock) {
-                            trace.port = new ClosedPort(pos, pos, side);
+                            trace.closedPorts.add(new ClosedPort(pos, next, pos, side));
                         }
                     }
                     continue;

@@ -300,9 +300,18 @@ public final class IrrigationGameTests {
                 && !level.getBlockState(edge).getValue(west) && !level.getBlockState(head).getValue(east)
                 && IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.DISABLED_PORT,
                 "Closing the loaded face updates both fittings");
+        level.setBlock(edge.below(), AEBlocks.IRRIGATION_VALVE.get().defaultBlockState()
+                .setValue(IrrigationValveBlock.OPEN, false), quietUpdate);
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+        sprinkler.fillBucket();
+        sprinkler.irrigateCycle();
+        h.assertTrue(level.getBlockState(head).getValue(IrrigationSprinklerBlock.ACTIVE),
+                "The isolated sprinkler runs on its own tank");
         h.assertTrue(IrrigationPipeBlock.toggle(level, edge, Direction.WEST)
                 && level.getBlockState(edge).getValue(west) && level.getBlockState(head).getValue(east),
                 "Reopening the loaded face reconnects both fittings");
+        h.assertFalse(level.getBlockState(head).getValue(IrrigationSprinklerBlock.ACTIVE),
+                "Reconnecting the closed valve stops the spray immediately");
         h.assertFalse(level.hasChunkAt(outside), "Changing either face leaves the neighboring chunk unloaded");
         h.succeed();
     }

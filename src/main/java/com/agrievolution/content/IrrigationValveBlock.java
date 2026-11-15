@@ -61,27 +61,8 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
-        Direction direction = context.getHorizontalDirection().getOpposite();
-        BlockPos pos = context.getClickedPos();
-        for (Direction side : Direction.values()) {
-            BlockPos neighbor = pos.relative(side);
-            if (context.getLevel().hasChunkAt(neighbor)
-                    && (context.getLevel().getBlockState(neighbor).getBlock() instanceof IrrigationBasinBlock
-                    || context.getLevel().getBlockState(neighbor).getBlock() instanceof IrrigationPipeBlock
-                    || context.getLevel().getBlockState(neighbor).getBlock() instanceof WaterReservoirBlock))
-                direction = side.getOpposite();
-        }
-        // A sprinkler takes priority over the basin and over the player's view direction.
-        for (Direction side : Direction.values()) {
-            BlockPos neighbor = pos.relative(side);
-            if (context.getLevel().hasChunkAt(neighbor)
-                    && context.getLevel().getBlockState(neighbor).getBlock() instanceof IrrigationSprinklerBlock) {
-                direction = side;
-                break;
-            }
-        }
-        return IrrigationNetwork.loadedConnections(defaultBlockState().setValue(FACING, direction)
-                .setValue(POWERED, IrrigationNetwork.hasLoadedNeighborSignal(context.getLevel(), pos)), context.getLevel(), pos);
+        return connectedState(context.getLevel(), context.getClickedPos(),
+                defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite()));
     }
 
     public static boolean connects(BlockState state, Direction side) {
@@ -91,29 +72,40 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
             net.minecraft.world.level.LevelAccessor level,BlockPos pos,BlockPos other) {
         return state.setValue(IrrigationSprinklerBlock.connection(side),IrrigationNetwork.port(neighbor,side.getOpposite()));
     }
-    private static Direction alignToSprinkler(Level level,BlockPos pos,Direction fallback) {
-        Direction head = null;
-        Direction pipe = null;
-        boolean alignedPipe = false;
+    private static BlockState connectedState(Level level, BlockPos pos, BlockState state) {
+        Direction facing = state.getValue(FACING);
+        Direction best = facing;
+        int bestPriority = 0;
         for (Direction side : Direction.values()) {
             BlockPos neighbor = pos.relative(side);
             if (!level.hasChunkAt(neighbor)) continue;
-            var block = level.getBlockState(neighbor).getBlock();
-            boolean aligned = side.getAxis() == fallback.getAxis();
-            if (block instanceof IrrigationSprinklerBlock) {
-                if (aligned) return fallback;
-                if (head == null) head = side;
-            } else if (block instanceof IrrigationPipeBlock) {
-                if (aligned) alignedPipe = true;
-                pipe = side;
+            BlockState fitting = level.getBlockState(neighbor);
+            boolean connected = IrrigationNetwork.port(fitting, side.getOpposite());
+            state = state.setValue(IrrigationSprinklerBlock.connection(side), connected);
+            if (!connected) continue;
+
+            int priority = switch (fitting.getBlock()) {
+                case IrrigationSprinklerBlock head -> 3;
+                case IrrigationPipeBlock pipe -> 2;
+                default -> 1;
+            };
+            boolean aligned = side.getAxis() == facing.getAxis();
+            if (priority > bestPriority || (priority == bestPriority && aligned)) {
+                best = aligned ? facing : side;
+                bestPriority = priority;
             }
         }
-        if (head != null) return head;
-        return alignedPipe || pipe == null ? fallback : pipe;
+        return state.setValue(FACING, best)
+                .setValue(POWERED, IrrigationNetwork.hasLoadedNeighborSignal(level, pos));
     }
 
     public static boolean permitsFlow(Level level, BlockPos pos, BlockState state) {
         return state.getValue(OPEN) && !IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
+    }
+
+    static String flowStatus(Level level, BlockPos pos, BlockState state) {
+        if (!state.getValue(OPEN)) return "Valve closed";
+        return permitsFlow(level, pos, state) ? "Valve open" : "Valve paused by redstone";
     }
 
     private static void notifySprinklers(Level level, BlockPos pos) {
@@ -125,20 +117,19 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        boolean powered = IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
-        if (powered != state.getValue(POWERED)) {
-            level.setBlock(pos, state.setValue(POWERED, powered), IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
-            notifySprinklers(level, pos);
-        }
+        refreshConnections(level, pos, state);
+        notifySprinklers(level, pos);
+    }
+
+    private static void refreshConnections(Level level, BlockPos pos, BlockState state) {
+        BlockState next = connectedState(level, pos, state);
+        if (state != next) level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
     }
 
     @Override protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighbor,
                                               BlockPos fromPos, boolean movedByPiston) {
         if (!level.isClientSide) {
-            boolean powered=IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
-            BlockState next = IrrigationNetwork.loadedConnections(
-                    state.setValue(POWERED, powered).setValue(FACING, alignToSprinkler(level, pos, state.getValue(FACING))), level, pos);
-            if (state != next) level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
+            refreshConnections(level, pos, state);
             notifySprinklers(level,pos);
         }
     }
@@ -146,8 +137,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                          Player player, BlockHitResult hit) {
         if (!level.isClientSide) {
-            BlockState next = IrrigationNetwork.loadedConnections(state.cycle(OPEN).setValue(POWERED,IrrigationNetwork.hasLoadedNeighborSignal(level, pos))
-                    .setValue(FACING,alignToSprinkler(level,pos,state.getValue(FACING))),level,pos);
+            BlockState next = connectedState(level, pos, state.cycle(OPEN));
             level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
             player.displayClientMessage(Component.literal(!next.getValue(OPEN) ? "Valve closed - flow through this valve stopped"
                     : next.getValue(POWERED) ? "Valve OPEN, but REDSTONE POWER is holding it shut"

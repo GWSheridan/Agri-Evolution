@@ -43,10 +43,11 @@ public final class SpannerItem extends Item {
 
     private static void showRoute(ServerPlayer player, IrrigationNetwork.Route route) {
         var end = route.blocks().getLast();
+        var level = player.serverLevel();
         String status = switch (route.flow()) {
             case READY -> "Water source ready";
             case EMPTY -> "Water source has less than a bucket";
-            case CLOSED_VALVE -> "Valve is closed or powered";
+            case CLOSED_VALVE -> IrrigationValveBlock.flowStatus(level, end, level.getBlockState(end));
             case DISABLED_PORT -> "Disabled " + route.disabledSide().getName() + " pipe port";
             case DISCONNECTED -> "No connected water source";
             case TOO_LARGE -> "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
@@ -57,7 +58,6 @@ public final class SpannerItem extends Item {
         var routeColor = new DustParticleOptions(new Vector3f(0.20f, 0.77f, 1.0f), 0.95f);
         var endColor = new DustParticleOptions(route.flow() == IrrigationNetwork.Flow.READY
                 ? new Vector3f(0.3f, 0.95f, 0.25f) : new Vector3f(1.0f, 0.44f, 0.15f), 1.25f);
-        var level = player.serverLevel();
         int stride = Math.max(1, (route.blocks().size() + 47) / 48);
         for (int i = 0; i < route.blocks().size() - 1; i += stride) {
             var point = route.blocks().get(i);

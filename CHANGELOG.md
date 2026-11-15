@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.21
+
+- Valves align with usable fittings. A disabled pipe face or reservoir panel without a port no longer turns the valve.
+- Loading a valve refreshes its alignment and connectors alongside its redstone state.
+- Changing a pipe port at a chunk edge updates the loaded valve or sprinkler straight away.
+- The Spanner ignores disabled ports that can be bypassed through a pipe loop.
+- Valve inspection distinguishes a manual shutoff from redstone power, and the item tooltip explains that side branches work.
+
 ## 1.2.20
 
 - Reopening a valve mid-spray resumes watering only on plots the sprinkler already reached and can still reach.

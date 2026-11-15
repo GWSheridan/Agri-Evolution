@@ -14,9 +14,11 @@ public final class IrrigationPipeBlock extends Block {
     public static boolean toggle(Level level, BlockPos pos, Direction side) {
         BlockPos neighborPos = pos.relative(side);
         if (!level.hasChunkAt(pos) || !level.hasChunkAt(neighborPos)) return false;
+        BlockState state = level.getBlockState(pos);
+        if (!(state.getBlock() instanceof IrrigationPipeBlock)) return false;
         var neighbor = level.getBlockState(neighborPos);
         boolean connected = IrrigationNetwork.port(neighbor, side.getOpposite());
-        var next = level.getBlockState(pos).cycle(BLOCKED[side.ordinal()]);
+        var next = state.cycle(BLOCKED[side.ordinal()]);
         next = next.setValue(IrrigationSprinklerBlock.connection(side), enabled(next, side) && connected);
         for (Direction other : Direction.Plane.HORIZONTAL) {
             if (!level.hasChunkAt(pos.relative(other))) {
@@ -26,6 +28,9 @@ public final class IrrigationPipeBlock extends Block {
                 if (connected) {
                     var updated = neighbor.updateShape(side.getOpposite(), next, level, neighborPos, pos);
                     if (updated != neighbor) level.setBlock(neighborPos, updated, quietUpdate);
+                    if (updated.getBlock() instanceof IrrigationValveBlock || updated.getBlock() instanceof IrrigationSprinklerBlock) {
+                        level.neighborChanged(updated, neighborPos, state.getBlock(), pos, false);
+                    }
                 }
                 return true;
             }

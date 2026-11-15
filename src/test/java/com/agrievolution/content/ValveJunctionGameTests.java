@@ -19,6 +19,7 @@ public final class ValveJunctionGameTests {
         var valve = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState();
         int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
         level.setBlock(powered.above(), Blocks.REDSTONE_BLOCK.defaultBlockState(), quietUpdate);
+        level.setBlock(unpowered.below(), AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
         level.setBlock(powered, valve, quietUpdate);
         level.setBlock(unpowered, valve.setValue(IrrigationValveBlock.POWERED, true), quietUpdate);
         h.assertTrue(!level.getBlockState(powered).getValue(IrrigationValveBlock.POWERED)
@@ -26,8 +27,68 @@ public final class ValveJunctionGameTests {
         h.runAfterDelay(5, () -> {
             h.assertTrue(level.getBlockState(powered).getValue(IrrigationValveBlock.POWERED)
                     && !level.getBlockState(unpowered).getValue(IrrigationValveBlock.POWERED), "Loaded valves check the current signal");
+            h.assertTrue(level.getBlockState(unpowered).getValue(IrrigationValveBlock.FACING) == Direction.DOWN
+                            && level.getBlockState(unpowered).getValue(IrrigationSprinklerBlock.connection(Direction.DOWN))
+                            && level.getBlockState(unpowered.below()).getValue(IrrigationSprinklerBlock.connection(Direction.UP)),
+                    "The load tick repairs saved alignment and connectors on both fittings");
+            h.assertTrue(FarmInspection.describe(level, powered, true, false).contains("Valve paused by redstone"),
+                    "The Spanner distinguishes a powered valve from a manual shutoff");
             h.succeed();
         });
+    }
+
+    @GameTest(template = "empty")
+    public static void valveAlignsToUsablePorts(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 168, 4));
+        var pipe = pos.north();
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(pipe, AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), quietUpdate);
+        h.assertTrue(IrrigationPipeBlock.toggle(level, pipe, Direction.SOUTH), "Close the pipe face before placement");
+        level.setBlock(pos.above(), AEBlocks.WATER_RESERVOIR.get().defaultBlockState().setValue(WaterReservoirBlock.X, 0), quietUpdate);
+        level.setBlock(pos.east(), AEBlocks.IRRIGATION_BASIN.get().defaultBlockState(), quietUpdate);
+        level.setBlock(pos.below(), Blocks.STONE.defaultBlockState(), quietUpdate);
+        var valve = AEBlocks.IRRIGATION_VALVE.get();
+        var context = new BlockPlaceContext(h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL), InteractionHand.MAIN_HAND,
+                new ItemStack(valve), new BlockHitResult(Vec3.atCenterOf(pos.below()), Direction.UP, pos.below(), false));
+        var placed = valve.getStateForPlacement(context);
+        h.assertTrue(placed.getValue(IrrigationValveBlock.FACING).getAxis() == Direction.Axis.X
+                        && placed.getValue(IrrigationSprinklerBlock.connection(Direction.EAST))
+                        && !placed.getValue(IrrigationSprinklerBlock.connection(Direction.NORTH))
+                        && !placed.getValue(IrrigationSprinklerBlock.connection(Direction.UP)),
+                "The valve aligns with the basin and ignores the disabled pipe and reservoir casing");
+        level.setBlock(pos, placed, Block.UPDATE_ALL);
+        IrrigationPipeBlock.toggle(level, pipe, Direction.SOUTH);
+        h.assertTrue(level.getBlockState(pos).getValue(IrrigationValveBlock.FACING).getAxis() == Direction.Axis.Z,
+                "An enabled pipe takes alignment priority over a basin");
+        IrrigationPipeBlock.toggle(level, pipe, Direction.SOUTH);
+        h.assertTrue(level.getBlockState(pos).getValue(IrrigationValveBlock.FACING).getAxis() == Direction.Axis.X,
+                "Closing the pipe face restores alignment to the basin");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void spannerSkipsClosedPortsBypassedByLoops(GameTestHelper h) {
+        var level = h.getLevel();
+        var valve = h.absolutePos(new BlockPos(4, 173, 4));
+        var corner = valve.east().south();
+        var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
+        level.setBlock(valve, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+        for (var pos : new BlockPos[] {valve.east(), valve.south(), corner}) {
+            level.setBlock(pos, pipe, Block.UPDATE_ALL);
+        }
+        IrrigationPipeBlock.toggle(level, valve.south(), Direction.EAST);
+        h.assertTrue(IrrigationNetwork.trace(level, valve).flow() == IrrigationNetwork.Flow.DISCONNECTED
+                        && !IrrigationNetwork.inspectZone(level, valve).blockedPath(),
+                "The closed face is bypassed and the network has no source");
+
+        level.setBlock(corner.below(), AEBlocks.IRRIGATION_BASIN.get().defaultBlockState(), Block.UPDATE_ALL);
+        IrrigationPipeBlock.toggle(level, corner, Direction.DOWN);
+        var route = IrrigationNetwork.trace(level, valve);
+        h.assertTrue(route.flow() == IrrigationNetwork.Flow.DISABLED_PORT && route.blocks().getLast().equals(corner)
+                        && route.disabledSide() == Direction.DOWN && IrrigationNetwork.inspectZone(level, valve).blockedPath(),
+                "The Spanner identifies the face that isolates the basin");
+        h.succeed();
     }
 
     @GameTest(template="empty") public static void refreshExistingValveAndPipeModels(GameTestHelper h) {
