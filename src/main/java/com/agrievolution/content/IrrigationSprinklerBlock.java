@@ -94,6 +94,33 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
         if(!level.isClientSide && level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler)
             sprinkler.checkFlow();
     }
+
+    @Override protected boolean hasAnalogOutputSignal(BlockState state) { return true; }
+
+    @Override protected int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos) {
+        return level.hasChunkAt(pos) && level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler
+                ? sprinkler.comparatorSignal() : 0;
+    }
+
+    @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
+        super.onRemove(state, level, pos, replacement, moving);
+        if (!state.is(replacement.getBlock())) updateComparators(level, pos, this);
+    }
+
+    static void updateComparators(Level level, BlockPos pos, Block source) {
+        if (level.isClientSide) return;
+        // Match vanilla comparator notifications, including through solid blocks, within loaded chunks.
+        for (Direction side : Direction.values()) {
+            BlockPos neighbor = pos.relative(side);
+            if (!level.hasChunkAt(neighbor)) continue;
+            BlockState state = level.getBlockState(neighbor);
+            state.onNeighborChange(level, neighbor, pos);
+            BlockPos behind = neighbor.relative(side);
+            if (!level.hasChunkAt(behind) || !state.isRedstoneConductor(level, neighbor)) continue;
+            BlockState behindState = level.getBlockState(behind);
+            if (behindState.getWeakChanges(level, behind)) level.neighborChanged(behindState, behind, source, pos, false);
+        }
+    }
     @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new IrrigationSprinklerBlockEntity(pos, state);
     }

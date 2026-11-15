@@ -33,6 +33,14 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         super(AEBlockEntities.IRRIGATION_SPRINKLER.get(), pos, state);
     }
     public int water() { return water; }
+    int comparatorSignal() { return water == 0 ? 0 : 1 + 14 * water / CAPACITY; }
+
+    @Override public void setChanged() {
+        if (level == null || !level.hasChunkAt(worldPosition)) return;
+        level.blockEntityChanged(worldPosition);
+        IrrigationSprinklerBlock.updateComparators(level, worldPosition, getBlockState().getBlock());
+    }
+
     boolean growthActive() {
         return level instanceof ServerLevel server && server.getGameTime() < growthUntil
                 && !isRemoved() && flowAllowed()
@@ -143,7 +151,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         var network=IrrigationNetwork.search(level,worldPosition);
         if(network.overflow())return;
         for(var supply:network.supplies()) if(supply.takeBucket(level)) {
-            water=1000;setChanged();return;
+            water = 1000;
+            return;
         }
     }
     /** One 25 mB watering interval, called every 40 ticks. Public for real-server tests. */
@@ -183,9 +192,13 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     private static int loadedUpdateFlags(Level level, BlockPos pos, int flags) {
-        // Moisture and spray state leave the block shape alone. Avoid notifying unloaded neighbors.
+        // Moisture and spray leave the block shape alone. Comparator updates can also reach through a solid neighbor.
         for (Direction side : Direction.Plane.HORIZONTAL) {
-            if (!level.hasChunkAt(pos.relative(side))) return Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+            BlockPos neighbor = pos.relative(side);
+            if (!level.hasChunkAt(neighbor) || ((flags & Block.UPDATE_NEIGHBORS) != 0
+                    && !level.hasChunkAt(neighbor.relative(side)) && level.getBlockState(neighbor).isRedstoneConductor(level, neighbor))) {
+                return Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+            }
         }
         return flags;
     }

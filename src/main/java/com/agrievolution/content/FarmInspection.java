@@ -52,7 +52,7 @@ public final class FarmInspection {
             }
             if(state.getBlock() instanceof IrrigationValveBlock)lines.add(IrrigationValveBlock.permitsFlow(level,pos,state)?"Valve open; flow allowed":"Valve closed or redstone-powered");
             if(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head){
-                lines.add("Head: "+head.water()+" / 4000 mB");
+                lines.add("Head: "+head.water()+" / 4000 mB | Comparator: "+head.comparatorSignal()+" / 15");
                 lines.add(head.controls());
                 var soils = head.wateredSoils();
                 lines.add(head.inspectionStatus(network, soils));

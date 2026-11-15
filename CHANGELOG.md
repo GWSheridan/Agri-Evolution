@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.11
+
+- A redstone comparator can read the sprinkler tank. Empty gives 0, and full gives 15.
+
 ## 1.2.10
 
 - The Spanner's sprinkler panel shows whether the head is watering or why it stopped, including at chunk edges.

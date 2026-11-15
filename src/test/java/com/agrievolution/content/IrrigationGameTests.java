@@ -14,6 +14,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ComparatorBlock;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.Mirror;
@@ -107,6 +108,67 @@ public final class IrrigationGameTests {
         h.assertTrue(sprinkler.growthActive(), "A closed valve on a different branch leaves the sprinkler running");
         h.succeed();
     }
+    @GameTest(template="empty")
+    public static void sprinklerComparatorTracksWaterAndRemoval(GameTestHelper h) {
+        var sprinkler = setup(h, false);
+        sprinkler.configure(false);
+        var level = h.getLevel();
+        var pos = position(h);
+        var direct = pos.south();
+        var through = pos.west(2);
+        level.setBlock(direct.below(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(through.below(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(pos.west(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        var comparator = Blocks.COMPARATOR.defaultBlockState();
+        level.setBlock(direct, comparator.setValue(ComparatorBlock.FACING, Direction.NORTH), Block.UPDATE_ALL);
+        level.setBlock(through, comparator.setValue(ComparatorBlock.FACING, Direction.EAST), Block.UPDATE_ALL);
+        h.assertTrue(level.getBlockState(pos).hasAnalogOutputSignal() && level.getBlockState(pos).getAnalogOutputSignal(level, pos) == 0,
+                "An empty sprinkler outputs zero");
+        for (int bucket = 0; bucket < 4; bucket++) h.assertTrue(sprinkler.fillBucket(), "Tank takes four buckets");
+        h.runAfterDelay(5, () -> {
+            h.assertTrue(level.getBlockState(direct).getSignal(level, direct, Direction.NORTH) == 15
+                    && level.getBlockState(through).getSignal(level, through, Direction.EAST) == 15,
+                    "A full tank reads 15 directly and through a solid block");
+            sprinkler.configure(false);
+            sprinkler.irrigateCycle();
+            h.assertTrue(sprinkler.water() == 3975 && sprinkler.growthActive(), "A reading comparator leaves the sprinkler enabled");
+        });
+        h.runAfterDelay(10, () -> {
+            h.assertTrue(level.getBlockState(direct).getSignal(level, direct, Direction.NORTH) == 14
+                    && level.getBlockState(through).getSignal(level, through, Direction.EAST) == 14,
+                    "Both comparators update when the spray uses water");
+            level.removeBlock(pos, false);
+        });
+        h.runAfterDelay(15, () -> {
+            h.assertTrue(level.getBlockState(direct).getSignal(level, direct, Direction.NORTH) == 0
+                    && level.getBlockState(through).getSignal(level, through, Direction.EAST) == 0,
+                    "Removing the sprinkler clears both comparators");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template="empty")
+    public static void sprinklerComparatorUpdateLeavesNeighboringChunkUnloaded(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(1280, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var pos = edge.west();
+        var outside = edge.east();
+        level.getChunkAt(edge);
+        h.assertFalse(level.hasChunkAt(outside), "The neighboring chunk must start unloaded");
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(edge, Blocks.STONE.defaultBlockState(), quietUpdate);
+        level.setBlock(pos, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(pos);
+        sprinkler.fillBucket();
+        h.assertTrue(!level.hasChunkAt(outside) && level.getBlockState(pos).getAnalogOutputSignal(level, pos) == 4,
+                "Updating the tank must leave the chunk beyond the stone unloaded");
+        sprinkler.startAfterFill();
+        h.assertTrue(!level.hasChunkAt(outside) && sprinkler.water() == 975 && sprinkler.growthActive(),
+                "Starting a spray must still leave the chunk beyond the stone unloaded");
+        h.succeed();
+    }
+
     @GameTest(template="empty")
     public static void reservoirPersistsAndClamps(GameTestHelper h) {
         var sprinkler=setup(h,false); var level=h.getLevel(); var pos=position(h);
