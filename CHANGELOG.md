@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.13
+
+- Collecting water from a basin uses one empty bucket and keeps the rest of the stack.
+- A sprinkler can refill from its supply when it has less than the 25 mB needed to spray. It keeps any water left in the tank.
+- Changing a pipe port keeps both fittings in sync without loading extra chunks. The Spanner tells you when the selected face needs its neighboring chunk loaded.
+
 ## 1.2.12
 
 - Use an empty bucket on a sprinkler to take 1,000 mB from its tank.

@@ -19,6 +19,7 @@ import net.neoforged.neoforge.common.ticket.AABBTicket;
 /** Finite reservoir; never loads chunks or copies water from a filled basin. */
 public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public static final int CAPACITY=4000;
+    private static final int WATER_PER_SPRAY = 25;
     private static final int WATERING_INTERVAL = 40;
     private int water;
     private boolean smartWatering;
@@ -109,9 +110,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             if (soils.isEmpty()) return "Dry-soil mode: no farmland in reach";
             if (!hasDrySoil(soils)) return "Dry-soil mode: soil already wet";
         }
-        if (water >= 25) return soils.isEmpty() ? "Ready, no farmland in reach" : "Ready for next watering cycle";
-        if (water > 0) return "Too little water to spray, add a bucket";
-        if (network.supplies().isEmpty()) return "Empty, no reachable water source";
+        if (water >= WATER_PER_SPRAY) return soils.isEmpty() ? "Ready, no farmland in reach" : "Ready for next watering cycle";
+        if (network.supplies().isEmpty()) return water == 0 ? "Empty, no reachable water source" : "Too little water to spray, add a bucket";
         for (var supply : network.supplies()) {
             if (supply.hasBucket(level)) return "Connected source ready to refill";
         }
@@ -153,12 +153,12 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         }
     }
 
-    private void drawFromBasin() {
-        if (water != 0 || !(level instanceof ServerLevel)) return;
+    private void refillForSpray() {
+        if (water >= WATER_PER_SPRAY) return;
         var network=IrrigationNetwork.search(level,worldPosition);
         if(network.overflow())return;
         for(var supply:network.supplies()) if(supply.takeBucket(level)) {
-            water = 1000;
+            water += 1000;
             return;
         }
     }
@@ -171,9 +171,9 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (smartWatering && !hasDrySoil(soils)) {
             stopWatering();return;
         }
-        drawFromBasin();
-        if (water < 25) { stopWatering(); return; }
-        water -= 25;
+        refillForSpray();
+        if (water < WATER_PER_SPRAY) { stopWatering(); return; }
+        water -= WATER_PER_SPRAY;
         setChanged();
         spray(server, soils, server.getGameTime() + WATERING_INTERVAL);
     }

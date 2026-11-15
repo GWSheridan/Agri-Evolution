@@ -209,6 +209,69 @@ public final class IrrigationGameTests {
     }
 
     @GameTest(template="empty")
+    public static void basinDrainingKeepsTheEmptyBucketStack(GameTestHelper h) {
+        setup(h, true);
+        var level = h.getLevel();
+        var basin = position(h).west(2);
+        var block = AEBlocks.IRRIGATION_BASIN.get();
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var hit = new BlockHitResult(Vec3.atCenterOf(basin), Direction.UP, basin, false);
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.BUCKET, 3));
+        block.useItemOn(player.getOffhandItem(), level.getBlockState(basin), level, basin, player, InteractionHand.OFF_HAND, hit);
+        h.assertTrue(!level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED)
+                && player.getOffhandItem().is(Items.BUCKET) && player.getOffhandItem().getCount() == 2
+                && player.getInventory().countItem(Items.WATER_BUCKET) == 1, "One bucket drains the basin and the rest stay in the offhand");
+        block.useItemOn(player.getOffhandItem(), level.getBlockState(basin), level, basin, player, InteractionHand.OFF_HAND, hit);
+        h.assertTrue(player.getOffhandItem().getCount() == 2 && player.getInventory().countItem(Items.WATER_BUCKET) == 1,
+                "Trying to drain an empty basin does not change the inventory");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void sprinklerRefillsWithLessThanOneSprayInItsTank(GameTestHelper h) {
+        var sprinkler = setup(h, true);
+        var level = h.getLevel();
+        var basin = position(h).west(2);
+        var tag = new CompoundTag();
+        tag.putInt("SprinklerWater", 10);
+        sprinkler.loadAdditional(tag, level.registryAccess());
+        h.assertTrue(sprinkler.inspectionStatus().equals("Connected source ready to refill"), "The status shows a refill is available");
+        sprinkler.irrigateCycle();
+        h.assertTrue(sprinkler.water() == 985 && sprinkler.growthActive()
+                && !level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED), "A refill keeps the last 10 mB and pays for one spray");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void pipePortsAtChunkEdgeSyncLoadedFittings(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(1536, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var head = edge.west();
+        var outside = edge.east();
+        level.getChunkAt(edge);
+        h.assertFalse(level.hasChunkAt(outside), "The neighboring chunk must start unloaded");
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        var west = IrrigationSprinklerBlock.connection(Direction.WEST);
+        var east = IrrigationSprinklerBlock.connection(Direction.EAST);
+        var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState().setValue(west, true);
+        level.setBlock(edge, pipe, quietUpdate);
+        level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState().setValue(east, true), quietUpdate);
+
+        h.assertTrue(!IrrigationPipeBlock.toggle(level, edge, Direction.EAST)
+                && level.getBlockState(edge).equals(pipe), "A face into an unloaded chunk waits for its neighbor");
+        h.assertTrue(IrrigationPipeBlock.toggle(level, edge, Direction.WEST)
+                && !level.getBlockState(edge).getValue(west) && !level.getBlockState(head).getValue(east)
+                && IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.DISABLED_PORT,
+                "Closing the loaded face updates both fittings");
+        h.assertTrue(IrrigationPipeBlock.toggle(level, edge, Direction.WEST)
+                && level.getBlockState(edge).getValue(west) && level.getBlockState(head).getValue(east),
+                "Reopening the loaded face reconnects both fittings");
+        h.assertFalse(level.hasChunkAt(outside), "Changing either face leaves the neighboring chunk unloaded");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
     public static void emptyBucketDrawsOnlyFromTheSprinklerTank(GameTestHelper h) {
         var sprinkler = setup(h, true);
         var level = h.getLevel();

@@ -69,8 +69,12 @@ public final class SpannerItem extends Item {
         if(state.getBlock() instanceof IrrigationValveBlock){
             if (level.mayInteract(player, pos)) inspectValve(player, level, pos, state);
         }else if(state.getBlock() instanceof IrrigationPipeBlock){
-            var side=event.getHitVec().getDirection();IrrigationPipeBlock.toggle(level,pos,side);
-            player.displayClientMessage(Component.literal(side.getName()+" pipe port: "+(IrrigationPipeBlock.enabled(level.getBlockState(pos),side)?"enabled":"disabled")),true);
+            var side = event.getHitVec().getDirection();
+            if (IrrigationPipeBlock.toggle(level, pos, side)) {
+                player.displayClientMessage(Component.literal(side.getName()+" pipe port: "+(IrrigationPipeBlock.enabled(level.getBlockState(pos),side)?"enabled":"disabled")),true);
+            } else {
+                player.displayClientMessage(Component.literal("Load the neighboring chunk to change this pipe port."), true);
+            }
         }else if(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head){
             head.configure(player.isShiftKeyDown());player.displayClientMessage(Component.literal(head.controls()),true);
         }

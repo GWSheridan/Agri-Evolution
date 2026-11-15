@@ -7,6 +7,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -81,23 +82,18 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
                                               BlockPos pos, Player player, InteractionHand hand,
                                               BlockHitResult hit) {
-        if (stack.is(Items.WATER_BUCKET) && !state.getValue(FILLED)) {
-            if (!level.isClientSide) {
-                level.setBlock(pos, state.setValue(FILLED, true), 3);
-                if (level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin) basin.refreshWatering();
-                if (!player.getAbilities().instabuild) player.setItemInHand(hand, new ItemStack(Items.BUCKET));
-            }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        boolean filling = stack.is(Items.WATER_BUCKET);
+        if ((!filling && !stack.is(Items.BUCKET)) || filling == state.getValue(FILLED)) {
+            return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (stack.is(Items.BUCKET) && state.getValue(FILLED)) {
-            if (!level.isClientSide) {
-                level.setBlock(pos, state.setValue(FILLED, false), 3);
-                if (level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin) basin.refreshWatering();
-                if (!player.getAbilities().instabuild) player.setItemInHand(hand, new ItemStack(Items.WATER_BUCKET));
+        if (!level.isClientSide && level.setBlock(pos, state.setValue(FILLED, filling), Block.UPDATE_ALL)) {
+            if (level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin) basin.refreshWatering();
+            if (!player.getAbilities().instabuild) {
+                var result = new ItemStack(filling ? Items.BUCKET : Items.WATER_BUCKET);
+                player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, result));
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
 }

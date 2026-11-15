@@ -11,10 +11,26 @@ import net.minecraft.world.phys.shapes.*;
 public final class IrrigationPipeBlock extends Block {
     private static final net.minecraft.world.level.block.state.properties.BooleanProperty[] BLOCKED=java.util.Arrays.stream(Direction.values()).map(d->net.minecraft.world.level.block.state.properties.BooleanProperty.create("blocked_"+d.getName())).toArray(net.minecraft.world.level.block.state.properties.BooleanProperty[]::new);
     public static boolean enabled(BlockState state,Direction side){return !state.getValue(BLOCKED[side.ordinal()]);}
-    public static void toggle(Level level,BlockPos pos,Direction side){
-        var state=level.getBlockState(pos);var next=state.cycle(BLOCKED[side.ordinal()]);
-        next=next.setValue(IrrigationSprinklerBlock.connection(side),enabled(next,side)&&IrrigationNetwork.port(level.getBlockState(pos.relative(side)),side.getOpposite()));
-        level.setBlock(pos,next,3);
+    public static boolean toggle(Level level, BlockPos pos, Direction side) {
+        BlockPos neighborPos = pos.relative(side);
+        if (!level.hasChunkAt(pos) || !level.hasChunkAt(neighborPos)) return false;
+        var neighbor = level.getBlockState(neighborPos);
+        boolean connected = IrrigationNetwork.port(neighbor, side.getOpposite());
+        var next = level.getBlockState(pos).cycle(BLOCKED[side.ordinal()]);
+        next = next.setValue(IrrigationSprinklerBlock.connection(side), enabled(next, side) && connected);
+        for (Direction other : Direction.Plane.HORIZONTAL) {
+            if (!level.hasChunkAt(pos.relative(other))) {
+                // Only the selected face changed. Sync its loaded neighbor without broadcasting across the border.
+                int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+                if (!level.setBlock(pos, next, quietUpdate)) return false;
+                if (connected) {
+                    var updated = neighbor.updateShape(side.getOpposite(), next, level, neighborPos, pos);
+                    if (updated != neighbor) level.setBlock(neighborPos, updated, quietUpdate);
+                }
+                return true;
+            }
+        }
+        return level.setBlock(pos, next, Block.UPDATE_ALL);
     }
 
     @Override protected BlockState rotate(BlockState state, Rotation rotation) {
