@@ -17,6 +17,7 @@ public final class IrrigationBasinUpgradeHandler {
         Player player = event.getEntity();
         if (!player.isShiftKeyDown() || event.getHand() != InteractionHand.MAIN_HAND) return;
         Level world = event.getLevel();
+        if (!world.hasChunkAt(event.getPos())) return;
         if (!(world.getBlockState(event.getPos()).getBlock() instanceof IrrigationBasinBlock)) return;
         ItemStack held = player.getItemInHand(event.getHand());
         if (!held.is(Items.COPPER_BLOCK) && !held.is(Items.AMETHYST_BLOCK)) return;
@@ -25,6 +26,8 @@ public final class IrrigationBasinUpgradeHandler {
         event.setCancellationResult(InteractionResult.sidedSuccess(world.isClientSide));
         event.setCanceled(true);
         if (world.isClientSide) return;
+        if (!player.mayBuild() || !world.mayInteract(player, event.getPos())
+                || !player.mayUseItemAt(event.getPos(), event.getHitVec().getDirection(), held)) return;
         if (!(world.getBlockEntity(event.getPos()) instanceof IrrigationBasinBlockEntity basin)) return;
         int current = basin.upgradeTier();
         boolean correct = (current == 0 && held.is(Items.COPPER_BLOCK))
@@ -35,7 +38,7 @@ public final class IrrigationBasinUpgradeHandler {
                     + (current == 0 ? "a Copper Block" : "an Amethyst Block") + " next."), true);
             return;
         }
-        basin.upgradeTo(current + 1);
+        if (!basin.upgradeTo(current + 1)) return;
         if (!player.getAbilities().instabuild) held.shrink(1);
         player.displayClientMessage(Component.literal("Irrigation Basin upgraded to Mk "
                 + (current + 2) + "! Watering radius: " + basin.wateringRadius()

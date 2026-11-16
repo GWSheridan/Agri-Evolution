@@ -8,6 +8,7 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -273,9 +274,15 @@ public final class IrrigationGameTests {
         h.assertTrue(!level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED)
                 && player.getOffhandItem().is(Items.BUCKET) && player.getOffhandItem().getCount() == 2
                 && player.getInventory().countItem(Items.WATER_BUCKET) == 1, "One bucket drains the basin and the rest stay in the offhand");
-        block.useItemOn(player.getOffhandItem(), level.getBlockState(basin), level, basin, player, InteractionHand.OFF_HAND, hit);
-        h.assertTrue(player.getOffhandItem().getCount() == 2 && player.getInventory().countItem(Items.WATER_BUCKET) == 1,
-                "Trying to drain an empty basin does not change the inventory");
+        var empty = block.useItemOn(player.getOffhandItem(), level.getBlockState(basin), level, basin, player, InteractionHand.OFF_HAND, hit);
+        h.assertTrue(empty == ItemInteractionResult.CONSUME && player.getOffhandItem().getCount() == 2
+                        && player.getInventory().countItem(Items.WATER_BUCKET) == 1,
+                "An empty basin consumes the interaction and leaves the buckets alone");
+        level.setBlock(basin, level.getBlockState(basin).setValue(IrrigationBasinBlock.FILLED, true), Block.UPDATE_ALL);
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.WATER_BUCKET));
+        var full = block.useItemOn(player.getOffhandItem(), level.getBlockState(basin), level, basin, player, InteractionHand.OFF_HAND, hit);
+        h.assertTrue(full == ItemInteractionResult.CONSUME && player.getOffhandItem().is(Items.WATER_BUCKET) && level.isEmptyBlock(basin.above()),
+                "From the offhand, a full basin cannot spill the water bucket into the world");
         h.succeed();
     }
 

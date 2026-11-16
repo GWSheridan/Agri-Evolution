@@ -63,6 +63,14 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
     }
 
     @Override
+    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
+        if (state.is(replacement.getBlock())) return;
+        // The Level helper would also look for comparators beyond a loaded chunk.
+        level.getChunkAt(pos).removeBlockEntity(pos);
+        IrrigationNetwork.updateComparators(level, pos, this);
+    }
+
+    @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         if (level.isClientSide || type != AEBlockEntities.IRRIGATION_BASIN.get()) return null;
         return (world, pos, current, entity) -> {
@@ -76,9 +84,7 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                Player player, BlockHitResult hit) {
         if (!level.isClientSide && level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin) {
-            player.displayClientMessage(Component.literal("Irrigation Basin Mk " + (basin.upgradeTier() + 1)
-                    + " - watering radius " + basin.wateringRadius() + " blocks"
-                    + (basin.upgradeTier() == 2 ? " - source-water auto-refill" : "")), true);
+            player.displayClientMessage(Component.literal(basin.inspectionStatus()), true);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
@@ -88,11 +94,13 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
                                               BlockPos pos, Player player, InteractionHand hand,
                                               BlockHitResult hit) {
         boolean filling = stack.is(Items.WATER_BUCKET);
-        if ((!filling && !stack.is(Items.BUCKET)) || filling == state.getValue(FILLED)) {
+        if (!filling && !stack.is(Items.BUCKET)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
-        if (!level.isClientSide && setFilled(level, pos, state, filling)) {
-            if (!player.getAbilities().instabuild) {
+        if (!level.isClientSide) {
+            if (filling == state.getValue(FILLED)) {
+                player.displayClientMessage(Component.literal(filling ? "The basin is already full." : "The basin is empty."), true);
+            } else if (setFilled(level, pos, state, filling) && !player.getAbilities().instabuild) {
                 var result = new ItemStack(filling ? Items.BUCKET : Items.WATER_BUCKET);
                 player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, result));
             }

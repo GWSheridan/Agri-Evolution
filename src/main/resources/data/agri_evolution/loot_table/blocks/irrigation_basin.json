@@ -6,7 +6,24 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "agri_evolution:irrigation_basin"
+          "name": "agri_evolution:irrigation_basin",
+          "functions": [
+            {
+              "function": "minecraft:copy_state",
+              "block": "agri_evolution:irrigation_basin",
+              "properties": ["upgrade"],
+              "conditions": [
+                {
+                  "condition": "minecraft:inverted",
+                  "term": {
+                    "condition": "minecraft:block_state_property",
+                    "block": "agri_evolution:irrigation_basin",
+                    "properties": {"upgrade": "0"}
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "conditions": [

@@ -53,8 +53,8 @@ public final class FarmInspection {
                 return lines;
             }
             if(state.getBlock() instanceof IrrigationBasinBlock){
-                lines.add("Basin: "+(state.getValue(IrrigationBasinBlock.FILLED)?"1000 mB available":"empty"));
-                lines.add("Aim at the sprinkler for operating status");return lines;
+                if (level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin) lines.add(basin.inspectionStatus());
+                return lines;
             }
             var network=IrrigationNetwork.search(level,pos);
             int water = network.supplies().stream().mapToInt(supply -> supply.water(level)).sum();

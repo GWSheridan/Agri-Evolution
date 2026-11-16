@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.25
+
+- Mk II and Mk III basins keep their upgrade when broken and placed again. The item shows its tier and watering radius, and the basin starts empty.
+- Basin upgrades respect building permissions and use the material only after the upgrade succeeds.
+- A full or empty basin explains why a bucket transfer failed and keeps the held bucket intact.
+- Empty-hand and Spanner inspection show the basin's water, range, and whether a Mk III basin has source water available for refills.
+- Loading a legacy upgrade or removing a basin at a chunk border leaves neighboring chunks unloaded.
+
 ## 1.2.24
 
 - Forming a Water Reservoir at a chunk edge leaves the chunks beyond the shell unloaded.
