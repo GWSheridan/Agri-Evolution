@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.23
+
+- A roof or closed valve cuts off sprinkler hydration as soon as it blocks the spray.
+- Removing an obstruction during a paid spray restores hydration and growth on plots that were already watered.
+- Sprinklers use one hydration ticket across their covered chunks. Unloading the head clears it from the whole area.
+- The Spanner's sprinkler preview stops at the bottom of the world.
+- The coverage outline sits just above the soil and hides with the HUD.
+
 ## 1.2.22
 
 - Spanner traces and sprinkler inspection now agree on when redstone, an adjacent valve, or an unloaded fitting stops a spray.

@@ -2,10 +2,8 @@ package com.agrievolution.content;
 
 import com.agrievolution.content.IrrigationNetwork.Flow;
 import com.agrievolution.content.IrrigationNetwork.Route;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -13,13 +11,14 @@ import net.minecraft.core.HolderLookup;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.FarmlandWaterManager;
-import net.neoforged.neoforge.common.ticket.AABBTicket;
+import net.neoforged.neoforge.common.ticket.SimpleTicket;
 
 /** Finite reservoir; never loads chunks or copies water from a filled basin. */
 public final class IrrigationSprinklerBlockEntity extends BlockEntity {
@@ -33,7 +32,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public int redstoneMode(){return redstoneMode;}
     public String controls(){return (smartWatering?"Dry-soil only":"Continuous")+" | "+switch(redstoneMode){case 1->"Requires redstone";case 2->"Ignores redstone";default->"Redstone pauses";};}
     public void configure(boolean redstone){if(redstone)redstoneMode=(redstoneMode+1)%3;else smartWatering=!smartWatering;setChanged();checkFlow();}
-    private final Map<BlockPos, AABBTicket> tickets = new HashMap<>();
+    private SimpleTicket<Vec3> waterTicket;
     private Set<BlockPos> paidSoils = Set.of();
     private long growthUntil;
     public IrrigationSprinklerBlockEntity(BlockPos pos, BlockState state) {
@@ -62,12 +61,12 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     boolean watersPlot(BlockPos soil) {
-        return tickets.containsKey(soil) && SprinklerCoverage.reaches(level, worldPosition, soil);
+        return paidSoils.contains(soil) && SprinklerCoverage.reaches(level, worldPosition, soil);
     }
 
     Set<BlockPos> growthSoils() {
         var soils = new HashSet<BlockPos>();
-        for (BlockPos soil : tickets.keySet()) {
+        for (BlockPos soil : paidSoils) {
             if (SprinklerCoverage.reaches(level, worldPosition, soil)) soils.add(soil);
         }
         return soils;
@@ -140,7 +139,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         var soils = inspectedSoils == null ? wateredSoils() : inspectedSoils;
         if (hasCurrentSpray()) {
             if (soils.isEmpty()) return "Spraying, no farmland in reach";
-            long watered = soils.stream().filter(tickets::containsKey).count();
+            long watered = soils.stream().filter(paidSoils::contains).count();
             if (watered == 0) return "Reachable farmland waits for the next spray";
             if (watered < soils.size()) return "Watering " + watered + "/" + soils.size()
                     + " reachable plots; new plots wait for the next spray";
@@ -184,9 +183,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (now < growthUntil) {
             if (!flowAllowed()) stopWatering();
             else if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) {
-                var reachable = new HashSet<>(paidSoils);
-                reachable.removeIf(soil -> !SprinklerCoverage.reaches(server, worldPosition, soil));
-                spray(server, reachable, growthUntil);
+                spray(server, growthSoils(), growthUntil);
             }
             return;
         }
@@ -230,9 +227,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     private void spray(ServerLevel server, Set<BlockPos> soils, long until) {
-        clearTickets();
+        clearWaterTicket();
         for (BlockPos soil : soils) {
-            tickets.put(soil, FarmlandWaterManager.addAABBTicket(server, new AABB(soil)));
             BlockState state = server.getBlockState(soil);
             if (state.getBlock() instanceof FarmBlock && state.getValue(FarmBlock.MOISTURE) != 7)
                 server.setBlock(soil, state.setValue(FarmBlock.MOISTURE,7),
@@ -241,6 +237,17 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         setActive(true);
         // A loaded but no-longer-ticking chunk cannot retain a free growth bonus.
         growthUntil = until;
+        if (!paidSoils.isEmpty()) {
+            var headChunk = new ChunkPos(worldPosition);
+            var plotChunks = paidSoils.stream().map(ChunkPos::new).filter(chunk -> !chunk.equals(headChunk))
+                    .distinct().toArray(ChunkPos[]::new);
+            // NeoForge checks this when farmland ticks. Recheck the path without scanning every plot each tick.
+            waterTicket = FarmlandWaterManager.addCustomTicket(server, new SimpleTicket<Vec3>() {
+                @Override public boolean matches(Vec3 point) {
+                    return watersPlot(BlockPos.containing(point)) && growthActive();
+                }
+            }, headChunk, plotChunks);
+        }
         SprinklerGrowth.activate(server, worldPosition);
     }
     private void setActive(boolean active) {
@@ -251,7 +258,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
     private void stopWatering() {
         if (level instanceof ServerLevel server) SprinklerGrowth.deactivate(server, worldPosition);
-        clearTickets();
+        clearWaterTicket();
         setActive(false);
     }
     @Override protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
@@ -280,19 +287,21 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
 
     private void resetSpray() {
         if (level instanceof ServerLevel server) SprinklerGrowth.deactivate(server, worldPosition);
-        clearTickets();
+        clearWaterTicket();
         growthUntil = 0;
         paidSoils = Set.of();
     }
 
-    private void clearTickets() {
-        for (var ticket : tickets.values()) ticket.invalidate();
-        tickets.clear();
+    private void clearWaterTicket() {
+        if (waterTicket != null) {
+            waterTicket.invalidate();
+            waterTicket = null;
+        }
     }
 
     /** First reachable farmland in each column; never water through roofs or load chunks. */
     Set<BlockPos> wateredSoils() {
-        var result=new java.util.HashSet<BlockPos>();
+        var result=new HashSet<BlockPos>();
         if(level!=null) for(var cell:SprinklerCoverage.scan(level,worldPosition)) if(cell.watered())result.add(cell.pos());
         return result;
     }

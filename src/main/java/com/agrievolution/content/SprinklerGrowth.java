@@ -37,7 +37,8 @@ public final class SprinklerGrowth {
     public static boolean covers(ServerLevel level,BlockPos crop){
         var positions=ACTIVE.get(level);if(positions==null)return false;
         // Inspect only candidate heads around this crop, not every sprinkler in the world.
-        for(int x=-4;x<=4;x++)for(int z=-4;z<=4;z++)for(int up=0;up<8;up++){
+        int radius = SprinklerCoverage.RADIUS;
+        for (int x = -radius; x <= radius; x++) for (int z = -radius; z <= radius; z++) for (int up = 0; up < SprinklerCoverage.DEPTH; up++) {
             var pos=crop.offset(x,up,z);
             if(positions.contains(pos)&&level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head
                     && head.watersPlot(crop.below()) && head.growthActive()) return true;

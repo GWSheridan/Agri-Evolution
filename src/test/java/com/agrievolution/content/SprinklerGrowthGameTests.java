@@ -6,10 +6,12 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FarmBlock;
+import net.neoforged.neoforge.common.FarmlandWaterManager;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -79,6 +81,7 @@ public final class SprinklerGrowthGameTests {
         level.setBlock(watered, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
         var sprinkler = head(h, pos);
         h.assertTrue(SprinklerGrowth.covers(level, watered.above()), "The first spray covers its farmland");
+        h.assertTrue(FarmlandWaterManager.hasBlockWaterTicket(level, watered), "The first spray keeps its farmland hydrated");
 
         level.setBlock(added, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
         h.assertTrue(sprinkler.wateredSoils().contains(added) && !SprinklerGrowth.covers(level, added.above()),
@@ -89,6 +92,8 @@ public final class SprinklerGrowthGameTests {
         var plots = SprinklerGrowth.coveredPlots(level);
         h.assertTrue(!SprinklerGrowth.covers(level, watered.above()) && !plots.contains(watered.above()) && !plots.contains(added.above()),
                 "Blocked and newly added farmland both wait");
+        h.assertFalse(FarmlandWaterManager.hasBlockWaterTicket(level, watered)
+                || FarmlandWaterManager.hasBlockWaterTicket(level, added), "A new roof and new soil receive no hydration ticket");
         h.assertTrue(sprinkler.inspectionStatus().equals("Reachable farmland waits for the next spray"),
                 "The report explains why the reachable farmland has no bonus");
 
@@ -113,9 +118,11 @@ public final class SprinklerGrowthGameTests {
         int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
         level.setBlock(valve, open.setValue(IrrigationValveBlock.OPEN, false), quietUpdate);
         h.assertFalse(SprinklerGrowth.coveredPlots(level).contains(soil.above()), "The remote shutoff immediately blocks the bonus");
+        h.assertFalse(FarmlandWaterManager.hasBlockWaterTicket(level, soil), "A remote shutoff also immediately stops hydration");
         level.setBlock(valve, open, quietUpdate);
         h.assertTrue(SprinklerGrowth.covers(level, soil.above()) && SprinklerGrowth.coveredPlots(level).contains(soil.above())
-                && sprinkler.water() == 975, "Reopening before the next sprinkler tick restores the paid bonus");
+                && FarmlandWaterManager.hasBlockWaterTicket(level, soil) && sprinkler.water() == 975,
+                "Reopening before the next sprinkler tick restores the paid bonus and hydration");
         h.succeed();
     }
 
@@ -147,6 +154,30 @@ public final class SprinklerGrowthGameTests {
                 "A blocked plot and a new plot both wait for a new spray");
         h.assertTrue(level.getBlockState(added).getValue(FarmBlock.MOISTURE) == 0,
                 "The resumed spray leaves the new plot dry");
+        level.setBlock(blocked.above(2), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+        h.assertTrue(SprinklerGrowth.covers(level, blocked.above()) && FarmlandWaterManager.hasBlockWaterTicket(level, blocked)
+                        && !FarmlandWaterManager.hasBlockWaterTicket(level, added) && sprinkler.water() == 975,
+                "An originally watered plot can recover mid-spray after the roof is removed");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void hydrationTicketFollowsSprinklerAcrossLoadedChunks(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(3328, 100, 4)));
+        var pos = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var near = pos.west().below(2);
+        var across = pos.east().below(2);
+        level.getChunkAt(near);
+        level.getChunkAt(across);
+        level.setBlock(near, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_CLIENTS);
+        level.setBlock(across, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_CLIENTS);
+        var sprinkler = head(h, pos);
+        h.assertTrue(FarmlandWaterManager.hasBlockWaterTicket(level, near) && FarmlandWaterManager.hasBlockWaterTicket(level, across),
+                "One spray covers farmland in both loaded chunks");
+        sprinkler.onChunkUnloaded();
+        h.assertFalse(FarmlandWaterManager.hasBlockWaterTicket(level, near) || FarmlandWaterManager.hasBlockWaterTicket(level, across),
+                "Unloading the head clears hydration in both chunks");
         h.succeed();
     }
 

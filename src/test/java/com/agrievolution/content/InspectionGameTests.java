@@ -118,6 +118,11 @@ public final class InspectionGameTests {
         h.assertTrue(cells.size()==81,"Nine by nine columns");
         h.assertTrue(head.wateredSoils().contains(open)&&!head.wateredSoils().contains(blocked)&&!head.wateredSoils().contains(wet),"Solid glass and fluids block coverage");
         h.assertTrue(cells.stream().filter(SprinklerCoverage.Cell::watered).map(SprinklerCoverage.Cell::pos).collect(java.util.stream.Collectors.toSet()).equals(head.wateredSoils()),"Preview and real coverage identical");
+        var floor = new BlockPos(pos.getX(), level.getMinBuildHeight(), pos.getZ());
+        h.assertTrue(SprinklerCoverage.scan(level, floor).isEmpty(), "A head at the world floor has no room below it");
+        var floorPreview = SprinklerCoverage.scan(level, floor.above());
+        h.assertTrue(!floorPreview.isEmpty() && floorPreview.stream().allMatch(cell -> cell.pos().getY() == floor.getY()),
+                "Near the floor the coverage preview stays within the world");
         h.assertTrue(head.water()==0&&!level.getBlockState(pos).getValue(IrrigationSprinklerBlock.ACTIVE),"Preview does not activate or refill");
         head.fillBucket();head.irrigateCycle();
         h.assertTrue(SprinklerGrowth.covers(level,open.above())&&!SprinklerGrowth.covers(level,blocked.above()),"Targeted overlay bonus matches real watered plots");h.succeed();
