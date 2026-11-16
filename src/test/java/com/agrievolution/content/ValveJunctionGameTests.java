@@ -38,6 +38,27 @@ public final class ValveJunctionGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void loadedValveRepairsTheOtherEndOfAnAlreadyConnectedPort(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 166, 4));
+        var east = IrrigationSprinklerBlock.connection(Direction.EAST);
+        var west = IrrigationSprinklerBlock.connection(Direction.WEST);
+        var state = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState().setValue(IrrigationValveBlock.FACING, Direction.EAST)
+                .setValue(IrrigationValveBlock.OPEN, false).setValue(east, true);
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(pos.east(), AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), quiet);
+        level.setBlock(pos, state, quiet);
+        var valve = (IrrigationValveBlockEntity) level.getBlockEntity(pos);
+        valve.rename("West beds");
+        h.runAfterDelay(5, () -> {
+            h.assertTrue(level.getBlockState(pos) == state && level.getBlockState(pos.east()).getValue(west)
+                            && valve.zone().equals("West beds"),
+                    "The load tick fixes the pipe even when the valve already has the correct state and zone name");
+            h.succeed();
+        });
+    }
+
+    @GameTest(template = "empty")
     public static void valveAlignsToUsablePorts(GameTestHelper h) {
         var level = h.getLevel();
         var pos = h.absolutePos(new BlockPos(4, 168, 4));

@@ -177,6 +177,11 @@ public final class IrrigationGameTests {
         h.assertFalse(level.hasChunkAt(outside), "The neighboring chunk must start unloaded");
         int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
         level.setBlock(edge, Blocks.STONE.defaultBlockState(), quietUpdate);
+        var soil = pos.west().below(2);
+        var pipe = pos.north();
+        var south = IrrigationSprinklerBlock.connection(Direction.SOUTH);
+        level.setBlock(soil, Blocks.FARMLAND.defaultBlockState(), quietUpdate);
+        level.setBlock(pipe, AEBlocks.IRRIGATION_PIPE.get().defaultBlockState().setValue(south, true), quietUpdate);
         level.setBlock(pos, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
         var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(pos);
         sprinkler.fillBucket();
@@ -185,7 +190,70 @@ public final class IrrigationGameTests {
         sprinkler.startAfterFill();
         h.assertTrue(!level.hasChunkAt(outside) && sprinkler.water() == 975 && sprinkler.growthActive(),
                 "Starting a spray must still leave the chunk beyond the stone unloaded");
+        h.assertTrue(FarmlandWaterManager.hasBlockWaterTicket(level, soil), "The active head supplies the loaded soil");
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), quietUpdate);
+        h.assertTrue(sprinkler.isRemoved() && !FarmlandWaterManager.hasBlockWaterTicket(level, soil)
+                        && !level.getBlockState(pipe).getValue(south) && !level.hasChunkAt(outside),
+                "Removing a sprinkler clears its hydration and the pipe arm without probing beyond the stone");
+
+        level.setBlock(pos, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), quietUpdate);
+        level.setBlock(pipe, level.getBlockState(pipe).setValue(south, true), quietUpdate);
+        var valve = level.getBlockEntity(pos);
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), quietUpdate);
+        h.assertTrue(valve != null && valve.isRemoved() && !level.getBlockState(pipe).getValue(south) && !level.hasChunkAt(outside),
+                "Removing a valve also leaves the next chunk unloaded and clears the adjoining pipe arm");
         h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void savedSprinklerRepairsBothFittingsAndRespectsDisabledPorts(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 123, 4));
+        var east = IrrigationSprinklerBlock.connection(Direction.EAST);
+        var west = IrrigationSprinklerBlock.connection(Direction.WEST);
+        var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(pos.east(), pipe, quiet);
+        level.setBlock(pos.west(), pipe, quiet);
+        h.assertTrue(IrrigationPipeBlock.toggle(level, pos.west(), Direction.EAST), "Close the west pipe's face");
+        level.setBlock(pos.west(), level.getBlockState(pos.west()).setValue(east, true), quiet);
+        level.setBlock(pos, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState().setValue(west, true), quiet);
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(pos);
+
+        sprinkler.onLoad();
+        h.assertTrue(level.getBlockState(pos).getValue(east) && level.getBlockState(pos.east()).getValue(west),
+                "Both ends of the open connection repair their arms");
+        h.assertTrue(!level.getBlockState(pos).getValue(west) && !level.getBlockState(pos.west()).getValue(east)
+                        && !IrrigationPipeBlock.enabled(level.getBlockState(pos.west()), Direction.EAST),
+                "Neither end of a disabled pipe draws a connector, and the disabled face stays closed");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void sprinklerRepairsConnectionWhenAdjacentChunkBecomesAvailable(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(4096, 100, 4)));
+        var head = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var outside = head.east();
+        var east = IrrigationSprinklerBlock.connection(Direction.EAST);
+        var west = IrrigationSprinklerBlock.connection(Direction.WEST);
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.getChunkAt(head);
+        level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState().setValue(east, true), quiet);
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
+        sprinkler.onLoad();
+        h.assertTrue(!level.hasChunkAt(outside) && level.getBlockState(head).getValue(east),
+                "A saved fitting keeps its unloaded face without forcing a chunk load");
+
+        level.getChunkAt(outside);
+        level.setBlock(outside, AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), quiet);
+        h.runAfterDelay(40 - level.getGameTime() % 40, () -> {
+            sprinkler.serverTick();
+            h.assertTrue(level.getBlockState(head).getValue(east) && level.getBlockState(outside).getValue(west),
+                    "The next fitting check repairs the pipe that arrived after the head");
+            h.assertTrue(sprinkler.water() == 0 && !sprinkler.growthActive(), "Updating the connector neither adds water nor starts a spray");
+            h.succeed();
+        });
     }
 
     @GameTest(template="empty")

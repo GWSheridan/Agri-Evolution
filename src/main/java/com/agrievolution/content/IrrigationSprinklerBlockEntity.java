@@ -180,6 +180,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     void serverTick() {
         if (!(level instanceof ServerLevel server)) return;
         long now = server.getGameTime();
+        if (now % WATERING_INTERVAL == 0) refreshFittings(server);
         if (now < growthUntil) {
             if (!flowAllowed()) stopWatering();
             else if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) {
@@ -274,7 +275,17 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     @Override public void onLoad() {
         super.onLoad();
         // A fresh placement can already have started a spray before its first load callback.
-        if (level instanceof ServerLevel && growthUntil == 0) setActive(false);
+        if (level instanceof ServerLevel server) {
+            if (growthUntil == 0) setActive(false);
+            refreshFittings(server);
+        }
+    }
+
+    private void refreshFittings(ServerLevel server) {
+        BlockState state = getBlockState();
+        BlockState updated = IrrigationNetwork.loadedConnections(state, server, worldPosition);
+        if (state != updated) server.setBlock(worldPosition, updated, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        IrrigationNetwork.syncLoadedFittings(server, worldPosition, updated, state.getBlock());
     }
     @Override public void onChunkUnloaded() {
         resetSpray();

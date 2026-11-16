@@ -47,6 +47,28 @@ public final class IrrigationNetwork {
         }
     }
 
+    static void removeFittingEntity(Level level, BlockPos pos, Block source) {
+        // The Level removal helper also searches for comparators beyond the loaded chunk.
+        level.getChunkAt(pos).removeBlockEntity(pos);
+        updateComparators(level, pos, source);
+    }
+
+    static void syncLoadedFittings(Level level, BlockPos pos, BlockState state, Block source) {
+        for (Direction side : Direction.values()) syncLoadedFitting(level, pos, state, source, side);
+    }
+
+    static void syncLoadedFitting(Level level, BlockPos pos, BlockState state, Block source, Direction side) {
+        BlockPos neighbor = pos.relative(side);
+        if (!level.hasChunkAt(neighbor)) return;
+        BlockState current = level.getBlockState(neighbor);
+        if (!(current.getBlock() instanceof IrrigationPipeBlock || current.getBlock() instanceof IrrigationValveBlock
+                || current.getBlock() instanceof IrrigationSprinklerBlock)) return;
+        BlockState updated = current.updateShape(side.getOpposite(), state, level, neighbor, pos);
+        if (current != updated && level.setBlock(neighbor, updated, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE)) {
+            level.neighborChanged(updated, neighbor, source, pos, false);
+        }
+    }
+
     /** Water and activity properties leave the block's shape and ports intact. */
     static int loadedUpdateFlags(Level level, BlockPos pos, int flags) {
         for (Direction side : Direction.Plane.HORIZONTAL) {

@@ -118,7 +118,14 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
 
     @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         refreshConnections(level, pos, state);
+        IrrigationNetwork.syncLoadedFittings(level, pos, level.getBlockState(pos), this);
         notifySprinklers(level, pos);
+    }
+
+    @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
+        if (state.is(replacement.getBlock())) return;
+        IrrigationNetwork.removeFittingEntity(level, pos, this);
+        IrrigationNetwork.syncLoadedFittings(level, pos, replacement, this);
     }
 
     private static void refreshConnections(Level level, BlockPos pos, BlockState state) {

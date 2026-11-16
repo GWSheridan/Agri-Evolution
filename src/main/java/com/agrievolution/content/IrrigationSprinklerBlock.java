@@ -101,8 +101,9 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
     }
 
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
-        super.onRemove(state, level, pos, replacement, moving);
-        if (!state.is(replacement.getBlock())) IrrigationNetwork.updateComparators(level, pos, this);
+        if (state.is(replacement.getBlock())) return;
+        IrrigationNetwork.removeFittingEntity(level, pos, this);
+        IrrigationNetwork.syncLoadedFittings(level, pos, replacement, this);
     }
     @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new IrrigationSprinklerBlockEntity(pos, state);

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.26
+
+- Sprinklers repair both ends of their pipe connections when loaded. Disabled faces stay closed.
+- A sprinkler rechecks saved connections when an adjoining chunk becomes available.
+- Loading a valve repairs a missing pipe arm even when the valve itself already looks right.
+- Removing a sprinkler clears its hydration and loaded pipe connections without loading chunks across the border.
+- Removing a valve clears loaded fittings without looking for comparators in unloaded chunks.
+
 ## 1.2.25
 
 - Mk II and Mk III basins keep their upgrade when broken and placed again. The item shows its tier and watering radius, and the basin starts empty.

@@ -25,13 +25,7 @@ public final class IrrigationPipeBlock extends Block {
                 // Only the selected face changed. Sync its loaded neighbor without broadcasting across the border.
                 int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
                 if (!level.setBlock(pos, next, quietUpdate)) return false;
-                if (connected) {
-                    var updated = neighbor.updateShape(side.getOpposite(), next, level, neighborPos, pos);
-                    if (updated != neighbor) level.setBlock(neighborPos, updated, quietUpdate);
-                    if (updated.getBlock() instanceof IrrigationValveBlock || updated.getBlock() instanceof IrrigationSprinklerBlock) {
-                        level.neighborChanged(updated, neighborPos, state.getBlock(), pos, false);
-                    }
-                }
+                IrrigationNetwork.syncLoadedFitting(level, pos, next, state.getBlock(), side);
                 return true;
             }
         }
