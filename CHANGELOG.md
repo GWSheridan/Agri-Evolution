@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.24
+
+- Forming a Water Reservoir at a chunk edge leaves the chunks beyond the shell unloaded.
+- Dismantling restores copper and clears connected pipe fittings using loaded chunks.
+- The reservoir core handles routine structure checks and Mk II generation. Shell pieces can still clean themselves up if the core is missing.
+- Small transfers leave the shell blocks alone until the gauge crosses a band. Comparators still track the water level.
+- Small transfers keep pump connections valid. Dismantling still disconnects the old tank.
+
 ## 1.2.23
 
 - A roof or closed valve cuts off sprinkler hydration as soon as it blocks the spray.

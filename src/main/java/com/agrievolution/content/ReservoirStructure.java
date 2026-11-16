@@ -3,7 +3,9 @@ package com.agrievolution.content;
 import java.util.function.Predicate;
 import net.minecraft.core.*;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 public final class ReservoirStructure {
     enum Status {
@@ -33,13 +35,22 @@ public final class ReservoirStructure {
             }
             changing=true;
             try {
-                for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++)
-                    level.setBlock(core.offset(dx,dy,dz),AEBlocks.WATER_RESERVOIR.get().defaultBlockState()
-                            .setValue(WaterReservoirBlock.X,dx+1).setValue(WaterReservoirBlock.Y,dy+1).setValue(WaterReservoirBlock.Z,dz+1),2);
+                for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {
+                    BlockPos part = core.offset(dx, dy, dz);
+                    BlockState shell = AEBlocks.WATER_RESERVOIR.get().defaultBlockState()
+                            .setValue(WaterReservoirBlock.X, dx + 1).setValue(WaterReservoirBlock.Y, dy + 1).setValue(WaterReservoirBlock.Z, dz + 1);
+                    level.setBlock(part, shell, IrrigationNetwork.loadedUpdateFlags(level, part, Block.UPDATE_CLIENTS));
+                }
                 if(level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank)tank.initialize();
             } finally {changing=false;}
-            for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++)
-                level.updateNeighborsAt(core.offset(dx,dy,dz),AEBlocks.WATER_RESERVOIR.get());
+            for (BlockPos cursor : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(1, 1, 1))) {
+                BlockPos part = cursor.immutable();
+                if (IrrigationNetwork.loadedUpdateFlags(level, part, Block.UPDATE_ALL) == Block.UPDATE_ALL) {
+                    level.updateNeighborsAt(part, AEBlocks.WATER_RESERVOIR.get());
+                } else {
+                    syncLoadedFittings(level, part, level.getBlockState(part));
+                }
+            }
             return Formation.FORMED;
         }
         return protectedShell ? Formation.PROTECTED : Formation.INVALID;
@@ -90,10 +101,28 @@ public final class ReservoirStructure {
             for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++) {
                 var p=core.offset(x,y,z);if(p.equals(removed)||!level.hasChunkAt(p))continue;
                 var s=level.getBlockState(p);
-                if(s.getBlock() instanceof WaterReservoirBlock && WaterReservoirBlock.core(p,s).equals(core))
-                    level.setBlock(p,p.equals(core)?(restoreWater?Blocks.WATER:Blocks.AIR).defaultBlockState():Blocks.COPPER_BLOCK.defaultBlockState(),3);
+                if (s.getBlock() instanceof WaterReservoirBlock && WaterReservoirBlock.core(p, s).equals(core)) {
+                    BlockState replacement = (p.equals(core) ? (restoreWater ? Blocks.WATER : Blocks.AIR) : Blocks.COPPER_BLOCK).defaultBlockState();
+                    int flags = IrrigationNetwork.loadedUpdateFlags(level, p, Block.UPDATE_ALL);
+                    if (level.setBlock(p, replacement, flags) && flags != Block.UPDATE_ALL) syncLoadedFittings(level, p, replacement);
+                }
             }
         } finally {changing=false;}
+    }
+
+    private static void syncLoadedFittings(Level level, BlockPos pos, BlockState part) {
+        for (Direction side : Direction.values()) {
+            BlockPos neighbor = pos.relative(side);
+            if (!level.hasChunkAt(neighbor)) continue;
+            BlockState current = level.getBlockState(neighbor);
+            if (!(current.getBlock() instanceof IrrigationPipeBlock || current.getBlock() instanceof IrrigationValveBlock
+                    || current.getBlock() instanceof IrrigationSprinklerBlock)) continue;
+            BlockState updated = current.updateShape(side.getOpposite(), part, level, neighbor, pos);
+            if (current != updated) {
+                level.setBlock(neighbor, updated, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+                level.neighborChanged(updated, neighbor, AEBlocks.WATER_RESERVOIR.get(), pos, false);
+            }
+        }
     }
     private ReservoirStructure(){}
 }

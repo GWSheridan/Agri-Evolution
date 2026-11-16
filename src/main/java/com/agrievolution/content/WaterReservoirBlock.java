@@ -51,21 +51,46 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
         };
     }
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return core(pos,state).equals(pos)?new WaterReservoirBlockEntity(pos,state):null;}
-    @Override protected void onPlace(BlockState state,Level level,BlockPos pos,BlockState old,boolean piston){if(!level.isClientSide)level.scheduleTick(pos,this,20);}
+    @Override protected void onPlace(BlockState state,Level level,BlockPos pos,BlockState old,boolean piston){
+        if (!level.isClientSide) {
+            level.scheduleTick(pos, this, 20);
+            if (!old.is(this)) invalidatePort(level, pos, state);
+        }
+    }
     @Override protected void tick(BlockState state,ServerLevel level,BlockPos pos,RandomSource random){
         var center=core(pos,state);
-        if(center.equals(pos)&&level.getBlockEntity(center) instanceof WaterReservoirBlockEntity tank)tank.generationSecond();
-        if(ReservoirStructure.loaded(level,center)&&!ReservoirStructure.complete(level,center)) {
-            ReservoirStructure.dismantle(level,center,null);
-            return;
+        boolean isCore = center.equals(pos);
+        var tank = tank(level, pos, state);
+        boolean liveCore = tank != null && !tank.isRemoved() && tank.getBlockState().is(this)
+                && core(center, tank.getBlockState()).equals(center);
+        // The core validates a live tank. Shell ticks still recover orphaned parts after a chunk reload.
+        if (isCore || !liveCore) {
+            var status = ReservoirStructure.status(level, center);
+            if (status == ReservoirStructure.Status.INCOMPLETE) {
+                ReservoirStructure.dismantle(level, center, null);
+                return;
+            }
+            if (isCore && status == ReservoirStructure.Status.COMPLETE && tank != null) tank.generateSecondInCompleteTank();
         }
         level.scheduleTick(pos,this,20);
     }
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState replacement,boolean piston){
-        boolean dismantled = !state.is(replacement.getBlock());
-        if (dismantled) ReservoirStructure.dismantle(level, core(pos, state), pos);
-        super.onRemove(state,level,pos,replacement,piston);
-        if (dismantled) IrrigationNetwork.updateComparators(level, pos, this);
+        if (state.is(replacement.getBlock())) return;
+        ReservoirStructure.dismantle(level, core(pos, state), pos);
+        // Level.removeBlockEntity also scans for comparators through blocks in unloaded chunks.
+        level.getChunkAt(pos).removeBlockEntity(pos);
+        IrrigationNetwork.updateComparators(level, pos, this);
+        invalidatePort(level, pos, state);
+    }
+
+    private static void invalidatePort(Level level, BlockPos pos, BlockState state) {
+        if (level.isClientSide) return;
+        for (Direction side : Direction.values()) {
+            if (port(state, side)) {
+                level.invalidateCapabilities(pos);
+                return;
+            }
+        }
     }
     @Override protected boolean hasAnalogOutputSignal(BlockState state){return true;}
     @Override protected int getAnalogOutputSignal(BlockState state,Level level,BlockPos pos){

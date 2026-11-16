@@ -265,6 +265,44 @@ public final class ReservoirGameTests {
         h.succeed();
     }
 
+    @GameTest(template = "empty")
+    public static void reservoirFormsAndDismantlesAtLoadedChunkEdge(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(3584, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var core = edge.west();
+        var outside = edge.east();
+        var pipePos = core.west(2);
+        var headPos = pipePos.west();
+        level.getChunkAt(core);
+        int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        for (BlockPos part : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(1, 1, 1))) {
+            level.setBlock(part.immutable(), (part.equals(core) ? Blocks.WATER : Blocks.COPPER_BLOCK).defaultBlockState(), quietUpdate);
+        }
+        level.setBlock(pipePos, AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), quietUpdate);
+        level.setBlock(headPos, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
+        h.assertFalse(level.hasChunkAt(outside), "The chunk beyond the shell starts unloaded");
+
+        h.assertTrue(ReservoirStructure.tryForm(level, core.west()) && !level.hasChunkAt(outside),
+                "Formation leaves the chunk beyond the shell unloaded");
+        var eastPort = IrrigationSprinklerBlock.connection(Direction.EAST);
+        h.assertTrue(level.getBlockState(pipePos).getValue(eastPort), "The pipe connects visually to the formed outlet");
+        var tank = (WaterReservoirBlockEntity) level.getBlockEntity(core);
+        tank.addBucket();
+        var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(headPos);
+        sprinkler.irrigateCycle();
+        h.assertTrue(tank.water() == 1000 && sprinkler.water() == 975, "The new pipe outlet supplies the sprinkler");
+        h.assertFalse(level.hasChunkAt(outside), "Sprinkler refills leave the chunk beyond the shell unloaded");
+
+        level.setBlock(edge, Blocks.AIR.defaultBlockState(), quietUpdate);
+        h.assertTrue(level.getBlockState(core).is(Blocks.WATER) && level.getBlockEntity(core) == null,
+                "Dismantling restores source water and removes the tank block entity");
+        h.assertTrue(level.getBlockState(edge.above()).is(Blocks.COPPER_BLOCK), "Dismantling restores the upper copper block");
+        h.assertFalse(level.getBlockState(pipePos).getValue(eastPort), "Dismantling clears the pipe connector");
+        h.assertFalse(level.hasChunkAt(outside), "Dismantling leaves the chunk beyond the shell unloaded");
+        h.succeed();
+    }
+
     @GameTest(template="empty") public static void invalidBlueprintAndEmptyDismantle(GameTestHelper h){
         var level=h.getLevel();var core=h.absolutePos(new BlockPos(3,30,3));blueprint(h,core);
         level.setBlock(core.above(),Blocks.AIR.defaultBlockState(),2);

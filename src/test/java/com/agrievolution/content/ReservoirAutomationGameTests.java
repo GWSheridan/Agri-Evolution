@@ -1,10 +1,12 @@
 package com.agrievolution.content;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.gametest.*;
 import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
@@ -33,7 +35,10 @@ public final class ReservoirAutomationGameTests {
  }
  @GameTest(template="empty") public static void capabilitySimulationAndStaleTank(GameTestHelper h){
   var core=h.absolutePos(new BlockPos(3,35,3));var tank=ReservoirGameTests.tank(h,core);var level=h.getLevel();
-  var port=level.getCapability(Capabilities.FluidHandler.BLOCK,core.north(),Direction.NORTH);
+  var invalidations = new AtomicInteger();
+  var cache = BlockCapabilityCache.create(Capabilities.FluidHandler.BLOCK, level, core.north(), Direction.NORTH,
+          () -> true, invalidations::incrementAndGet);
+  var port = cache.getCapability();
   h.assertTrue(port!=null,"External pumps can access outward port");
   h.assertTrue(level.getCapability(Capabilities.FluidHandler.BLOCK,core.north(),Direction.UP)==null,"Only outward face exposes tank");
   h.assertTrue(port.fill(new FluidStack(Fluids.LAVA,1000),FluidAction.EXECUTE)==0,"Reject nonwater");
@@ -41,7 +46,16 @@ public final class ReservoirAutomationGameTests {
   port.fill(new FluidStack(Fluids.WATER,500),FluidAction.EXECUTE);
   h.assertTrue(port.drain(250,FluidAction.SIMULATE).getAmount()==250&&tank.water()==1500,"Simulated drain is read only");
   h.assertTrue(port.drain(250,FluidAction.EXECUTE).getAmount()==250&&tank.water()==1250,"Exact fluid accounting");
+  h.assertTrue(invalidations.get() == 0 && cache.getCapability() == port && port.getFluidInTank(0).getAmount() == 1250,
+          "Small transfers change the stored amount without invalidating the pump connection");
+  port.fill(new FluidStack(Fluids.WATER, 6750), FluidAction.EXECUTE);
+  h.assertTrue(level.getBlockState(core.north()).getValue(WaterReservoirBlock.FILL) == 1, "The first gauge band includes 8000 mB");
+  port.fill(new FluidStack(Fluids.WATER, 1), FluidAction.EXECUTE);
+  h.assertTrue(level.getBlockState(core.north()).getValue(WaterReservoirBlock.FILL) == 2, "Crossing a gauge threshold updates the shell");
+  h.assertTrue(cache.getCapability() == port, "Gauge changes leave the same tank available to pumps");
   level.setBlock(core.east(),Blocks.AIR.defaultBlockState(),3);
-  h.assertTrue(port.fill(new FluidStack(Fluids.WATER,1000),FluidAction.EXECUTE)==0&&port.drain(1000,FluidAction.EXECUTE).isEmpty(),"Cached tank cannot operate after dismantling");h.succeed();
+  h.assertTrue(invalidations.get() > 0 && cache.getCapability() == null
+          && port.fill(new FluidStack(Fluids.WATER,1000),FluidAction.EXECUTE)==0 && port.drain(1000,FluidAction.EXECUTE).isEmpty(),
+          "Dismantling invalidates the connection and the old tank cannot operate");h.succeed();
  }
 }
