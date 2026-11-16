@@ -44,17 +44,7 @@ public final class SpannerItem extends Item {
     private static void showRoute(ServerPlayer player, IrrigationNetwork.Route route) {
         var end = route.blocks().getLast();
         var level = player.serverLevel();
-        String status = switch (route.flow()) {
-            case READY -> "Water source ready";
-            case EMPTY -> "Water source has less than a bucket";
-            case CLOSED_VALVE -> IrrigationValveBlock.flowStatus(level, end, level.getBlockState(end));
-            case DISABLED_PORT -> "Disabled " + route.disabledSide().getName() + " pipe port";
-            case DISCONNECTED -> "No connected water source";
-            case TOO_LARGE -> "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
-            case UNLOADED_CONNECTION -> "Connection leads into an unloaded chunk";
-            case INCOMPLETE_RESERVOIR -> ReservoirStructure.Status.INCOMPLETE.message;
-        };
-        player.displayClientMessage(Component.literal(status + " [" + end.toShortString() + "]"), true);
+        player.displayClientMessage(Component.literal(routeStatus(level, route) + " [" + end.toShortString() + "]"), true);
         var routeColor = new DustParticleOptions(new Vector3f(0.20f, 0.77f, 1.0f), 0.95f);
         var endColor = new DustParticleOptions(route.flow() == IrrigationNetwork.Flow.READY
                 ? new Vector3f(0.3f, 0.95f, 0.25f) : new Vector3f(1.0f, 0.44f, 0.15f), 1.25f);
@@ -66,17 +56,35 @@ public final class SpannerItem extends Item {
         level.sendParticles(player, endColor, true, end.getX() + 0.5, end.getY() + 0.8, end.getZ() + 0.5, 10, 0.23, 0.22, 0.23, 0);
     }
 
+    static String routeStatus(Level level, IrrigationNetwork.Route route) {
+        var end = route.blocks().getLast();
+        return switch (route.flow()) {
+            case READY -> "Water source ready";
+            case EMPTY -> "Water source has less than a bucket";
+            case CLOSED_VALVE -> IrrigationValveBlock.flowStatus(level, end, level.getBlockState(end));
+            case DISABLED_PORT -> "Disabled " + route.disabledSide().getName() + " pipe port";
+            case DISCONNECTED -> "No connected water source";
+            case TOO_LARGE -> "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
+            case UNLOADED_CONNECTION -> "Connection leads into an unloaded chunk";
+            case INCOMPLETE_RESERVOIR -> ReservoirStructure.Status.INCOMPLETE.message;
+            case PAUSED_BY_REDSTONE -> "Sprinkler paused by redstone";
+            case WAITING_FOR_REDSTONE -> "Sprinkler waiting for redstone";
+        };
+    }
+
     public static void onRightClick(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
         var player=event.getEntity();var level=event.getLevel();var pos=event.getPos();
-        if(event.getHand()!=net.minecraft.world.InteractionHand.MAIN_HAND||!(player.getMainHandItem().getItem() instanceof SpannerItem)||!player.mayBuild())return;
+        if(event.getHand()!=net.minecraft.world.InteractionHand.MAIN_HAND||!(player.getMainHandItem().getItem() instanceof SpannerItem))return;
         if (!level.hasChunkAt(pos)) return;
         var state = level.getBlockState(pos);
         if(!(state.getBlock() instanceof IrrigationPipeBlock)&&!(state.getBlock() instanceof IrrigationSprinklerBlock)
                 && !(state.getBlock() instanceof IrrigationValveBlock))return;
         event.setCanceled(true);event.setCancellationResult(InteractionResult.sidedSuccess(level.isClientSide));
+        if (level.isClientSide) return;
+        boolean valve = state.getBlock() instanceof IrrigationValveBlock;
         var side = event.getHitVec().getDirection();
-        if (level.isClientSide || !canEdit(player, level, pos, side, player.getMainHandItem())) return;
-        if(state.getBlock() instanceof IrrigationValveBlock){
+        if ((!valve || player.isShiftKeyDown()) && !canEdit(player, level, pos, side, player.getMainHandItem())) return;
+        if (valve) {
             inspectValve(player, level, pos, state);
         }else if(state.getBlock() instanceof IrrigationPipeBlock){
             if (IrrigationPipeBlock.toggle(level, pos, side)) {
@@ -113,7 +121,10 @@ public final class SpannerItem extends Item {
         else if (!IrrigationValveBlock.permitsFlow(level, pos, state)) flow = "Valve paused by redstone";
         else if (status.limit()) flow = "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
         else if (status.supplies().isEmpty()) {
-            if (status.blockedPath()) flow = "Supply path blocked";
+            if (status.closedValve() != null) {
+                BlockPos shutoff = status.closedValve();
+                flow = IrrigationValveBlock.flowStatus(level, shutoff, level.getBlockState(shutoff)) + " along supply path";
+            } else if (status.disabledSide() != null) flow = "Supply blocked by disabled " + status.disabledSide().getName() + " pipe port";
             else if (status.unloadedConnection()) flow = "Connection leads into an unloaded chunk";
             else if (status.incompleteReservoir()) flow = ReservoirStructure.Status.INCOMPLETE.message;
             else flow = "No connected water source";

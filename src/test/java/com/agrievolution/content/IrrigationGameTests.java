@@ -108,6 +108,22 @@ public final class IrrigationGameTests {
         h.assertTrue(IrrigationNetwork.trace(level, pos).equals(supplyRoute), "The trace can bypass a closed valve off the supply route");
         sprinkler.irrigateCycle();
         h.assertTrue(sprinkler.growthActive(), "A closed valve on a different branch leaves the sprinkler running");
+
+        level.setBlock(pos.north(), Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+        var paused = IrrigationNetwork.trace(level, pos);
+        h.assertTrue(paused.flow() == IrrigationNetwork.Flow.PAUSED_BY_REDSTONE && paused.blocks().equals(List.of(pos))
+                        && SpannerItem.routeStatus(level, paused).equals("Sprinkler paused by redstone"),
+                "The trace identifies the powered head even with a full basin available");
+        sprinkler.configure(true);
+        level.setBlock(pos.north(), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+        var waiting = IrrigationNetwork.trace(level, pos);
+        h.assertTrue(waiting.flow() == IrrigationNetwork.Flow.WAITING_FOR_REDSTONE && waiting.blocks().equals(List.of(pos)),
+                "A head set to require power reports the missing signal");
+        sprinkler.configure(true);
+        level.setBlock(pos.north(), Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+        h.assertTrue(IrrigationNetwork.trace(level, pos).equals(supplyRoute)
+                        && level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED),
+                "Ignore-redstone mode traces the supply without draining it");
         h.succeed();
     }
     @GameTest(template="empty")
@@ -486,6 +502,10 @@ public final class IrrigationGameTests {
         level.setBlock(edge, pipe, quietUpdate);
         h.assertTrue(IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.DISCONNECTED,
                 "An unused port says disconnected even when it faces an unloaded chunk");
+        h.assertTrue(IrrigationNetwork.trace(level, outside).equals(
+                        new IrrigationNetwork.Route(List.of(outside), IrrigationNetwork.Flow.UNLOADED_CONNECTION, null))
+                        && !IrrigationNetwork.search(level, outside).blockedValve(),
+                "An unloaded origin reports an unavailable chunk rather than a closed valve");
         h.assertFalse(level.hasChunkAt(outside), "Tracing must leave the neighboring chunk unloaded");
         h.succeed();
     }

@@ -107,6 +107,15 @@ public final class ReservoirGameTests {
             h.assertTrue(IrrigationPipeBlock.enabled(level.getBlockState(pipe), Direction.UP)
                     && !sprinkler.smartWatering() && namedValve.zone().equals("Irrigation zone"),
                     "Protected fittings retain their port, watering mode, and name");
+            player.getAbilities().mayBuild = false;
+            player.setShiftKeyDown(false);
+            player.message = "";
+            var valveHit = new BlockHitResult(Vec3.atCenterOf(valve), Direction.UP, valve, false);
+            var inspection = new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, valve, valveHit);
+            SpannerItem.onRightClick(inspection);
+            h.assertTrue(inspection.isCanceled() && !player.message.isEmpty() && namedValve.zone().equals("Irrigation zone")
+                            && level.getBlockState(valve).getValue(IrrigationValveBlock.OPEN),
+                    "Read-only valve inspection gives a report without allowing renaming or a valve toggle");
         } finally {
             border.setCenter(oldX, oldZ);
             border.setSize(oldSize);

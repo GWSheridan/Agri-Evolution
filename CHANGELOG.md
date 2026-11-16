@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.22
+
+- Spanner traces and sprinkler inspection now agree on when redstone, an adjacent valve, or an unloaded fitting stops a spray.
+- Starting a trace in an unloaded chunk reports the missing chunk and leaves it unloaded.
+- Valve zone reports name the disabled pipe face or tell you whether a remote valve is closed by hand or held shut by redstone.
+- Players without building permission can read valve reports where interaction is available. Renaming and fitting changes still require permission.
+- Aim the Spanner at any section of a Vertical Greenhouse to check its water level and pipe supply.
+
 ## 1.2.21
 
 - Valves align with usable fittings. A disabled pipe face or reservoir panel without a port no longer turns the valve.

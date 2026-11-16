@@ -1,7 +1,10 @@
 package com.agrievolution.content;
 
+import com.agrievolution.content.IrrigationNetwork.Flow;
+import com.agrievolution.content.IrrigationNetwork.Route;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
@@ -84,24 +87,33 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     private boolean flowAllowed() {
-        return localBlockage() == null && networkBlockage(IrrigationNetwork.search(level, worldPosition)) == null;
+        return level instanceof ServerLevel && localShutoff() == null
+                && networkBlockage(IrrigationNetwork.search(level, worldPosition)) == null;
     }
 
-    private String localBlockage() {
-        if (!(level instanceof ServerLevel)) return "Sprinkler unavailable";
+    record LocalShutoff(Flow flow, BlockPos pos, String message) {
+        Route route(BlockPos head) {
+            return new Route(head.equals(pos) ? List.of(head) : List.of(head, pos), flow, null);
+        }
+    }
+
+    LocalShutoff localShutoff() {
         boolean powered = redstoneMode != 2 && IrrigationNetwork.hasLoadedNeighborSignal(level, worldPosition);
-        if (redstoneMode == 0 && powered) return "Paused by redstone";
-        if (redstoneMode == 1 && !powered) return "Waiting for redstone";
+        if (redstoneMode == 0 && powered) return new LocalShutoff(Flow.PAUSED_BY_REDSTONE, worldPosition, "Paused by redstone");
+        if (redstoneMode == 1 && !powered) return new LocalShutoff(Flow.WAITING_FOR_REDSTONE, worldPosition, "Waiting for redstone");
         for (Direction side : Direction.values()) {
             BlockPos pos = worldPosition.relative(side);
             if (!level.hasChunkAt(pos)) {
-                if (getBlockState().getValue(IrrigationSprinklerBlock.connection(side))) return "Connected chunk not loaded";
+                if (getBlockState().getValue(IrrigationSprinklerBlock.connection(side))) {
+                    return new LocalShutoff(Flow.UNLOADED_CONNECTION, worldPosition, "Connected chunk not loaded");
+                }
                 continue;
             }
             BlockState state = level.getBlockState(pos);
             if (IrrigationValveBlock.connects(state, side)
                     && !IrrigationValveBlock.permitsFlow(level, pos, state)) {
-                return state.getValue(IrrigationValveBlock.OPEN) ? "Adjacent valve held shut by redstone" : "Adjacent valve closed";
+                String message = state.getValue(IrrigationValveBlock.OPEN) ? "Adjacent valve held shut by redstone" : "Adjacent valve closed";
+                return new LocalShutoff(Flow.CLOSED_VALVE, pos, message);
             }
         }
         return null;
@@ -119,10 +131,11 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     String inspectionStatus(IrrigationNetwork.Search inspectedNetwork, Set<BlockPos> inspectedSoils) {
-        String blockage = localBlockage();
-        if (blockage != null) return blockage;
+        if (!(level instanceof ServerLevel)) return "Sprinkler unavailable";
+        var stop = localShutoff();
+        if (stop != null) return stop.message();
         var network = inspectedNetwork == null ? IrrigationNetwork.search(level, worldPosition) : inspectedNetwork;
-        blockage = networkBlockage(network);
+        String blockage = networkBlockage(network);
         if (blockage != null) return blockage;
         var soils = inspectedSoils == null ? wateredSoils() : inspectedSoils;
         if (hasCurrentSpray()) {
@@ -200,7 +213,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     /** One 25 mB watering interval, called every 40 ticks. Public for real-server tests. */
     public void irrigateCycle() {
         if (!(level instanceof ServerLevel server) || isRemoved()) return;
-        if (localBlockage() != null) { stopWatering(); return; }
+        if (localShutoff() != null) { stopWatering(); return; }
         var network = IrrigationNetwork.search(server, worldPosition);
         if (networkBlockage(network) != null) { stopWatering(); return; }
         growthUntil = 0;

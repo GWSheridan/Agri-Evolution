@@ -300,6 +300,11 @@ public final class VerticalGreenhouseGameTests {
         seconds(h, greenhouse, 1);
         h.assertTrue(menu.waterStatus() == VerticalGreenhouseBlockEntity.WaterStatus.BLOCKED_PORT
                 && level.getBlockState(supply).getValue(IrrigationBasinBlock.FILLED), "A disabled port leaves its basin water in place");
+        var inspected = FarmInspection.describe(level, base, true, false);
+        h.assertTrue(inspected.contains("Water: 0 / 16000 mB") && inspected.contains("Pipe supply: Disabled east pipe port")
+                        && inspected.equals(FarmInspection.describe(level, base.above(2), true, false))
+                        && level.getBlockState(supply).getValue(IrrigationBasinBlock.FILLED),
+                "The Spanner can read the same tank and supply from any section without moving water");
 
         IrrigationPipeBlock.toggle(level, inlet, Direction.EAST);
         level.setBlock(supply, pipe, quietUpdate);

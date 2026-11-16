@@ -61,7 +61,7 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
 
     public static boolean port(BlockState state, Direction side) { return state.getValue(SECTION) == 0 && side != Direction.UP; }
 
-    private static VerticalGreenhouseBlockEntity controller(Level level, BlockPos pos, BlockState state) {
+    static VerticalGreenhouseBlockEntity controller(Level level, BlockPos pos, BlockState state) {
         BlockPos base = pos.below(state.getValue(SECTION));
         return matches(level.getBlockState(base), state.getBlock(), state.getValue(FACING), 0)
                 && level.getBlockEntity(base) instanceof VerticalGreenhouseBlockEntity greenhouse ? greenhouse : null;

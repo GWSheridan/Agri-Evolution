@@ -28,8 +28,20 @@ public final class FarmInspection {
     public static List<String> describe(ServerLevel level,BlockPos pos,boolean spanner,boolean sampler){
         var lines=new ArrayList<String>();if(!level.hasChunkAt(pos))return lines;
         var state=level.getBlockState(pos);
-        if(spanner && (IrrigationNetwork.port(state,Direction.UP)||state.getBlock() instanceof WaterReservoirBlock||state.getBlock() instanceof IrrigationPipeBlock)){
+        if(spanner && (IrrigationNetwork.port(state,Direction.UP)||state.getBlock() instanceof WaterReservoirBlock
+                ||state.getBlock() instanceof IrrigationPipeBlock||state.getBlock() instanceof VerticalGreenhouseBlock)){
             lines.add(state.getBlock().getName().getString());
+            if (state.getBlock() instanceof VerticalGreenhouseBlock) {
+                var greenhouse = VerticalGreenhouseBlock.controller(level, pos, state);
+                if (greenhouse == null || !greenhouse.complete()) {
+                    lines.add("Vertical Greenhouse is incomplete");
+                } else {
+                    lines.add("Water: " + greenhouse.water() + " / " + VerticalGreenhouseBlockEntity.CAPACITY + " mB");
+                    var route = IrrigationNetwork.trace(level, greenhouse.getBlockPos());
+                    lines.add("Pipe supply: " + SpannerItem.routeStatus(level, route));
+                }
+                return lines;
+            }
             if(state.getBlock() instanceof WaterReservoirBlock){
                 var core=WaterReservoirBlock.core(pos,state);
                 var status = ReservoirStructure.status(level, core);

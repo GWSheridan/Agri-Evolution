@@ -88,6 +88,19 @@ public final class ValveJunctionGameTests {
         h.assertTrue(route.flow() == IrrigationNetwork.Flow.DISABLED_PORT && route.blocks().getLast().equals(corner)
                         && route.disabledSide() == Direction.DOWN && IrrigationNetwork.inspectZone(level, valve).blockedPath(),
                 "The Spanner identifies the face that isolates the basin");
+        h.assertTrue(SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden").getFirst()
+                        .contains("Supply blocked by disabled down pipe port"), "The zone report identifies the same blocked face");
+
+        var shutoff = corner.below();
+        var valveState = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState();
+        level.setBlock(shutoff, valveState.setValue(IrrigationValveBlock.OPEN, false), Block.UPDATE_ALL);
+        IrrigationPipeBlock.toggle(level, corner, Direction.DOWN);
+        h.assertTrue(SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden").getFirst()
+                        .contains("Valve closed along supply path"), "The zone locates a remote manual shutoff");
+        level.setBlock(shutoff, valveState, Block.UPDATE_ALL);
+        level.setBlock(shutoff.below(), Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+        h.assertTrue(SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden").getFirst()
+                        .contains("Valve paused by redstone along supply path"), "The zone distinguishes a powered remote valve");
         h.succeed();
     }
 

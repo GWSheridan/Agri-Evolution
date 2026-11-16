@@ -103,10 +103,17 @@ public final class IrrigationNetwork {
         }
     }
     public record Search(boolean attached,List<Supply> supplies,boolean overflow,boolean blockedValve) {}
-    public enum Flow { READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE, UNLOADED_CONNECTION, INCOMPLETE_RESERVOIR }
+    public enum Flow {
+        READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE, UNLOADED_CONNECTION, INCOMPLETE_RESERVOIR,
+        PAUSED_BY_REDSTONE, WAITING_FOR_REDSTONE
+    }
     public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {}
-    record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, boolean blockedPath,
-                      boolean unloadedConnection, boolean incompleteReservoir) {}
+    record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, BlockPos closedValve,
+                      Direction disabledSide, boolean unloadedConnection, boolean incompleteReservoir) {
+        boolean blockedPath() {
+            return closedValve != null || disabledSide != null;
+        }
+    }
     private record Endpoint(BlockPos pos, Supply supply) {}
     private record ClosedPort(BlockPos from, BlockPos to, BlockPos pipe, Direction side) {}
     private static final class Trace {
@@ -126,16 +133,13 @@ public final class IrrigationNetwork {
     }
 
     public static Route trace(Level level, BlockPos head) {
+        if (!level.hasChunkAt(head)) return new Route(List.of(head), Flow.UNLOADED_CONNECTION, null);
+        if (level.getBlockEntity(head) instanceof IrrigationSprinklerBlockEntity sprinkler) {
+            var stop = sprinkler.localShutoff();
+            if (stop != null) return stop.route(head);
+        }
         var trace = new Trace();
         var network = search(level, head, trace);
-        // A sprinkler pauses for either of these adjacent blockages even with a second supply.
-        boolean adjacentValve = trace.valve != null && head.equals(trace.parents.get(trace.valve));
-        boolean adjacentUnloaded = head.equals(trace.unloadedFitting);
-        if ((adjacentValve || adjacentUnloaded)
-                && level.getBlockState(head).getBlock() instanceof IrrigationSprinklerBlock) {
-            return adjacentValve ? route(trace, trace.valve, Flow.CLOSED_VALVE)
-                    : route(trace, head, Flow.UNLOADED_CONNECTION);
-        }
         if (network.overflow()) return new Route(List.of(head), Flow.TOO_LARGE, null);
         for (var endpoint : trace.endpoints) {
             if (endpoint.supply().hasBucket(level)) return route(trace, endpoint.pos(), Flow.READY);
@@ -156,8 +160,9 @@ public final class IrrigationNetwork {
     static ZoneStatus inspectZone(Level level, BlockPos valve) {
         var trace = new Trace();
         var network = search(level, valve, trace, true);
+        var port = trace.blockingPort();
         return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), network.overflow(),
-                network.blockedValve() || trace.blockingPort() != null, trace.unloadedFitting != null, trace.incompleteReservoir != null);
+                trace.valve, port == null ? null : port.side(), trace.unloadedFitting != null, trace.incompleteReservoir != null);
     }
 
     private static Route route(Trace trace, BlockPos end, Flow flow) {
@@ -176,7 +181,7 @@ public final class IrrigationNetwork {
     }
 
     private static Search search(Level level, BlockPos head, Trace trace, boolean inspectClosedOrigin) {
-        if(!level.hasChunkAt(head))return new Search(true,List.of(),false,true);
+        if (!level.hasChunkAt(head)) return new Search(false, List.of(), false, false);
         var initial=level.getBlockState(head);
         if(!inspectClosedOrigin && initial.getBlock() instanceof IrrigationValveBlock && !IrrigationValveBlock.permitsFlow(level,head,initial)){
             if (trace != null) trace.valve = head;
