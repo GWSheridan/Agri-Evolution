@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Loaded-only bounded graph. Sources are endpoints, never conduits between branches. */
 public final class IrrigationNetwork {
     public static final int MAX_NODES=512;
+    private static final int BUCKET = 1000;
 
     static boolean hasLoadedNeighborSignal(Level level, BlockPos pos) {
         // Match SignalGetter's weak and conducted power checks without asking for unloaded blocks.
@@ -107,14 +108,10 @@ public final class IrrigationNetwork {
             if (reservoir != null) return reservoir.water();
             if (!level.hasChunkAt(basin)) return 0;
             var state = level.getBlockState(basin);
-            return state.getBlock() instanceof IrrigationBasinBlock && state.getValue(IrrigationBasinBlock.FILLED) ? 1000 : 0;
+            return state.getBlock() instanceof IrrigationBasinBlock && state.getValue(IrrigationBasinBlock.FILLED) ? BUCKET : 0;
         }
 
-        int capacity() { return reservoir == null ? 1000 : WaterReservoirBlockEntity.CAPACITY; }
-
-        boolean hasBucket(Level level) {
-            return water(level) >= 1000;
-        }
+        int capacity() { return reservoir == null ? BUCKET : WaterReservoirBlockEntity.CAPACITY; }
 
         boolean takeBucket(Level level) {
             if (reservoir != null) return reservoir.takeBucket();
@@ -124,10 +121,24 @@ public final class IrrigationNetwork {
                     && IrrigationBasinBlock.setFilled(level, basin, state, false);
         }
     }
+    record SupplyWater(int total, int capacity, int ready, int fullest) {}
+
+    static SupplyWater supplyWater(Level level, List<Supply> supplies) {
+        int total = 0, capacity = 0, ready = 0, fullest = 0;
+        for (Supply supply : supplies) {
+            int water = supply.water(level);
+            total += water;
+            capacity += supply.capacity();
+            if (water >= BUCKET) ready++;
+            fullest = Math.max(fullest, water);
+        }
+        return new SupplyWater(total, capacity, ready, fullest);
+    }
+
     public record Search(boolean attached,List<Supply> supplies,boolean overflow,boolean blockedValve) {}
     public enum Flow {
         READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE, UNLOADED_CONNECTION, INCOMPLETE_RESERVOIR,
-        PAUSED_BY_REDSTONE, WAITING_FOR_REDSTONE
+        PAUSED_BY_REDSTONE, WAITING_FOR_REDSTONE, INCOMPLETE_GREENHOUSE
     }
     public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {}
     record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, BlockPos closedValve,
@@ -156,17 +167,53 @@ public final class IrrigationNetwork {
 
     public static Route trace(Level level, BlockPos head) {
         if (!level.hasChunkAt(head)) return new Route(List.of(head), Flow.UNLOADED_CONNECTION, null);
+        BlockState state = level.getBlockState(head);
+        if (state.getBlock() instanceof VerticalGreenhouseBlock) {
+            var greenhouse = VerticalGreenhouseBlock.controller(level, head, state);
+            if (greenhouse == null || !greenhouse.complete()) return new Route(List.of(head), Flow.INCOMPLETE_GREENHOUSE, null);
+            head = greenhouse.getBlockPos();
+        }
         if (level.getBlockEntity(head) instanceof IrrigationSprinklerBlockEntity sprinkler) {
             var stop = sprinkler.localShutoff();
             if (stop != null) return stop.route(head);
         }
-        var trace = new Trace();
-        var network = search(level, head, trace);
-        if (network.overflow()) return new Route(List.of(head), Flow.TOO_LARGE, null);
-        for (var endpoint : trace.endpoints) {
-            if (endpoint.supply().hasBucket(level)) return route(trace, endpoint.pos(), Flow.READY);
+        return inspectSupply(level, head).route(level);
+    }
+
+    static final class SupplyInspection {
+        private final BlockPos origin;
+        private final Search network;
+        private final Trace trace;
+
+        private SupplyInspection(BlockPos origin, Search network, Trace trace) {
+            this.origin = origin;
+            this.network = network;
+            this.trace = trace;
         }
-        if (!trace.endpoints.isEmpty()) return route(trace, trace.endpoints.getFirst().pos(), Flow.EMPTY);
+
+        Search network() { return network; }
+
+        Route route(Level level) { return supplyRoute(level, origin, network, trace); }
+    }
+
+    static SupplyInspection inspectSupply(Level level, BlockPos origin) {
+        var trace = new Trace();
+        return new SupplyInspection(origin, search(level, origin, trace), trace);
+    }
+
+    private static Route supplyRoute(Level level, BlockPos head, Search network, Trace trace) {
+        if (network.overflow()) return new Route(List.of(head), Flow.TOO_LARGE, null);
+        Endpoint fullest = null;
+        int mostWater = -1;
+        for (var endpoint : trace.endpoints) {
+            int water = endpoint.supply().water(level);
+            if (water >= BUCKET) return route(trace, endpoint.pos(), Flow.READY);
+            if (water > mostWater) {
+                mostWater = water;
+                fullest = endpoint;
+            }
+        }
+        if (fullest != null) return route(trace, fullest.pos(), Flow.EMPTY);
         if (trace.valve != null) return route(trace, trace.valve, Flow.CLOSED_VALVE);
         ClosedPort port = trace.blockingPort();
         if (port != null) {
@@ -244,12 +291,13 @@ public final class IrrigationNetwork {
                     continue;
                 }
                 seen.add(next);
-                if(seen.size()>MAX_NODES)return new Search(true,List.of(),true,true);
+                if (seen.size() > MAX_NODES) return new Search(true, List.of(), true, blockedValve);
+                attached = true;
                 if (trace != null) trace.parents.put(next, pos);
-                if(neighbor.getBlock() instanceof IrrigationPipeBlock) {attached=true;queue.add(next);}
+                if(neighbor.getBlock() instanceof IrrigationPipeBlock) queue.add(next);
                 else if(neighbor.getBlock() instanceof IrrigationValveBlock) {
                     if(IrrigationValveBlock.permitsFlow(level,next,neighbor))queue.add(next);
-                    else {attached=true;blockedValve=true;if (trace != null && trace.valve == null) trace.valve = next;}
+                    else {blockedValve=true;if (trace != null && trace.valve == null) trace.valve = next;}
                 } else if(neighbor.getBlock() instanceof IrrigationBasinBlock) {
                     if(sources.add(next))addSupply(supplies, trace, next, new Supply(next,null));
                 } else if(neighbor.getBlock() instanceof WaterReservoirBlock) {

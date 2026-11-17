@@ -411,7 +411,8 @@ public final class ReservoirGameTests {
             level.setBlock(origin.offset(x,y,z),AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(),2);
         var head=origin.west();level.setBlock(head,AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),3);
         var search=IrrigationNetwork.search(level,head);
-        h.assertTrue(search.overflow()&&search.supplies().isEmpty(),"Oversized network must stop at the traversal limit without exposing partial supply");
+        h.assertTrue(search.overflow() && search.supplies().isEmpty() && !search.blockedValve(),
+                "Oversized networks report the limit without inventing a closed valve or exposing a partial supply");
         var valve = origin.north();
         var closed = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState().setValue(IrrigationValveBlock.OPEN, false);
         level.setBlock(valve, closed, Block.UPDATE_ALL);

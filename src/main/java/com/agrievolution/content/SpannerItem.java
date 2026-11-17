@@ -37,7 +37,6 @@ public final class SpannerItem extends Item {
         event.setUseBlock(TriState.FALSE);
         event.setUseItem(TriState.FALSE);
         if (event.getAction() != LeftClickBlock.Action.START || !(player instanceof ServerPlayer serverPlayer)) return;
-        if (block instanceof VerticalGreenhouseBlock) pos = pos.below(state.getValue(VerticalGreenhouseBlock.SECTION));
         showRoute(serverPlayer, IrrigationNetwork.trace(level, pos));
     }
 
@@ -69,6 +68,7 @@ public final class SpannerItem extends Item {
             case INCOMPLETE_RESERVOIR -> ReservoirStructure.Status.INCOMPLETE.message;
             case PAUSED_BY_REDSTONE -> "Sprinkler paused by redstone";
             case WAITING_FOR_REDSTONE -> "Sprinkler waiting for redstone";
+            case INCOMPLETE_GREENHOUSE -> "Vertical Greenhouse is incomplete";
         };
     }
 
@@ -121,6 +121,7 @@ public final class SpannerItem extends Item {
             return List.of(name + " | " + valveStatus + " | Pipe network exceeds " + IrrigationNetwork.MAX_NODES
                     + " nodes. Supply and sprinkler counts unavailable.");
         }
+        var amounts = IrrigationNetwork.supplyWater(level, status.supplies());
         String flow;
         if (!state.getValue(IrrigationValveBlock.OPEN)) flow = "Valve closed";
         else if (!IrrigationValveBlock.permitsFlow(level, pos, state)) flow = "Valve paused by redstone";
@@ -134,14 +135,11 @@ public final class SpannerItem extends Item {
             } else if (status.unloadedConnection()) flow = "Connection leads into an unloaded chunk";
             else if (status.incompleteReservoir()) flow = ReservoirStructure.Status.INCOMPLETE.message;
             else flow = "No connected water source";
-        } else if (status.supplies().stream().noneMatch(supply -> supply.hasBucket(level))) flow = "Connected sources short of a full bucket";
+        } else if (amounts.ready() == 0) flow = "Connected sources short of a full bucket";
         else flow = "Water supply ready";
-        int water = 0, capacity = 0;
-        for (var supply : status.supplies()) {
-            water += supply.water(level);
-            capacity += supply.capacity();
-        }
-        String tanks = capacity == 0 ? "No reachable water storage" : "Supply water: " + water + " / " + capacity + " mB";
+        String tanks = status.supplies().isEmpty() ? "No reachable water storage"
+                : "Supply water: " + amounts.total() + " / " + amounts.capacity() + " mB | Sources ready: "
+                + amounts.ready() + "/" + status.supplies().size();
         int active = 0;
         IrrigationSprinklerBlockEntity nearestStopped = null;
         for (BlockPos headPos : status.sprinklers()) {

@@ -56,25 +56,30 @@ public final class FarmInspection {
                 if (level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin) lines.add(basin.inspectionStatus());
                 return lines;
             }
-            var network=IrrigationNetwork.search(level,pos);
-            int water = network.supplies().stream().mapToInt(supply -> supply.water(level)).sum();
-            lines.add("Reachable sources: "+network.supplies().size()+" | "+water+" mB");
-            if(network.overflow())lines.add("Network exceeds 512 nodes");
+            var entity = level.getBlockEntity(pos);
+            var supplyInspection = entity instanceof IrrigationSprinklerBlockEntity ? IrrigationNetwork.inspectSupply(level, pos) : null;
+            var network = supplyInspection == null ? IrrigationNetwork.search(level, pos) : supplyInspection.network();
+            if (network.overflow()) {
+                lines.add("Network exceeds " + IrrigationNetwork.MAX_NODES + " nodes");
+            } else {
+                var amounts = IrrigationNetwork.supplyWater(level, network.supplies());
+                lines.add("Sources ready: " + amounts.ready() + "/" + network.supplies().size() + " | " + amounts.total() + " mB total");
+            }
             if(state.getBlock() instanceof IrrigationPipeBlock){
                 String disabled=java.util.Arrays.stream(Direction.values()).filter(d->!IrrigationPipeBlock.enabled(state,d)).map(Direction::getName).collect(java.util.stream.Collectors.joining(", "));
                 lines.add("Disabled ports: "+(disabled.isEmpty()?"none":disabled));lines.add("Click a face with Spanner to toggle its port");
             }
             if (state.getBlock() instanceof IrrigationValveBlock) {
-                if (level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve && !valve.zoneName().isEmpty()) {
+                if (entity instanceof IrrigationValveBlockEntity valve && !valve.zoneName().isEmpty()) {
                     lines.add("Zone: " + valve.zoneName());
                 }
                 lines.add(IrrigationValveBlock.flowStatus(level, pos, state));
             }
-            if(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head){
+            if(entity instanceof IrrigationSprinklerBlockEntity head){
                 lines.add("Head: "+head.water()+" / 4000 mB | Comparator: "+head.comparatorSignal()+" / 15");
                 lines.add(head.controls());
                 var soils = head.wateredSoils();
-                lines.add(head.inspectionStatus(network, soils));
+                lines.add(head.inspectionStatus(supplyInspection, soils));
                 lines.add("Reachable farmland: "+soils.size()+" / 81");
                 lines.add("Preview: green soil; red blocked; amber no soil");
             }else lines.add("Aim at the sprinkler for operating status");

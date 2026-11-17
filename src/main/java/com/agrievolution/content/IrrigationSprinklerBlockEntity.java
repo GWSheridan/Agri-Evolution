@@ -129,11 +129,12 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         return inspectionStatus(null, null);
     }
 
-    String inspectionStatus(IrrigationNetwork.Search inspectedNetwork, Set<BlockPos> inspectedSoils) {
+    String inspectionStatus(IrrigationNetwork.SupplyInspection inspection, Set<BlockPos> inspectedSoils) {
         if (!(level instanceof ServerLevel)) return "Sprinkler unavailable";
         var stop = localShutoff();
         if (stop != null) return stop.message();
-        var network = inspectedNetwork == null ? IrrigationNetwork.search(level, worldPosition) : inspectedNetwork;
+        if (inspection == null) inspection = IrrigationNetwork.inspectSupply(level, worldPosition);
+        var network = inspection.network();
         String blockage = networkBlockage(network);
         if (blockage != null) return blockage;
         var soils = inspectedSoils == null ? wateredSoils() : inspectedSoils;
@@ -151,7 +152,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         }
         if (water >= WATER_PER_SPRAY) return soils.isEmpty() ? "Ready, no farmland in reach" : "Ready for next watering cycle";
         if (network.supplies().isEmpty()) {
-            var route = IrrigationNetwork.trace(level, worldPosition);
+            var route = inspection.route(level);
             return switch (route.flow()) {
                 case DISABLED_PORT -> "Refill blocked by disabled " + route.disabledSide().getName() + " pipe port";
                 case UNLOADED_CONNECTION -> "Refill path leads into an unloaded chunk";
@@ -159,10 +160,10 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
                 default -> water == 0 ? "Empty, no reachable water source" : "Too little water to spray, add a bucket";
             };
         }
-        for (var supply : network.supplies()) {
-            if (supply.hasBucket(level)) return "Connected source ready to refill";
-        }
-        return "Connected sources short of a full bucket";
+        var amounts = IrrigationNetwork.supplyWater(level, network.supplies());
+        if (amounts.ready() > 0) return "Connected source ready to refill";
+        return "Connected sources short of a full bucket"
+                + (amounts.fullest() > 0 ? " (fullest: " + amounts.fullest() + " mB)" : "");
     }
 
     private boolean hasDrySoil(Set<BlockPos> soils) {

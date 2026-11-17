@@ -305,6 +305,13 @@ public final class VerticalGreenhouseGameTests {
                         && inspected.equals(FarmInspection.describe(level, base.above(2), true, false))
                         && level.getBlockState(supply).getValue(IrrigationBasinBlock.FILLED),
                 "The Spanner can read the same tank and supply from any section without moving water");
+        h.assertTrue(IrrigationNetwork.trace(level, base.above(2)).equals(IrrigationNetwork.trace(level, base)),
+                "A trace from the roof starts at the actual intake and finds the same blocked port");
+        var orphan = base.north().above(2);
+        level.setBlock(orphan, level.getBlockState(base.above(2)), quietUpdate);
+        var incomplete = IrrigationNetwork.trace(level, orphan);
+        h.assertTrue(incomplete.flow() == IrrigationNetwork.Flow.INCOMPLETE_GREENHOUSE
+                        && incomplete.blocks().getFirst().equals(orphan), "A missing controller is reported at the clicked section");
 
         IrrigationPipeBlock.toggle(level, inlet, Direction.EAST);
         level.setBlock(supply, pipe, quietUpdate);

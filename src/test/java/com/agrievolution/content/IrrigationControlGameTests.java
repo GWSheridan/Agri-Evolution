@@ -7,11 +7,47 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.*;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class IrrigationControlGameTests {
+ @GameTest(template = "empty")
+ public static void sourceReportsKeepPartialTanksSeparate(GameTestHelper h) {
+  var level = h.getLevel();
+  var pos = h.absolutePos(new BlockPos(4, 115, 4));
+  var nearCore = pos.east(4);
+  var farCore = pos.south(5);
+  var near = ReservoirGameTests.tank(h, nearCore);
+  var far = ReservoirGameTests.tank(h, farCore);
+  near.drain(625, FluidAction.EXECUTE);
+  far.drain(175, FluidAction.EXECUTE);
+  var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
+  for (int i = 1; i <= 2; i++) level.setBlock(pos.east(i), pipe, Block.UPDATE_ALL);
+  for (int i = 1; i <= 3; i++) level.setBlock(pos.south(i), pipe, Block.UPDATE_ALL);
+  level.setBlock(pos, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), Block.UPDATE_ALL);
+  var head = (IrrigationSprinklerBlockEntity) level.getBlockEntity(pos);
+  var route = IrrigationNetwork.trace(level, pos);
+  h.assertTrue(route.flow() == IrrigationNetwork.Flow.EMPTY && route.blocks().getLast().equals(farCore.north()),
+          "The trace points to the fullest partial tank even when it is farther away");
+  h.assertTrue(FarmInspection.describe(level, pos, true, false).contains("Sources ready: 0/2 | 1200 mB total")
+          && head.inspectionStatus().contains("fullest: 825 mB"), "Combined water does not count as a deliverable bucket");
+  h.assertTrue(near.water() == 375 && far.water() == 825 && head.water() == 0, "Inspection moves no water");
+
+  level.setBlock(pos, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+  far.fill(new FluidStack(Fluids.WATER, 175), FluidAction.EXECUTE);
+  route = IrrigationNetwork.trace(level, pos);
+  h.assertTrue(route.flow() == IrrigationNetwork.Flow.READY && route.blocks().getLast().equals(farCore.north()),
+          "A tank with exactly one bucket is ready");
+  String zone = SpannerItem.describeZone(level, pos, level.getBlockState(pos), "Orchard").getFirst();
+  h.assertTrue(zone.contains("Supply water: 1375 / 64000 mB") && zone.contains("Sources ready: 1/2")
+          && far.water() == 1000, "The valve report distinguishes ready sources from total storage");
+  h.succeed();
+ }
+
  @GameTest(template="empty")
  public static void namedZoneReadsWaterWithoutOpeningValve(GameTestHelper helper) {
   var level = helper.getLevel();

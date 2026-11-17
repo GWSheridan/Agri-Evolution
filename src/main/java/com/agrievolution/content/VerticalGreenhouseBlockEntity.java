@@ -312,7 +312,8 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         }
         if (CAPACITY - water < BUCKET) return WaterStatus.READY;
 
-        var network = IrrigationNetwork.search(server, worldPosition);
+        var inspection = IrrigationNetwork.inspectSupply(server, worldPosition);
+        var network = inspection.network();
         if (network.overflow()) return WaterStatus.NETWORK_LIMIT;
         for (var supply : network.supplies()) {
             if (supply.takeBucket(server)) {
@@ -322,7 +323,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         }
         if (!network.supplies().isEmpty()) return WaterStatus.EMPTY_SOURCE;
         if (network.blockedValve()) return WaterStatus.BLOCKED_VALVE;
-        return switch (IrrigationNetwork.trace(server, worldPosition).flow()) {
+        return switch (inspection.route(server).flow()) {
             case DISABLED_PORT -> WaterStatus.BLOCKED_PORT;
             case UNLOADED_CONNECTION -> WaterStatus.UNLOADED_SUPPLY;
             case INCOMPLETE_RESERVOIR -> WaterStatus.INCOMPLETE_RESERVOIR;

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.28
+
+- The Spanner shows how many connected sources can deliver a full bucket, alongside their combined water level.
+- When every source is short of water, the trace points to the fullest tank and sprinkler inspection shows how much that tank contains.
+- Tracing from any Vertical Greenhouse section starts at the intake. If the structure is incomplete, the trace says so.
+- Sprinkler inspection and the Vertical Greenhouse intake reuse their supply search when explaining blocked or missing routes.
+- A network that exceeds the search limit no longer reports a closed valve unless one was actually found.
+
 ## 1.2.27
 
 - Named valves keep their zone name when moved. The name appears on the item and in the Spanner overlay.
