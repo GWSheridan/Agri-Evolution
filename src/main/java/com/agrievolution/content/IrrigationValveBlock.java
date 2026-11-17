@@ -116,18 +116,20 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
         return permitsFlow(level, pos, state) ? "Valve open" : "Valve paused by redstone";
     }
 
-    private static void notifySprinklers(Level level, BlockPos pos) {
+    private static void notifySprinklers(Level level, BlockPos pos, boolean resume) {
         for (Direction side : Direction.values()) {
             BlockPos target=pos.relative(side);
-            if (level.hasChunkAt(target) && level.getBlockEntity(target) instanceof IrrigationSprinklerBlockEntity sprinkler)
-                sprinkler.checkFlow();
+            if (level.hasChunkAt(target) && level.getBlockEntity(target) instanceof IrrigationSprinklerBlockEntity sprinkler) {
+                if (resume) sprinkler.updatePaidSpray();
+                else sprinkler.checkFlow();
+            }
         }
     }
 
     @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         refreshConnections(level, pos, state);
         IrrigationNetwork.syncLoadedFittings(level, pos, level.getBlockState(pos), this);
-        notifySprinklers(level, pos);
+        notifySprinklers(level, pos, false);
     }
 
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
@@ -145,7 +147,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
                                               BlockPos fromPos, boolean movedByPiston) {
         if (!level.isClientSide) {
             refreshConnections(level, pos, state);
-            notifySprinklers(level,pos);
+            notifySprinklers(level, pos, false);
         }
     }
 
@@ -157,7 +159,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
             player.displayClientMessage(Component.literal(!next.getValue(OPEN) ? "Valve closed - flow through this valve stopped"
                     : next.getValue(POWERED) ? "Valve OPEN, but REDSTONE POWER is holding it shut"
                     : "Valve open - flow permitted through this valve"), true);
-            notifySprinklers(level,pos);
+            notifySprinklers(level, pos, true);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

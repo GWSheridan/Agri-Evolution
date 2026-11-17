@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.34
+
+- Reopening an adjacent valve by hand resumes an already-paid spray immediately.
+- Changing a sprinkler's redstone mode with the Spanner can resume the same spray without another charge.
+- A paused sprinkler reports when the paid spray can resume, even if the tank is empty.
+- Removed sprinklers reject bucket transfers through stale tank references.
+- Sprinklers register hydration before announcing an active spray and skip growth tracking when they reached no farmland.
+
 ## 1.2.33
 
 - Placing pipes, valves, sprinklers, and basins from the inventory keeps adjacent unloaded chunks asleep.

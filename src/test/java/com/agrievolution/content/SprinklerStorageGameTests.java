@@ -15,6 +15,21 @@ public final class SprinklerStorageGameTests {
         h.getLevel().setBlock(pos,AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),3);
         return (IrrigationSprinklerBlockEntity)h.getLevel().getBlockEntity(pos);
     }
+
+    @GameTest(template = "empty")
+    public static void removedSprinklerHandlesCannotTransferWater(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(3, 155, 3));
+        var old = head(h, pos);
+        h.assertTrue(old.fillBucket(), "The original sprinkler can accept a bucket");
+        level.removeBlock(pos, false);
+        var replacement = head(h, pos);
+        h.assertTrue(old.isRemoved() && replacement != old && !old.fillBucket() && !old.takeBucket(),
+                "The detached sprinkler rejects both filling and draining even after replacement");
+        h.assertTrue(old.water() == 1000 && replacement.water() == 0 && replacement.fillBucket() && replacement.takeBucket(),
+                "The replacement owns an independent, usable tank");
+        h.succeed();
+    }
     @GameTest(template="empty") public static void fourBucketCapacityAndPersistence(GameTestHelper h){
         var pos=h.absolutePos(new BlockPos(3,120,3));var head=head(h,pos);
         for(int i=0;i<4;i++)h.assertTrue(head.fillBucket(),"Four buckets accepted");

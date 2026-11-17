@@ -5,13 +5,19 @@ import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.FarmlandWaterManager;
+import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.gametest.GameTestHolder;
 import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
@@ -22,6 +28,49 @@ public final class SprinklerGrowthGameTests {
         h.getLevel().setBlock(pos,AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),3);
         var head=(IrrigationSprinklerBlockEntity)h.getLevel().getBlockEntity(pos);
         head.fillBucket(); head.irrigateCycle(); return head;
+    }
+
+    @GameTest(template = "empty")
+    public static void manualValveAndSpannerResumeTheLastPaidSprayImmediately(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 96, 4));
+        var soil = pos.south().below(3);
+        var valvePos = pos.east();
+        var valve = AEBlocks.IRRIGATION_VALVE.get();
+        level.setBlock(soil, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(valvePos, valve.defaultBlockState(), Block.UPDATE_ALL);
+        var sprinkler = head(h, pos);
+        for (int cycle = 1; cycle < 40; cycle++) sprinkler.irrigateCycle();
+        h.assertTrue(sprinkler.water() == 0 && FarmlandWaterManager.hasBlockWaterTicket(level, soil),
+                "The final paid spray is watering even after the tank runs dry");
+
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var valveHit = new BlockHitResult(Vec3.atCenterOf(valvePos), Direction.UP, valvePos, false);
+        valve.useWithoutItem(level.getBlockState(valvePos), level, valvePos, player, valveHit);
+        h.assertFalse(sprinkler.hasCurrentSpray() || FarmlandWaterManager.hasBlockWaterTicket(level, soil),
+                "Closing the valve immediately pauses both effects");
+
+        var closed = level.getBlockState(valvePos);
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.setBlock(valvePos, closed.setValue(IrrigationValveBlock.OPEN, true), quiet);
+        h.assertTrue(sprinkler.inspectionStatus().equals("Paid spray ready to resume") && !sprinkler.hasCurrentSpray(),
+                "A quiet remote change leaves the paid window waiting for its next update");
+        level.setBlock(valvePos, closed, quiet);
+
+        valve.useWithoutItem(level.getBlockState(valvePos), level, valvePos, player, valveHit);
+        h.assertTrue(sprinkler.water() == 0 && SprinklerGrowth.covers(level, soil.above())
+                        && FarmlandWaterManager.hasBlockWaterTicket(level, soil),
+                "Reopening by hand resumes the same spray without waiting for a tick or charging again");
+
+        player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(AEItems.SPANNER.get()));
+        player.setShiftKeyDown(true);
+        var headHit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
+        SpannerItem.onRightClick(new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, pos, headHit));
+        h.assertFalse(sprinkler.hasCurrentSpray(), "Switching to Requires redstone pauses an unpowered head");
+        SpannerItem.onRightClick(new PlayerInteractEvent.RightClickBlock(player, InteractionHand.MAIN_HAND, pos, headHit));
+        h.assertTrue(sprinkler.water() == 0 && sprinkler.redstoneMode() == 2 && SprinklerGrowth.covers(level, soil.above())
+                        && FarmlandWaterManager.hasBlockWaterTicket(level, soil), "Switching to Ignores redstone resumes the paid spray immediately");
+        h.succeed();
     }
     @GameTest(template="empty")
     public static void fiveTimesNaturalBudget(GameTestHelper h) {

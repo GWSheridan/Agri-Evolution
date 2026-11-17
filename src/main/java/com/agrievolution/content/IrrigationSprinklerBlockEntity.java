@@ -31,7 +31,12 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public boolean smartWatering(){return smartWatering;}
     public int redstoneMode(){return redstoneMode;}
     public String controls(){return (smartWatering?"Dry-soil only":"Continuous")+" | "+switch(redstoneMode){case 1->"Requires redstone";case 2->"Ignores redstone";default->"Redstone pauses";};}
-    public void configure(boolean redstone){if(redstone)redstoneMode=(redstoneMode+1)%3;else smartWatering=!smartWatering;setChanged();checkFlow();}
+    public void configure(boolean redstone) {
+        if (redstone) redstoneMode = (redstoneMode + 1) % 3;
+        else smartWatering = !smartWatering;
+        setChanged();
+        updatePaidSpray();
+    }
     private SimpleTicket<Vec3> waterTicket;
     private Set<BlockPos> paidSoils = Set.of();
     private long growthUntil;
@@ -56,8 +61,12 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     boolean hasCurrentSpray() {
-        return level instanceof ServerLevel server && server.getGameTime() < growthUntil
-                && !isRemoved() && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE);
+        return level instanceof ServerLevel server && hasPaidTime(server)
+                && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE);
+    }
+
+    private boolean hasPaidTime(ServerLevel server) {
+        return !isRemoved() && server.getGameTime() < growthUntil;
     }
 
     boolean watersPlot(BlockPos soil) {
@@ -72,17 +81,22 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         return soils;
     }
     public boolean fillBucket() {
-        if (!(level instanceof ServerLevel) || water > CAPACITY-1000) return false;
+        if (!canTransferWater() || water > CAPACITY - 1000) return false;
         water += 1000;
         waterChanged();
         return true;
     }
 
     boolean takeBucket() {
-        if (!(level instanceof ServerLevel) || water < 1000) return false;
+        if (!canTransferWater() || water < 1000) return false;
         water -= 1000;
         waterChanged();
         return true;
+    }
+
+    private boolean canTransferWater() {
+        return level instanceof ServerLevel && !isRemoved() && level.hasChunkAt(worldPosition)
+                && level.getBlockEntity(worldPosition) == this;
     }
 
     private boolean flowAllowed() {
@@ -130,13 +144,14 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     String inspectionStatus(IrrigationNetwork.SupplyInspection inspection, Set<BlockPos> inspectedSoils) {
-        if (!(level instanceof ServerLevel)) return "Sprinkler unavailable";
+        if (!(level instanceof ServerLevel server) || isRemoved()) return "Sprinkler unavailable";
         var stop = localShutoff();
         if (stop != null) return stop.message();
         if (inspection == null) inspection = IrrigationNetwork.inspectSupply(level, worldPosition);
         var network = inspection.network();
         String blockage = networkBlockage(network);
         if (blockage != null) return blockage;
+        if (hasPaidTime(server) && !hasCurrentSpray()) return "Paid spray ready to resume";
         var soils = inspectedSoils == null ? wateredSoils() : inspectedSoils;
         if (hasCurrentSpray()) {
             if (soils.isEmpty()) return "Spraying, no farmland in reach";
@@ -178,15 +193,22 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (hasCurrentSpray() && !flowAllowed()) stopWatering();
     }
 
+    /** Resume the paid interval after an explicit control change or when the head ticks. */
+    void updatePaidSpray() {
+        if (!(level instanceof ServerLevel server) || !hasPaidTime(server)) return;
+        if (!flowAllowed()) {
+            if (getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) stopWatering();
+        } else if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) {
+            spray(server, growthSoils(), growthUntil);
+        }
+    }
+
     void serverTick() {
         if (!(level instanceof ServerLevel server)) return;
         long now = server.getGameTime();
         if (now % WATERING_INTERVAL == 0) refreshFittings(server);
         if (now < growthUntil) {
-            if (!flowAllowed()) stopWatering();
-            else if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) {
-                spray(server, growthSoils(), growthUntil);
-            }
+            updatePaidSpray();
             return;
         }
         if (growthUntil == 0 && now % WATERING_INTERVAL != 0) return;
@@ -223,9 +245,9 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         refillForSpray(network);
         if (water < WATER_PER_SPRAY) { stopWatering(); return; }
         water -= WATER_PER_SPRAY;
-        waterChanged();
         paidSoils = Set.copyOf(soils);
         spray(server, soils, server.getGameTime() + WATERING_INTERVAL);
+        waterChanged();
     }
 
     private void spray(ServerLevel server, Set<BlockPos> soils, long until) {
@@ -236,7 +258,6 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
                 server.setBlock(soil, state.setValue(FarmBlock.MOISTURE,7),
                         IrrigationNetwork.loadedUpdateFlags(server, soil, Block.UPDATE_CLIENTS));
         }
-        setActive(true);
         // A loaded but no-longer-ticking chunk cannot retain a free growth bonus.
         growthUntil = until;
         if (!paidSoils.isEmpty()) {
@@ -249,8 +270,12 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
                     return watersPlot(BlockPos.containing(point)) && growthActive();
                 }
             }, headChunk, plotChunks);
+            SprinklerGrowth.activate(server, worldPosition);
+        } else {
+            SprinklerGrowth.deactivate(server, worldPosition);
         }
-        SprinklerGrowth.activate(server, worldPosition);
+        // Adjacent blocks can react to ACTIVE immediately, so register the paid spray first.
+        setActive(true);
     }
     private void setActive(boolean active) {
         if (level instanceof ServerLevel && !isRemoved() && getBlockState().getBlock() instanceof IrrigationSprinklerBlock
