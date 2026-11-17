@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.36
+
+- Spanner traces show the exact amount of water at the source they find.
+- A shut valve's zone name appears when it blocks a trace or another valve's supply.
+- Pipe and sprinkler reports give the direction of a connection into an unloaded chunk. Valve reports also give the fitting's coordinates.
+- Sprinkler and Vertical Greenhouse intake reports distinguish a partly unloaded reservoir shell from a pipe crossing a chunk border.
+- The Spanner marks the actual face of a capped pipe or unloaded connection.
+
 ## 1.2.35
 
 - The Spanner shows how much water a valve's zone contains while the valve is shut, with the same flow status as the right-click report.

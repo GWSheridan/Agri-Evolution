@@ -31,7 +31,8 @@ public final class IrrigationControlGameTests {
   level.setBlock(pos, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), Block.UPDATE_ALL);
   var head = (IrrigationSprinklerBlockEntity) level.getBlockEntity(pos);
   var route = IrrigationNetwork.trace(level, pos);
-  h.assertTrue(route.flow() == IrrigationNetwork.Flow.EMPTY && route.blocks().getLast().equals(farCore.north()),
+  h.assertTrue(route.flow() == IrrigationNetwork.Flow.EMPTY && route.blocks().getLast().equals(farCore.north())
+          && route.sourceWater() == 825 && SpannerItem.routeStatus(level, route).contains("825 mB"),
           "The trace points to the fullest partial tank even when it is farther away");
   h.assertTrue(FarmInspection.describe(level, pos, true, false).contains("Sources ready: 0/2 | 1200 mB total")
           && head.inspectionStatus().contains("fullest: 825 mB"), "Combined water does not count as a deliverable bucket");
@@ -40,7 +41,8 @@ public final class IrrigationControlGameTests {
   level.setBlock(pos, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
   far.fill(new FluidStack(Fluids.WATER, 175), FluidAction.EXECUTE);
   route = IrrigationNetwork.trace(level, pos);
-  h.assertTrue(route.flow() == IrrigationNetwork.Flow.READY && route.blocks().getLast().equals(farCore.north()),
+  h.assertTrue(route.flow() == IrrigationNetwork.Flow.READY && route.blocks().getLast().equals(farCore.north())
+          && route.sourceWater() == 1000 && SpannerItem.routeStatus(level, route).contains("1000 mB"),
           "A tank with exactly one bucket is ready");
   String zone = SpannerItem.describeZone(level, pos, level.getBlockState(pos), "Orchard").getFirst();
   h.assertTrue(zone.contains("Supply water: 1375 / 64000 mB") && zone.contains("Sources ready: 1/2")

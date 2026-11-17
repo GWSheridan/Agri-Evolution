@@ -92,7 +92,7 @@ public final class IrrigationGameTests {
         level.setBlock(basin, AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
                 .setValue(IrrigationBasinBlock.FILLED, true), 3);
         var shutoffRoute = new IrrigationNetwork.Route(List.of(pos, valve), IrrigationNetwork.Flow.CLOSED_VALVE, null);
-        var supplyRoute = new IrrigationNetwork.Route(List.of(pos, pipe, basin), IrrigationNetwork.Flow.READY, null);
+        var supplyRoute = new IrrigationNetwork.Route(List.of(pos, pipe, basin), IrrigationNetwork.Flow.READY, null, null, 1000);
 
         sprinkler.fillBucket();
         sprinkler.irrigateCycle();
@@ -533,9 +533,9 @@ public final class IrrigationGameTests {
         var connected = level.getBlockState(pos).setValue(IrrigationSprinklerBlock.connection(Direction.EAST), true);
         level.setBlock(pos, connected, quietUpdate);
         sprinkler.irrigateCycle();
-        h.assertTrue(sprinkler.water() == 975 && sprinkler.inspectionStatus().equals("Connected chunk not loaded"),
+        h.assertTrue(sprinkler.water() == 975 && sprinkler.inspectionStatus().equals("Connection leads east into an unloaded chunk"),
                 "A remembered fitting across the boundary must not be bypassed");
-        h.assertTrue(FarmInspection.describe(level, pos, true, false).contains("Connected chunk not loaded"),
+        h.assertTrue(FarmInspection.describe(level, pos, true, false).contains("Connection leads east into an unloaded chunk"),
                 "The coverage panel shows the missing connection when it actually stops the spray");
         h.assertFalse(level.hasChunkAt(outside), "Inspecting the connection must leave the neighboring chunk unloaded");
         h.succeed();
@@ -558,23 +558,23 @@ public final class IrrigationGameTests {
 
         level.setBlock(edge, headState.setValue(east, true), quietUpdate);
         var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(edge);
-        h.assertTrue(sprinkler.inspectionStatus().equals("Connected chunk not loaded"), "An adjacent unloaded connection pauses the head");
-        var paused = new IrrigationNetwork.Route(List.of(edge), IrrigationNetwork.Flow.UNLOADED_CONNECTION, null);
+        h.assertTrue(sprinkler.inspectionStatus().equals("Connection leads east into an unloaded chunk"), "An adjacent unloaded connection pauses the head");
+        var paused = new IrrigationNetwork.Route(List.of(edge), IrrigationNetwork.Flow.UNLOADED_CONNECTION, null, Direction.EAST, -1);
         h.assertTrue(IrrigationNetwork.trace(level, edge).equals(paused), "Show the sprinkler's unavailable connection even with a full basin");
 
         var head = edge.above();
         var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
         level.setBlock(edge, pipe.setValue(east, true), quietUpdate);
         level.setBlock(head, headState, quietUpdate);
-        var loadedSupply = new IrrigationNetwork.Route(List.of(head, edge, basin), IrrigationNetwork.Flow.READY, null);
+        var loadedSupply = new IrrigationNetwork.Route(List.of(head, edge, basin), IrrigationNetwork.Flow.READY, null, null, 1000);
         h.assertTrue(IrrigationNetwork.trace(level, head).equals(loadedSupply), "A remote unloaded branch can be bypassed by a loaded supply");
         h.assertTrue(level.getBlockState(basin).getValue(IrrigationBasinBlock.FILLED), "Tracing leaves the basin full");
 
         level.setBlock(basin, Blocks.AIR.defaultBlockState(), quietUpdate);
-        var border = new IrrigationNetwork.Route(List.of(head, edge), IrrigationNetwork.Flow.UNLOADED_CONNECTION, null);
+        var border = new IrrigationNetwork.Route(List.of(head, edge), IrrigationNetwork.Flow.UNLOADED_CONNECTION, null, Direction.EAST, -1);
         h.assertTrue(IrrigationNetwork.trace(level, head).equals(border), "The route ends at the last loaded fitting");
         var remoteHead = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
-        h.assertTrue(remoteHead.inspectionStatus().equals("Refill path leads into an unloaded chunk"),
+        h.assertTrue(remoteHead.inspectionStatus().equals("Refill blocked: Connection leads east into an unloaded chunk"),
                 "The sprinkler names the unavailable refill path without loading it");
         level.setBlock(edge, pipe, quietUpdate);
         h.assertTrue(IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.DISCONNECTED,
@@ -609,7 +609,10 @@ public final class IrrigationGameTests {
         h.assertTrue(interaction.isCanceled(), "The Spanner should handle the interaction");
         h.assertFalse(level.hasChunkAt(outside), "Inspecting the open valve must leave the neighboring chunk unloaded");
         var zone = IrrigationNetwork.inspectZone(level, valve);
-        h.assertTrue(zone.supplies().isEmpty() && zone.unloadedConnection() && !zone.blockedPath(),
+        h.assertTrue(zone.supplies().isEmpty() && zone.unloadedConnection() && !zone.blockedPath()
+                        && zone.unloaded().side() == Direction.EAST
+                        && SpannerItem.describeZone(level, valve, state, "Garden").getFirst()
+                        .contains("Connection leads east into an unloaded chunk [" + valve.toShortString() + "]"),
                 "An unloaded supply connection is distinct from a shut valve or a disabled port");
         h.assertTrue(level.getBlockState(valve).getValue(IrrigationValveBlock.OPEN), "Inspecting must leave the valve open");
         h.succeed();

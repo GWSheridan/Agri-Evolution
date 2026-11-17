@@ -52,24 +52,40 @@ public final class SpannerItem extends Item {
             var point = route.blocks().get(i);
             level.sendParticles(player, routeColor, true, point.getX() + 0.5, point.getY() + 0.65, point.getZ() + 0.5, 4, 0.18, 0.15, 0.18, 0);
         }
-        level.sendParticles(player, endColor, true, end.getX() + 0.5, end.getY() + 0.8, end.getZ() + 0.5, 10, 0.23, 0.22, 0.23, 0);
+        Direction stopFace = route.disabledSide() != null ? route.disabledSide() : route.boundarySide();
+        var marker = stopFace == null ? net.minecraft.world.phys.Vec3.atCenterOf(end).add(0, 0.3, 0)
+                : net.minecraft.world.phys.Vec3.atCenterOf(end).add(stopFace.getStepX() * 0.46, stopFace.getStepY() * 0.46, stopFace.getStepZ() * 0.46);
+        level.sendParticles(player, endColor, true, marker.x, marker.y, marker.z, 10, 0.23, 0.22, 0.23, 0);
     }
 
     static String routeStatus(Level level, IrrigationNetwork.Route route) {
         var end = route.blocks().getLast();
         return switch (route.flow()) {
-            case READY -> "Water source ready";
-            case EMPTY -> "Water source has less than a bucket";
-            case CLOSED_VALVE -> IrrigationValveBlock.flowStatus(level, end, level.getBlockState(end));
+            case READY -> "Water source ready" + sourceAmount(route);
+            case EMPTY -> "Water source has less than a bucket" + sourceAmount(route);
+            case CLOSED_VALVE -> closedValveStatus(level, end);
             case DISABLED_PORT -> "Disabled " + route.disabledSide().getName() + " pipe port";
             case DISCONNECTED -> "No connected water source";
             case TOO_LARGE -> "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
-            case UNLOADED_CONNECTION -> "Connection leads into an unloaded chunk";
+            case UNLOADED_CONNECTION -> IrrigationNetwork.unloadedMessage(route.boundarySide());
+            case UNLOADED_RESERVOIR -> ReservoirStructure.Status.UNLOADED.message;
             case INCOMPLETE_RESERVOIR -> ReservoirStructure.Status.INCOMPLETE.message;
             case PAUSED_BY_REDSTONE -> "Sprinkler paused by redstone";
             case WAITING_FOR_REDSTONE -> "Sprinkler waiting for redstone";
             case INCOMPLETE_GREENHOUSE -> "Vertical Greenhouse is incomplete";
         };
+    }
+
+    private static String sourceAmount(IrrigationNetwork.Route route) {
+        return route.sourceWater() < 0 ? "" : " (" + route.sourceWater() + " mB)";
+    }
+
+    private static String closedValveStatus(Level level, BlockPos pos) {
+        String status = IrrigationValveBlock.flowStatus(level, pos, level.getBlockState(pos));
+        if (level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve && !valve.zoneName().isEmpty()) {
+            return status + " (" + valve.zoneName() + ")";
+        }
+        return status;
     }
 
     public static void onRightClick(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
@@ -151,13 +167,18 @@ public final class SpannerItem extends Item {
         }
         if (status.closedValve() != null) {
             BlockPos shutoff = status.closedValve();
-            return IrrigationValveBlock.flowStatus(level, shutoff, level.getBlockState(shutoff))
+            return closedValveStatus(level, shutoff)
                     + " along supply path [" + shutoff.toShortString() + "]";
         }
         if (status.disabledSide() != null) {
             return "Supply blocked by disabled " + status.disabledSide().getName() + " pipe port [" + status.disabledPipe().toShortString() + "]";
         }
-        if (status.unloadedConnection()) return "Connection leads into an unloaded chunk";
+        if (status.unloaded() != null) {
+            var stop = status.unloaded();
+            String reason = stop.flow() == IrrigationNetwork.Flow.UNLOADED_RESERVOIR
+                    ? ReservoirStructure.Status.UNLOADED.message : IrrigationNetwork.unloadedMessage(stop.side());
+            return reason + " [" + stop.fitting().toShortString() + "]";
+        }
         if (status.incompleteReservoir()) return ReservoirStructure.Status.INCOMPLETE.message;
         return "No connected water source";
     }

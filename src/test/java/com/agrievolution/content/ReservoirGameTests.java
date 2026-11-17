@@ -302,20 +302,19 @@ public final class ReservoirGameTests {
                 AEBlocks.WATER_RESERVOIR.get().useItemOn(held, inlet, level, face, player, InteractionHand.MAIN_HAND, hit);
                 h.assertTrue(player.message.equals(expected.message) && held.is(item), "Unavailable shells explain the failure and preserve the item");
             }
-            var expectedFlow = expected == ReservoirStructure.Status.UNLOADED ? IrrigationNetwork.Flow.UNLOADED_CONNECTION
+            var expectedFlow = expected == ReservoirStructure.Status.UNLOADED ? IrrigationNetwork.Flow.UNLOADED_RESERVOIR
                     : IrrigationNetwork.Flow.INCOMPLETE_RESERVOIR;
             h.assertTrue(IrrigationNetwork.trace(level, valve).equals(new IrrigationNetwork.Route(List.of(valve, face), expectedFlow, null)),
                     "The trace points to the unavailable water inlet");
             var zone = IrrigationNetwork.inspectZone(level, valve);
             h.assertTrue(zone.supplies().isEmpty() && zone.unloadedConnection() == (expected == ReservoirStructure.Status.UNLOADED)
+                    && (zone.unloaded() == null || zone.unloaded().flow() == IrrigationNetwork.Flow.UNLOADED_RESERVOIR)
                     && zone.incompleteReservoir() == (expected == ReservoirStructure.Status.INCOMPLETE),
                     "The valve distinguishes unavailable sources from a disconnected pipe");
             var head = valve.west();
             level.setBlock(head, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), quietUpdate);
             var sprinkler = (IrrigationSprinklerBlockEntity) level.getBlockEntity(head);
-            String refillStatus = expected == ReservoirStructure.Status.UNLOADED
-                    ? "Refill path leads into an unloaded chunk" : expected.message;
-            h.assertTrue(sprinkler.inspectionStatus().equals(refillStatus), "The sprinkler explains the unavailable reservoir");
+            h.assertTrue(sprinkler.inspectionStatus().equals(expected.message), "The sprinkler explains the unavailable reservoir");
         }
         h.assertFalse(level.hasChunkAt(edge.east()), "Inspection must leave the unseen shell chunk unloaded");
         h.succeed();

@@ -73,7 +73,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
 
     public enum WaterStatus {
         CHECKING, OFF, WAITING, READY, REFILLING, NO_SOURCE, EMPTY_SOURCE, BLOCKED_VALVE, NETWORK_LIMIT, INCOMPLETE,
-        BLOCKED_PORT, UNLOADED_SUPPLY, INCOMPLETE_RESERVOIR
+        BLOCKED_PORT, UNLOADED_SUPPLY, INCOMPLETE_RESERVOIR, UNLOADED_RESERVOIR
     }
 
     private NonNullList<ItemStack> items = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
@@ -334,6 +334,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         return switch (inspection.route(server).flow()) {
             case DISABLED_PORT -> WaterStatus.BLOCKED_PORT;
             case UNLOADED_CONNECTION -> WaterStatus.UNLOADED_SUPPLY;
+            case UNLOADED_RESERVOIR -> WaterStatus.UNLOADED_RESERVOIR;
             case INCOMPLETE_RESERVOIR -> WaterStatus.INCOMPLETE_RESERVOIR;
             default -> WaterStatus.NO_SOURCE;
         };

@@ -117,6 +117,7 @@ public final class VerticalGreenhouseScreen extends AbstractContainerScreen<Vert
             case INCOMPLETE -> "Column incomplete";
             case BLOCKED_PORT -> "Pipe port disabled";
             case UNLOADED_SUPPLY -> "Supply chunk unloaded";
+            case UNLOADED_RESERVOIR -> "Reservoir shell partly unloaded";
             case INCOMPLETE_RESERVOIR -> "Reservoir incomplete";
         };
         gui.drawString(font, status, leftPos + VerticalGreenhouseMenu.FIRST_OUTPUT_X, y + 3, INK, false);

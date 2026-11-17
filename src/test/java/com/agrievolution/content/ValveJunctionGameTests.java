@@ -26,6 +26,9 @@ public final class ValveJunctionGameTests {
                 .setValue(IrrigationBasinBlock.FILLED, true), Block.UPDATE_ALL);
         h.assertTrue(FarmInspection.describe(level, target, true, false).contains("Pipe supply: Valve closed [" + valve.toShortString() + "]"),
                 "Aiming at a pipe identifies the remote shut valve by position");
+        ((IrrigationValveBlockEntity) level.getBlockEntity(valve)).rename("Orchard");
+        h.assertTrue(FarmInspection.describe(level, target, true, false).contains("Pipe supply: Valve closed (Orchard) [" + valve.toShortString() + "]"),
+                "A named shut valve identifies its zone as well as its position");
 
         level.setBlock(valve, level.getBlockState(valve).setValue(IrrigationValveBlock.OPEN, true), Block.UPDATE_ALL);
         h.assertTrue(IrrigationPipeBlock.toggle(level, junction, Direction.EAST), "Cap the upstream pipe");

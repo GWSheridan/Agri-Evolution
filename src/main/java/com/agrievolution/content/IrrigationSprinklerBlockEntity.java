@@ -104,9 +104,11 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
                 && networkBlockage(IrrigationNetwork.search(level, worldPosition)) == null;
     }
 
-    record LocalShutoff(Flow flow, BlockPos pos, String message) {
+    record LocalShutoff(Flow flow, BlockPos pos, String message, Direction boundarySide) {
+        LocalShutoff(Flow flow, BlockPos pos, String message) { this(flow, pos, message, null); }
+
         Route route(BlockPos head) {
-            return new Route(head.equals(pos) ? List.of(head) : List.of(head, pos), flow, null);
+            return new Route(head.equals(pos) ? List.of(head) : List.of(head, pos), flow, null, boundarySide, -1);
         }
     }
 
@@ -118,7 +120,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             BlockPos pos = worldPosition.relative(side);
             if (!level.hasChunkAt(pos)) {
                 if (getBlockState().getValue(IrrigationSprinklerBlock.connection(side))) {
-                    return new LocalShutoff(Flow.UNLOADED_CONNECTION, worldPosition, "Connected chunk not loaded");
+                    return new LocalShutoff(Flow.UNLOADED_CONNECTION, worldPosition, IrrigationNetwork.unloadedMessage(side), side);
                 }
                 continue;
             }
@@ -170,7 +172,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             var route = inspection.route(level);
             return switch (route.flow()) {
                 case DISABLED_PORT -> "Refill blocked by disabled " + route.disabledSide().getName() + " pipe port";
-                case UNLOADED_CONNECTION -> "Refill path leads into an unloaded chunk";
+                case UNLOADED_CONNECTION -> "Refill blocked: " + IrrigationNetwork.unloadedMessage(route.boundarySide());
+                case UNLOADED_RESERVOIR -> ReservoirStructure.Status.UNLOADED.message;
                 case INCOMPLETE_RESERVOIR -> ReservoirStructure.Status.INCOMPLETE.message;
                 default -> water == 0 ? "Empty, no reachable water source" : "Too little water to spray, add a bucket";
             };

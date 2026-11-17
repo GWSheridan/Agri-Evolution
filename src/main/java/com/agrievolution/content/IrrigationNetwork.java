@@ -138,22 +138,36 @@ public final class IrrigationNetwork {
     public record Search(boolean attached,List<Supply> supplies,boolean overflow,boolean blockedValve) {}
     public enum Flow {
         READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE, UNLOADED_CONNECTION, INCOMPLETE_RESERVOIR,
-        PAUSED_BY_REDSTONE, WAITING_FOR_REDSTONE, INCOMPLETE_GREENHOUSE
+        PAUSED_BY_REDSTONE, WAITING_FOR_REDSTONE, INCOMPLETE_GREENHOUSE, UNLOADED_RESERVOIR
     }
-    public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {}
+    public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide, Direction boundarySide, int sourceWater) {
+        public Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {
+            this(blocks, flow, disabledSide, null, -1);
+        }
+    }
     record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, BlockPos closedValve,
-                      BlockPos disabledPipe, Direction disabledSide, boolean unloadedConnection, boolean incompleteReservoir) {
+                      BlockPos disabledPipe, Direction disabledSide, UnloadedStop unloaded, boolean incompleteReservoir) {
+        boolean unloadedConnection() { return unloaded != null; }
         boolean blockedPath() {
             return closedValve != null || disabledSide != null;
         }
     }
     private record Endpoint(BlockPos pos, Supply supply) {}
     private record ClosedPort(BlockPos from, BlockPos to, BlockPos pipe, Direction side) {}
+    record UnloadedStop(BlockPos fitting, Direction side) {
+        Flow flow() { return side == null ? Flow.UNLOADED_RESERVOIR : Flow.UNLOADED_CONNECTION; }
+    }
+
+    static String unloadedMessage(Direction side) {
+        return side == null ? "Connection leads into an unloaded chunk"
+                : "Connection leads " + side.getName() + " into an unloaded chunk";
+    }
     private static final class Trace {
         final Map<BlockPos, BlockPos> parents = new HashMap<>();
         final List<Endpoint> endpoints = new ArrayList<>();
         final List<BlockPos> sprinklers = new ArrayList<>();
-        BlockPos valve, lastFitting, unloadedFitting, incompleteReservoir;
+        BlockPos valve, lastFitting, incompleteReservoir;
+        UnloadedStop unloaded;
         final List<ClosedPort> closedPorts = new ArrayList<>();
 
         ClosedPort blockingPort() {
@@ -207,21 +221,23 @@ public final class IrrigationNetwork {
         int mostWater = -1;
         for (var endpoint : trace.endpoints) {
             int water = endpoint.supply().water(level);
-            if (water >= BUCKET) return route(trace, endpoint.pos(), Flow.READY);
+            if (water >= BUCKET) return new Route(path(trace, endpoint.pos()), Flow.READY, null, null, water);
             if (water > mostWater) {
                 mostWater = water;
                 fullest = endpoint;
             }
         }
-        if (fullest != null) return route(trace, fullest.pos(), Flow.EMPTY);
+        if (fullest != null) return new Route(path(trace, fullest.pos()), Flow.EMPTY, null, null, mostWater);
         if (trace.valve != null) return route(trace, trace.valve, Flow.CLOSED_VALVE);
         ClosedPort port = trace.blockingPort();
         if (port != null) {
-            var blocks = new ArrayList<>(route(trace, port.from(), Flow.DISABLED_PORT).blocks());
+            var blocks = new ArrayList<>(path(trace, port.from()));
             if (!blocks.getLast().equals(port.pipe())) blocks.add(port.pipe());
             return new Route(List.copyOf(blocks), Flow.DISABLED_PORT, port.side());
         }
-        if (trace.unloadedFitting != null) return route(trace, trace.unloadedFitting, Flow.UNLOADED_CONNECTION);
+        if (trace.unloaded != null) {
+            return new Route(path(trace, trace.unloaded.fitting()), trace.unloaded.flow(), null, trace.unloaded.side(), -1);
+        }
         if (trace.incompleteReservoir != null) return route(trace, trace.incompleteReservoir, Flow.INCOMPLETE_RESERVOIR);
         return route(trace, trace.lastFitting == null ? head : trace.lastFitting, Flow.DISCONNECTED);
     }
@@ -229,18 +245,22 @@ public final class IrrigationNetwork {
     static ZoneStatus inspectZone(Level level, BlockPos valve) {
         var trace = new Trace();
         var network = search(level, valve, trace, true);
-        if (network.overflow()) return new ZoneStatus(List.of(), List.of(), true, null, null, null, false, false);
+        if (network.overflow()) return new ZoneStatus(List.of(), List.of(), true, null, null, null, null, false);
         var port = trace.blockingPort();
         return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), false,
                 trace.valve, port == null ? null : port.pipe(), port == null ? null : port.side(),
-                trace.unloadedFitting != null, trace.incompleteReservoir != null);
+                trace.unloaded, trace.incompleteReservoir != null);
     }
 
     private static Route route(Trace trace, BlockPos end, Flow flow) {
+        return new Route(path(trace, end), flow, null);
+    }
+
+    private static List<BlockPos> path(Trace trace, BlockPos end) {
         var blocks = new ArrayList<BlockPos>();
         for (BlockPos pos = end; pos != null; pos = trace.parents.get(pos)) blocks.add(pos);
         Collections.reverse(blocks);
-        return new Route(List.copyOf(blocks), flow, null);
+        return List.copyOf(blocks);
     }
 
     public static Search search(Level level,BlockPos head) {
@@ -270,10 +290,10 @@ public final class IrrigationNetwork {
                 var next=pos.relative(side);
                 if (seen.contains(next)) continue;
                 if (!level.hasChunkAt(next)) {
-                    if (trace != null && trace.unloadedFitting == null && outgoing) {
+                    if (trace != null && trace.unloaded == null && outgoing) {
                         // The stored connection tells us the last fitting before the unloaded chunk.
                         var connection = IrrigationSprinklerBlock.connection(side);
-                        if (state.hasProperty(connection) && state.getValue(connection)) trace.unloadedFitting = pos;
+                        if (state.hasProperty(connection) && state.getValue(connection)) trace.unloaded = new UnloadedStop(pos, side);
                     }
                     continue;
                 }
@@ -307,7 +327,7 @@ public final class IrrigationNetwork {
                     if (status == ReservoirStructure.Status.COMPLETE && level.getBlockEntity(core) instanceof WaterReservoirBlockEntity tank) {
                         addSupply(supplies, trace, next, new Supply(null, tank));
                     } else if (trace != null) {
-                        if (status == ReservoirStructure.Status.UNLOADED && trace.unloadedFitting == null) trace.unloadedFitting = next;
+                        if (status == ReservoirStructure.Status.UNLOADED && trace.unloaded == null) trace.unloaded = new UnloadedStop(next, null);
                         if (status == ReservoirStructure.Status.INCOMPLETE && trace.incompleteReservoir == null) trace.incompleteReservoir = next;
                     }
                 } else if (trace != null && neighbor.getBlock() instanceof IrrigationSprinklerBlock) {

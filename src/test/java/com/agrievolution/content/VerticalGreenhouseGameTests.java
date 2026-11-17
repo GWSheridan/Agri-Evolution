@@ -426,6 +426,14 @@ public final class VerticalGreenhouseGameTests {
         h.assertTrue(menu.waterStatus() == VerticalGreenhouseBlockEntity.WaterStatus.UNLOADED_SUPPLY
                 && !level.hasChunkAt(edge.east()), "An unloaded supply is reported without loading the other chunk");
 
+        var tankPart = AEBlocks.WATER_RESERVOIR.get().defaultBlockState();
+        level.setBlock(edge.west(), tankPart.setValue(WaterReservoirBlock.X, 0), quietUpdate);
+        level.setBlock(edge, tankPart, quietUpdate);
+        seconds(h, greenhouse, 1);
+        h.assertTrue(menu.waterStatus() == VerticalGreenhouseBlockEntity.WaterStatus.UNLOADED_RESERVOIR
+                && FarmInspection.describe(level, base, true, false).contains("Pipe supply: " + ReservoirStructure.Status.UNLOADED.message)
+                && !level.hasChunkAt(edge.east()), "A partially unloaded reservoir gets its own intake status");
+
         level.setBlock(supply, AEBlocks.WATER_RESERVOIR.get().defaultBlockState().setValue(WaterReservoirBlock.X, 0), quietUpdate);
         seconds(h, greenhouse, 1);
         h.assertTrue(menu.waterStatus() == VerticalGreenhouseBlockEntity.WaterStatus.INCOMPLETE_RESERVOIR
