@@ -120,6 +120,12 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         super(AEBlockEntities.VERTICAL_GREENHOUSE.get(), pos, state);
     }
 
+    @Override public void setChanged() {
+        if (level == null || !level.hasChunkAt(worldPosition)) return;
+        level.blockEntityChanged(worldPosition);
+        IrrigationNetwork.updateComparators(level, worldPosition, getBlockState().getBlock());
+    }
+
     @Override public int getContainerSize() { return SLOTS; }
     @Override protected NonNullList<ItemStack> getItems() { return items; }
     @Override protected void setItems(NonNullList<ItemStack> items) { this.items = items; }
@@ -205,7 +211,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     }
 
     public boolean complete() {
-        if (level == null || isRemoved() || level.getBlockEntity(worldPosition) != this) return false;
+        if (level == null || isRemoved() || !level.hasChunkAt(worldPosition) || level.getBlockEntity(worldPosition) != this) return false;
         BlockState state = getBlockState();
         Direction facing = state.getValue(VerticalGreenhouseBlock.FACING);
         return state.getValue(VerticalGreenhouseBlock.SECTION) == 0
@@ -218,7 +224,9 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
             && fill(new FluidStack(Fluids.WATER, BUCKET), FluidAction.EXECUTE) == BUCKET; }
 
     @Override public int getTanks() { return 1; }
-    @Override public FluidStack getFluidInTank(int tank) { return tank == 0 ? new FluidStack(Fluids.WATER, water) : FluidStack.EMPTY; }
+    @Override public FluidStack getFluidInTank(int tank) {
+        return tank == 0 && water > 0 && complete() ? new FluidStack(Fluids.WATER, water) : FluidStack.EMPTY;
+    }
     @Override public int getTankCapacity(int tank) { return tank == 0 ? CAPACITY : 0; }
     @Override public boolean isFluidValid(int tank, FluidStack fluid) { return tank == 0 && fluid.is(Fluids.WATER); }
     @Override public int fill(FluidStack fluid, FluidAction action) {

@@ -17,7 +17,7 @@ public final class AEItems {
             properties -> new BlockItem(AEBlocks.SEED_VAULT.get(), properties), new Item.Properties());
 
     public static final DeferredItem<BlockItem> VERTICAL_GREENHOUSE = ITEMS.registerItem("vertical_greenhouse",
-            properties -> new BlockItem(AEBlocks.VERTICAL_GREENHOUSE.get(), properties), new Item.Properties());
+            properties -> new VerticalGreenhouseItem(AEBlocks.VERTICAL_GREENHOUSE.get(), properties), new Item.Properties());
     public static final DeferredItem<BlockItem> GARDEN_ORDER_BOARD = ITEMS.registerItem("garden_order_board",
             properties -> new BlockItem(AEBlocks.GARDEN_ORDER_BOARD.get(), properties), new Item.Properties());
     public static final DeferredItem<BlockItem> PRESERVING_STATION = ITEMS.registerItem("preserving_station",

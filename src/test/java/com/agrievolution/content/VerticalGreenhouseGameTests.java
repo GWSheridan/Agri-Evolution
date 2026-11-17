@@ -2,6 +2,7 @@ package com.agrievolution.content;
 
 import com.agrievolution.genetics.CropSpecies;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -18,10 +19,13 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
@@ -46,6 +50,81 @@ public final class VerticalGreenhouseGameTests {
 
     private static void seconds(GameTestHelper helper, VerticalGreenhouseBlockEntity greenhouse, int seconds) {
         for (int i = 0; i < seconds; i++) greenhouse.runSecond(helper.getLevel());
+    }
+
+    @GameTest(template = "empty")
+    public static void greenhousePlacementAndDismantlingRespectChunkBorders(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var chunk = new ChunkPos(helper.absolutePos(new BlockPos(5120, 100, 4)));
+        var base = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var outside = base.east();
+        var pipePos = base.west();
+        var supply = pipePos.west();
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.getChunkAt(base);
+        level.setBlock(base.below(), Blocks.STONE.defaultBlockState(), quiet);
+        level.setBlock(supply, AEBlocks.IRRIGATION_BASIN.get().defaultBlockState().setValue(IrrigationBasinBlock.FILLED, true), quiet);
+        level.setBlock(pipePos, AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), quiet);
+        helper.assertFalse(level.hasChunkAt(outside), "The next chunk starts unloaded");
+
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        var item = new ItemStack(AEItems.VERTICAL_GREENHOUSE.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, item);
+        var hit = new BlockHitResult(Vec3.atBottomCenterOf(base), Direction.UP, base.below(), false);
+        helper.assertTrue(item.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit)).consumesAction() && item.isEmpty(),
+                "The normal item places all three sections");
+        var greenhouse = (VerticalGreenhouseBlockEntity) level.getBlockEntity(base);
+        var pipeArm = IrrigationSprinklerBlock.connection(Direction.EAST);
+        helper.assertTrue(greenhouse != null && greenhouse.complete() && level.getBlockState(pipePos).getValue(pipeArm)
+                        && !level.hasChunkAt(outside), "The intake connects without loading the chunk beyond the column");
+
+        var invalidations = new AtomicInteger();
+        var cache = BlockCapabilityCache.create(Capabilities.FluidHandler.BLOCK, level, base, Direction.NORTH,
+                () -> true, invalidations::incrementAndGet);
+        var port = cache.getCapability();
+        greenhouse.cycleWaterIntake();
+        seconds(helper, greenhouse, 1);
+        helper.assertTrue(port != null && port.getFluidInTank(0).getAmount() == 1000
+                        && !level.getBlockState(supply).getValue(IrrigationBasinBlock.FILLED),
+                "The new connection draws one bucket into the real tank");
+        helper.assertFalse(level.hasChunkAt(outside), "A pipe refill leaves the next chunk unloaded");
+
+        greenhouse.setItem(0, new ItemStack(Items.CARROT));
+        helper.assertFalse(level.hasChunkAt(outside), "Inserting a seed leaves the next chunk unloaded");
+        level.setBlock(base.above(2), Blocks.AIR.defaultBlockState(), quiet);
+        helper.assertFalse(level.hasChunkAt(outside), "Dismantling leaves the next chunk unloaded");
+        helper.assertTrue(level.isEmptyBlock(base) && level.isEmptyBlock(base.above()) && level.isEmptyBlock(base.above(2))
+                        && !level.getBlockState(pipePos).getValue(pipeArm), "Removing the crown clears the stack and its intake arm");
+        helper.assertTrue(invalidations.get() > 0 && cache.getCapability() == null && port.getFluidInTank(0).isEmpty()
+                        && port.fill(new FluidStack(Fluids.WATER, 1000), FluidAction.EXECUTE) == 0,
+                "External pumps lose the dismantled tank and old handles cannot use it");
+        // The distant chunk is not tracking entities. The normal break test checks the dropped item.
+        helper.assertTrue(greenhouse.getItem(0).isEmpty(), "Dismantling releases the tray item from the old inventory");
+
+        var innerBase = base.west();
+        var state = AEBlocks.VERTICAL_GREENHOUSE.get().defaultBlockState();
+        level.setBlock(base, Blocks.STONE.defaultBlockState(), quiet);
+        for (int section = 0; section <= 2; section++) {
+            level.setBlock(innerBase.above(section), state.setValue(VerticalGreenhouseBlock.SECTION, section), quiet);
+        }
+        var innerGreenhouse = (VerticalGreenhouseBlockEntity) level.getBlockEntity(innerBase);
+        helper.assertTrue(!level.hasChunkAt(outside) && innerGreenhouse.addBucket() && !level.hasChunkAt(outside),
+                "Filling a tank does not scan through the stone into the next chunk");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void structureTransformsKeepTheThreeGreenhouseSectionsAligned(GameTestHelper helper) {
+        var greenhouse = AEBlocks.VERTICAL_GREENHOUSE.get();
+        for (int section = 0; section <= 2; section++) {
+            var state = greenhouse.defaultBlockState().setValue(VerticalGreenhouseBlock.SECTION, section);
+            var rotated = state.rotate(Rotation.CLOCKWISE_90);
+            var mirrored = rotated.mirror(Mirror.FRONT_BACK);
+            helper.assertTrue(VerticalGreenhouseBlock.matches(rotated, greenhouse, Direction.EAST, section)
+                            && VerticalGreenhouseBlock.matches(mirrored, greenhouse, Direction.WEST, section),
+                    "Rotation and mirroring turn section " + section + " while keeping its height in the column");
+        }
+        helper.succeed();
     }
 
     @GameTest(template = "empty")

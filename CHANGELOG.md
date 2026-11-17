@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.31
+
+- Placing a Vertical Greenhouse at a chunk border keeps neighboring chunks unloaded and connects the intake to existing pipes.
+- Breaking a greenhouse section tears down the column and clears its pipe connectors without loading nearby chunks.
+- Rotating or mirroring a greenhouse in a structure turns all three sections together.
+- Pumps holding the old tank handle see an empty tank after the greenhouse is dismantled.
+- Saving tank or tray changes leaves chunks beyond neighboring solid blocks unloaded.
+
 ## 1.2.30
 
 - Pipes placed by a structure repair their own connectors and the ones on adjoining fittings. Disabled faces stay capped.

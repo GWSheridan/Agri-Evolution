@@ -19,7 +19,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
+import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -42,6 +44,14 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
     @Override protected RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) { builder.add(SECTION, FACING); }
 
+    @Override protected BlockState rotate(BlockState state, Rotation rotation) {
+        return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+    }
+
+    @Override protected BlockState mirror(BlockState state, Mirror mirror) {
+        return state.setValue(FACING, mirror.mirror(state.getValue(FACING)));
+    }
+
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
         BlockPos base = context.getClickedPos();
         Level level = context.getLevel();
@@ -51,8 +61,16 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
 
     @Override public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         if (level.isClientSide || state.getValue(SECTION) != 0) return;
-        level.setBlock(pos.above(), state.setValue(SECTION, 1), UPDATE_ALL);
-        level.setBlock(pos.above(2), state.setValue(SECTION, 2), UPDATE_ALL);
+        for (int section = 1; section <= 2; section++) {
+            var part = pos.above(section);
+            level.setBlock(part, state.setValue(SECTION, section), IrrigationNetwork.loadedUpdateFlags(level, part, UPDATE_ALL));
+        }
+    }
+
+    @Override protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moving) {
+        if (!level.isClientSide && !old.is(this) && state.getValue(SECTION) == 0) {
+            IrrigationNetwork.syncLoadedFittings(level, pos, state, this);
+        }
     }
 
     static boolean matches(BlockState state, Block block, Direction facing, int section) {
@@ -63,7 +81,7 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
 
     static VerticalGreenhouseBlockEntity controller(Level level, BlockPos pos, BlockState state) {
         BlockPos base = pos.below(state.getValue(SECTION));
-        return matches(level.getBlockState(base), state.getBlock(), state.getValue(FACING), 0)
+        return level.hasChunkAt(base) && matches(level.getBlockState(base), state.getBlock(), state.getValue(FACING), 0)
                 && level.getBlockEntity(base) instanceof VerticalGreenhouseBlockEntity greenhouse ? greenhouse : null;
     }
 
@@ -100,18 +118,26 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
     }
 
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
-        if (!level.isClientSide && !newState.is(this)) {
-            int section = state.getValue(SECTION);
-            if (section == 0 && level.getBlockEntity(pos) instanceof VerticalGreenhouseBlockEntity greenhouse) {
-                Containers.dropContents(level, pos, greenhouse);
-            }
-            BlockPos base = pos.below(section);
-            for (int other = 0; other <= 2; other++) {
-                if (other == section) continue;
-                var part = base.above(other);
-                if (matches(level.getBlockState(part), this, state.getValue(FACING), other)) level.removeBlock(part, false);
-            }
+        if (level.isClientSide || newState.is(this)) {
+            super.onRemove(state, level, pos, newState, moving);
+            return;
         }
-        super.onRemove(state, level, pos, newState, moving);
+        int section = state.getValue(SECTION);
+        if (section == 0 && level.getBlockEntity(pos) instanceof VerticalGreenhouseBlockEntity greenhouse) {
+            Containers.dropContents(level, pos, greenhouse);
+        }
+        BlockPos base = pos.below(section);
+        for (int other = 0; other <= 2; other++) {
+            if (other == section) continue;
+            var part = base.above(other);
+            var current = level.getBlockState(part);
+            if (!matches(current, this, state.getValue(FACING), other)) continue;
+            level.setBlock(part, current.getFluidState().createLegacyBlock(), IrrigationNetwork.loadedUpdateFlags(level, part, UPDATE_ALL));
+        }
+        if (section == 0) {
+            IrrigationNetwork.removeFittingEntity(level, pos, this);
+            IrrigationNetwork.syncLoadedFittings(level, pos, newState, this);
+            level.invalidateCapabilities(pos);
+        }
     }
 }
