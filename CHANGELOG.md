@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.32
+
+- The Spanner tells you when a reservoir blueprint crosses into an unloaded chunk.
+- Reservoir panels repair incorrect water gauges from the core tank.
+- Reservoir outlets repair missing pipe arms when the adjoining chunk is available. Capped pipe faces stay closed.
+- Repairing a stale gauge also refreshes the comparator reading, including through a solid block.
+- A full Mk II reservoir starts a fresh ten-second generation interval once space opens.
+
 ## 1.2.31
 
 - Placing a Vertical Greenhouse at a chunk border keeps neighboring chunks unloaded and connects the intake to existing pipes.

@@ -193,6 +193,7 @@ public final class SpannerItem extends Item {
             String message = switch (result) {
                 case FORMED -> "Copper Reservoir formed with 1000 mB. Connect pipes to its face-centre ports.";
                 case PROTECTED -> "You need permission to edit the whole reservoir shell and its centre.";
+                case UNLOADED -> "Part of the reservoir shell is in an unloaded chunk. Load the rest of the shell and try again.";
                 case INVALID -> "Build a 3x3x3 shell of 26 fresh copper blocks around one water source, then use the Spanner.";
             };
             player.displayClientMessage(Component.literal(message), true);

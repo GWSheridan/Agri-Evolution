@@ -2,7 +2,6 @@ package com.agrievolution.content;
 
 import net.minecraft.core.*;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluids;
@@ -31,7 +30,7 @@ public final class WaterReservoirBlockEntity extends BlockEntity implements IFlu
     public WaterReservoirBlockEntity(BlockPos pos,BlockState state) {super(AEBlockEntities.WATER_RESERVOIR.get(),pos,state);}
     public int water(){return water;}
     public int comparatorSignal() { return water == 0 ? 0 : 1 + 14 * water / CAPACITY; }
-    private static int gaugeLevel(int amount) { return (amount + 7999) / 8000; }
+    static int gaugeLevel(int amount) { return (amount + 7999) / 8000; }
     public boolean complete() {
         return !isRemoved() && level != null && level.hasChunkAt(worldPosition)
                 && level.getBlockEntity(worldPosition) == this && ReservoirStructure.complete(level, worldPosition);
@@ -65,6 +64,7 @@ public final class WaterReservoirBlockEntity extends BlockEntity implements IFlu
     private void setWater(int amount) {
         int previous = water;
         water = amount;
+        if (water == CAPACITY) generationSeconds = 0;
         setChanged();
         int fill = gaugeLevel(water);
         boolean updateGauge = gaugeLevel(previous) != fill;
@@ -72,14 +72,16 @@ public final class WaterReservoirBlockEntity extends BlockEntity implements IFlu
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){
             var p=worldPosition.offset(x,y,z);if(!level.hasChunkAt(p))continue;var state=level.getBlockState(p);
             if (state.getBlock() instanceof WaterReservoirBlock && WaterReservoirBlock.core(p, state).equals(worldPosition)) {
-                if (updateGauge && state.getValue(WaterReservoirBlock.FILL) != fill) {
-                    level.setBlock(p, state.setValue(WaterReservoirBlock.FILL, fill),
-                            IrrigationNetwork.loadedUpdateFlags(level, p, Block.UPDATE_CLIENTS));
-                }
+                if (updateGauge) WaterReservoirBlock.refreshGauge(level, p, state, fill);
                 IrrigationNetwork.updateComparators(level, p, state.getBlock());
             }
         }
     }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries) {super.saveAdditional(tag,registries);tag.putInt("Water",water);tag.putBoolean("Renewable",renewable);tag.putInt("GenerationSeconds",generationSeconds);}
-    @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries) {super.loadAdditional(tag,registries);water=Math.clamp(tag.getInt("Water"),0,CAPACITY);renewable=tag.getBoolean("Renewable");generationSeconds=Math.clamp(tag.getInt("GenerationSeconds"),0,9);}
+    @Override protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        water = Math.clamp(tag.getInt("Water"), 0, CAPACITY);
+        renewable = tag.getBoolean("Renewable");
+        generationSeconds = water == CAPACITY ? 0 : Math.clamp(tag.getInt("GenerationSeconds"), 0, 9);
+    }
 }

@@ -2,8 +2,12 @@ package com.agrievolution.content;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ComparatorBlock;
+import net.minecraft.world.level.block.entity.ComparatorBlockEntity;
 import net.neoforged.neoforge.gametest.*;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
@@ -11,6 +15,68 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class ReservoirAutomationGameTests {
+    @GameTest(template = "empty")
+    public static void fullReservoirRestartsMkTwoGenerationTimer(GameTestHelper h) {
+        var tank = ReservoirGameTests.tank(h, h.absolutePos(new BlockPos(3, 160, 3)));
+        h.assertTrue(tank.upgrade(), "Upgrade to Mk II");
+        tank.fill(new FluidStack(Fluids.WATER, 30500), FluidAction.EXECUTE);
+        for (int i = 0; i < 9; i++) tank.generationSecond();
+        tank.fill(new FluidStack(Fluids.WATER, 500), FluidAction.EXECUTE);
+        h.assertTrue(tank.takeBucket(), "Make room after topping up the tank");
+        for (int i = 0; i < 9; i++) tank.generationSecond();
+        h.assertTrue(tank.water() == 31000, "The seconds before reaching full do not count after draining");
+        tank.generationSecond();
+        h.assertTrue(tank.water() == 32000, "A fresh cycle fills the bucket on the tenth second");
+
+        var saved = new CompoundTag();
+        tank.saveAdditional(saved, h.getLevel().registryAccess());
+        saved.putInt("GenerationSeconds", 9);
+        tank.loadAdditional(saved, h.getLevel().registryAccess());
+        h.assertTrue(tank.takeBucket(), "A full tank from an older save is drainable");
+        tank.generationSecond();
+        h.assertTrue(tank.water() == 31000, "Loading a full tank clears any saved partial cycle");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void reservoirGaugeRepairRefreshesComparatorOutput(GameTestHelper h) {
+        var level = h.getLevel();
+        var core = h.absolutePos(new BlockPos(3, 161, 3));
+        var tank = ReservoirGameTests.tank(h, core);
+        h.assertTrue(tank.takeBucket(), "Start with an empty tank before placing the comparator");
+        var output = core.east(3);
+        level.setBlock(core.east(2), Blocks.STONE.defaultBlockState(), 3);
+        level.setBlock(output.below(), Blocks.STONE.defaultBlockState(), 3);
+        level.setBlock(output, Blocks.COMPARATOR.defaultBlockState().setValue(ComparatorBlock.FACING, Direction.WEST), 3);
+        var comparator = (ComparatorBlockEntity) level.getBlockEntity(output);
+        h.assertTrue(tank.addBucket(), "Fill one bucket to notify the comparator");
+        h.runAfterDelay(5, () -> {
+            h.assertTrue(comparator.getOutputSignal() == 1, "The initial bucket powers the comparator through a solid block");
+            tank.fill(new FluidStack(Fluids.WATER, 1), FluidAction.EXECUTE);
+        });
+        h.runAfterDelay(10, () -> {
+            h.assertTrue(comparator.getOutputSignal() == 1, "The signal stays steady between thresholds");
+            tank.fill(new FluidStack(Fluids.WATER, 1999), FluidAction.EXECUTE);
+        });
+        h.runAfterDelay(15, () -> {
+            h.assertTrue(comparator.getOutputSignal() == 2, "Crossing the threshold changes the output even in the same gauge band");
+            tank.drain(3000, FluidAction.EXECUTE);
+        });
+        h.runAfterDelay(20, () -> {
+            h.assertTrue(comparator.getOutputSignal() == 0, "Draining the tank resets the comparator");
+            var face = core.east();
+            var block = AEBlocks.WATER_RESERVOIR.get();
+            level.setBlock(face, level.getBlockState(face).setValue(WaterReservoirBlock.FILL, 4), Block.UPDATE_KNOWN_SHAPE);
+            comparator.setOutputSignal(9);
+            block.tick(level.getBlockState(face), level, face, level.random);
+            h.assertTrue(level.getBlockState(face).getValue(WaterReservoirBlock.FILL) == 0, "The old gauge is repaired from tank storage");
+        });
+        h.runAfterDelay(25, () -> {
+            h.assertTrue(comparator.getOutputSignal() == 0, "Gauge repair also refreshes the stale comparator behind the stone");
+            h.succeed();
+        });
+    }
+
  @GameTest(template="empty",timeoutTicks=240) public static void scheduledGenerationAndUpgradeRecovery(GameTestHelper h){
   var core=h.absolutePos(new BlockPos(3,55,3));var tank=ReservoirGameTests.tank(h,core);tank.upgrade();
   h.runAfterDelay(199,()->h.assertTrue(tank.water()==1000,"No bucket before ten actual seconds"));

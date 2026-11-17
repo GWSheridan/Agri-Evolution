@@ -16,7 +16,7 @@ public final class ReservoirStructure {
         final String message;
         Status(String message) { this.message = message; }
     }
-    enum Formation { FORMED, PROTECTED, INVALID }
+    enum Formation { FORMED, PROTECTED, UNLOADED, INVALID }
 
     private static boolean changing;
     public static boolean tryForm(Level level,BlockPos clicked) {
@@ -26,9 +26,12 @@ public final class ReservoirStructure {
     static Formation tryForm(Level level, BlockPos clicked, Predicate<BlockPos> canEdit) {
         if (level.isClientSide) return Formation.INVALID;
         boolean protectedShell = false;
+        boolean unloadedShell = false;
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++) {
             var core=clicked.offset(x,y,z);
-            if(!validBlueprint(level,core))continue;
+            Status blueprint = blueprintStatus(level, core);
+            if (blueprint == Status.UNLOADED) unloadedShell = true;
+            if (blueprint != Status.COMPLETE) continue;
             if (!canEditShell(core, canEdit)) {
                 protectedShell = true;
                 continue;
@@ -53,7 +56,8 @@ public final class ReservoirStructure {
             }
             return Formation.FORMED;
         }
-        return protectedShell ? Formation.PROTECTED : Formation.INVALID;
+        if (protectedShell) return Formation.PROTECTED;
+        return unloadedShell ? Formation.UNLOADED : Formation.INVALID;
     }
 
     private static boolean canEditShell(BlockPos core, Predicate<BlockPos> canEdit) {
@@ -62,14 +66,24 @@ public final class ReservoirStructure {
         }
         return true;
     }
-    private static boolean validBlueprint(Level level,BlockPos core) {
-        for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++) {
-            var p=core.offset(x,y,z);if(!level.hasChunkAt(p))return false;
-            var s=level.getBlockState(p);
-            if(x==0&&y==0&&z==0) {if(!s.is(Blocks.WATER)||!s.getFluidState().isSource())return false;}
-            else if(!s.is(Blocks.COPPER_BLOCK))return false;
+    private static Status blueprintStatus(Level level, BlockPos core) {
+        if (level.hasChunkAt(core)) {
+            BlockState centre = level.getBlockState(core);
+            if (!centre.is(Blocks.WATER) || !centre.getFluidState().isSource()) return Status.INCOMPLETE;
         }
-        return true;
+        boolean unloaded = false;
+        for (int x = -1; x <= 1; x++) for (int z = -1; z <= 1; z++) {
+            var column = core.offset(x, 0, z);
+            if (!level.hasChunkAt(column)) {
+                unloaded = true;
+                continue;
+            }
+            for (int y = -1; y <= 1; y++) {
+                if (x == 0 && y == 0 && z == 0) continue;
+                if (!level.getBlockState(column.offset(0, y, 0)).is(Blocks.COPPER_BLOCK)) return Status.INCOMPLETE;
+            }
+        }
+        return unloaded ? Status.UNLOADED : Status.COMPLETE;
     }
     public static boolean loaded(Level level,BlockPos core) {
         for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)if(!level.hasChunkAt(core.offset(x,0,z)))return false;

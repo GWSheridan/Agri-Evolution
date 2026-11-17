@@ -42,13 +42,12 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
     }
 
     public static BlockPos core(BlockPos pos,BlockState state){return pos.offset(1-state.getValue(X),1-state.getValue(Y),1-state.getValue(Z));}
-    public static boolean port(BlockState state,Direction side){
-        int x=state.getValue(X),y=state.getValue(Y),z=state.getValue(Z);
-        return switch(side){
-            case NORTH -> x==1&&y==1&&z==0;case SOUTH -> x==1&&y==1&&z==2;
-            case WEST -> x==0&&y==1&&z==1;case EAST -> x==2&&y==1&&z==1;
-            case UP -> x==1&&y==2&&z==1;case DOWN -> x==1&&y==0&&z==1;
-        };
+    public static boolean port(BlockState state, Direction side) {
+        return side != null && side == outlet(state);
+    }
+
+    private static Direction outlet(BlockState state) {
+        return Direction.fromDelta(state.getValue(X) - 1, state.getValue(Y) - 1, state.getValue(Z) - 1);
     }
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return core(pos,state).equals(pos)?new WaterReservoirBlockEntity(pos,state):null;}
     @Override protected void onPlace(BlockState state,Level level,BlockPos pos,BlockState old,boolean piston){
@@ -72,7 +71,19 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
             }
             if (isCore && status == ReservoirStructure.Status.COMPLETE && tank != null) tank.generateSecondInCompleteTank();
         }
+        if (liveCore) {
+            if (refreshGauge(level, pos, level.getBlockState(pos), WaterReservoirBlockEntity.gaugeLevel(tank.water()))) {
+                IrrigationNetwork.updateComparators(level, pos, this);
+            }
+            Direction side = outlet(state);
+            if (side != null) IrrigationNetwork.syncLoadedFitting(level, pos, state, this, side);
+        }
         level.scheduleTick(pos,this,20);
+    }
+
+    static boolean refreshGauge(Level level, BlockPos pos, BlockState state, int fill) {
+        return state.getValue(FILL) != fill
+                && level.setBlock(pos, state.setValue(FILL, fill), IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_CLIENTS));
     }
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState replacement,boolean piston){
         if (state.is(replacement.getBlock())) return;
@@ -83,13 +94,7 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
     }
 
     private static void invalidatePort(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide) return;
-        for (Direction side : Direction.values()) {
-            if (port(state, side)) {
-                level.invalidateCapabilities(pos);
-                return;
-            }
-        }
+        if (!level.isClientSide && outlet(state) != null) level.invalidateCapabilities(pos);
     }
     @Override protected boolean hasAnalogOutputSignal(BlockState state){return true;}
     @Override protected int getAnalogOutputSignal(BlockState state,Level level,BlockPos pos){

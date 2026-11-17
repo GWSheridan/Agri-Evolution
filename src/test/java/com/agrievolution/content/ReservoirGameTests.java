@@ -53,6 +53,82 @@ public final class ReservoirGameTests {
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++)
             h.getLevel().setBlock(core.offset(x,y,z),(x==0&&y==0&&z==0?Blocks.WATER:Blocks.COPPER_BLOCK).defaultBlockState(),2);
     }
+
+    @GameTest(template = "empty")
+    public static void spannerDistinguishesUnloadedBlueprintsFromMissingCopper(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(5376, 100, 4)));
+        var core = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var clicked = core.west();
+        var outside = core.east();
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.getChunkAt(core);
+        for (var part : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(0, 1, 1))) {
+            level.setBlock(part, (part.equals(core) ? Blocks.WATER : Blocks.COPPER_BLOCK).defaultBlockState(), quiet);
+        }
+        var player = new InspectingPlayer(level);
+        var tool = new ItemStack(AEItems.SPANNER.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, tool);
+        var hit = new BlockHitResult(Vec3.atCenterOf(clicked), Direction.WEST, clicked, false);
+        var use = new UseOnContext(player, InteractionHand.MAIN_HAND, hit);
+        tool.useOn(use);
+        h.assertTrue(player.message.contains("unloaded chunk") && !level.hasChunkAt(outside)
+                && level.getBlockState(core).is(Blocks.WATER), "An otherwise matching shell waits for the unloaded part");
+
+        var missing = clicked.above().north();
+        level.setBlock(missing, Blocks.AIR.defaultBlockState(), quiet);
+        tool.useOn(use);
+        h.assertTrue(player.message.contains("26 fresh copper blocks") && !level.hasChunkAt(outside),
+                "A known gap is a construction mistake even when another chunk is unloaded");
+
+        level.setBlock(missing, Blocks.COPPER_BLOCK.defaultBlockState(), quiet);
+        level.getChunkAt(outside);
+        for (var part : BlockPos.betweenClosed(outside.offset(0, -1, -1), outside.offset(0, 1, 1))) {
+            level.setBlock(part, Blocks.COPPER_BLOCK.defaultBlockState(), quiet);
+        }
+        tool.useOn(use);
+        h.assertTrue(player.message.contains("formed with 1000 mB") && ReservoirStructure.complete(level, core),
+                "The same copper shell forms when all its parts are available");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void reservoirRepairsSavedGaugeAndLateOutletFittings(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(5632, 100, 4)));
+        var outlet = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var core = outlet.west();
+        var outside = outlet.east();
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.getChunkAt(core);
+        for (var part : BlockPos.betweenClosed(core.offset(-1, -1, -1), core.offset(1, 1, 1))) {
+            level.setBlock(part, (part.equals(core) ? Blocks.WATER : Blocks.COPPER_BLOCK).defaultBlockState(), quiet);
+        }
+        h.assertTrue(ReservoirStructure.tryForm(level, outlet), "The shell fits in the loaded chunk");
+        var tank = (WaterReservoirBlockEntity) level.getBlockEntity(core);
+        tank.fill(new FluidStack(Fluids.WATER, 8000), FluidAction.EXECUTE);
+        var block = AEBlocks.WATER_RESERVOIR.get();
+        level.setBlock(outlet, level.getBlockState(outlet).setValue(WaterReservoirBlock.FILL, 0), quiet);
+        block.tick(level.getBlockState(outlet), level, outlet, level.random);
+        h.assertTrue(level.getBlockState(outlet).getValue(WaterReservoirBlock.FILL) == 2
+                        && tank.water() == 9000 && !level.hasChunkAt(outside),
+                "The saved panel corrects its gauge without transferring water or loading its neighbor");
+
+        level.getChunkAt(outside);
+        var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
+        var west = IrrigationSprinklerBlock.connection(Direction.WEST);
+        level.setBlock(outside, pipe, quiet);
+        h.assertFalse(level.getBlockState(outside).getValue(west), "The saved pipe arm starts missing");
+        block.tick(level.getBlockState(outlet), level, outlet, level.random);
+        h.assertTrue(level.getBlockState(outside).getValue(west), "The outlet reconnects the pipe once its chunk is available");
+        h.assertTrue(IrrigationPipeBlock.toggle(level, outside, Direction.WEST), "Cap that pipe face");
+        level.setBlock(outside, level.getBlockState(outside).setValue(west, true), quiet);
+        block.tick(level.getBlockState(outlet), level, outlet, level.random);
+        h.assertTrue(!level.getBlockState(outside).getValue(west) && !IrrigationPipeBlock.enabled(level.getBlockState(outside), Direction.WEST),
+                "The same repair clears a stale arm without reopening a capped pipe");
+        h.succeed();
+    }
+
     @GameTest(template="empty") public static void formationStorageAndDismantle(GameTestHelper h){
         var level=h.getLevel();var core=h.absolutePos(new BlockPos(3,20,3));var tank=tank(h,core);
         h.assertTrue(tank.water()==1000,"Source must become exactly one stored bucket");
