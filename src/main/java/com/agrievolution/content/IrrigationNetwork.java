@@ -131,7 +131,7 @@ public final class IrrigationNetwork {
     }
     public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {}
     record ZoneStatus(List<Supply> supplies, List<BlockPos> sprinklers, boolean limit, BlockPos closedValve,
-                      Direction disabledSide, boolean unloadedConnection, boolean incompleteReservoir) {
+                      BlockPos disabledPipe, Direction disabledSide, boolean unloadedConnection, boolean incompleteReservoir) {
         boolean blockedPath() {
             return closedValve != null || disabledSide != null;
         }
@@ -182,9 +182,11 @@ public final class IrrigationNetwork {
     static ZoneStatus inspectZone(Level level, BlockPos valve) {
         var trace = new Trace();
         var network = search(level, valve, trace, true);
+        if (network.overflow()) return new ZoneStatus(List.of(), List.of(), true, null, null, null, false, false);
         var port = trace.blockingPort();
-        return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), network.overflow(),
-                trace.valve, port == null ? null : port.side(), trace.unloadedFitting != null, trace.incompleteReservoir != null);
+        return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), false,
+                trace.valve, port == null ? null : port.pipe(), port == null ? null : port.side(),
+                trace.unloadedFitting != null, trace.incompleteReservoir != null);
     }
 
     private static Route route(Trace trace, BlockPos end, Flow flow) {

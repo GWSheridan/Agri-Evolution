@@ -1,7 +1,14 @@
 package com.agrievolution.content;
 import net.minecraft.core.*;
 import net.minecraft.gametest.framework.*;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.*;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.gametest.*;
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class IrrigationControlGameTests {
@@ -26,6 +33,38 @@ public final class IrrigationControlGameTests {
           && IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.CLOSED_VALVE,
           "Zone names persist and inspection can see supply and heads around a closed valve without moving water");
   helper.succeed();
+ }
+
+ @GameTest(template = "empty")
+ public static void namedValveMovesWithoutLoadingTheNextChunk(GameTestHelper h) {
+  var level = h.getLevel();
+  var chunk = new ChunkPos(h.absolutePos(new BlockPos(4352, 100, 4)));
+  var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+  var pos = edge.west();
+  var destination = pos.west(3);
+  int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+  level.getChunkAt(pos);
+  level.setBlock(edge, Blocks.STONE.defaultBlockState(), quiet);
+  level.setBlock(pos, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState().setValue(IrrigationValveBlock.OPEN, false), quiet);
+  var valve = (IrrigationValveBlockEntity) level.getBlockEntity(pos);
+  var unnamed = Block.getDrops(level.getBlockState(pos), level, pos, valve).getFirst();
+  h.assertTrue(ItemStack.isSameItemSameComponents(unnamed, new ItemStack(AEItems.IRRIGATION_VALVE.get())),
+          "An unnamed valve drop still stacks with a newly crafted valve");
+  h.assertFalse(level.hasChunkAt(edge.east()), "The neighboring chunk starts unloaded");
+  valve.rename("  Orchard  ");
+  h.assertTrue(!level.hasChunkAt(edge.east()) && FarmInspection.describe(level, pos, true, false).contains("Zone: Orchard"),
+          "Renaming avoids comparator lookups across the border, and the HUD displays the zone name");
+  var drop = Block.getDrops(level.getBlockState(pos), level, pos, valve).getFirst();
+  h.assertTrue(IrrigationValveBlockEntity.storedZone(drop).equals("Orchard"), "The valve drop keeps its saved name");
+  level.setBlock(pos, Blocks.AIR.defaultBlockState(), quiet);
+  level.setBlock(destination.below(), Blocks.STONE.defaultBlockState(), quiet);
+  var player = h.makeMockPlayer(GameType.SURVIVAL);
+  player.setItemInHand(InteractionHand.MAIN_HAND, drop);
+  var hit = new BlockHitResult(Vec3.atCenterOf(destination.below()), Direction.UP, destination.below(), false);
+  h.assertTrue(drop.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit)).consumesAction(), "Place the dropped valve item");
+  h.assertTrue(level.getBlockEntity(destination) instanceof IrrigationValveBlockEntity placed && placed.zone().equals("Orchard")
+          && level.getBlockState(destination).getValue(IrrigationValveBlock.OPEN), "The relocated valve keeps its name and starts open");
+  h.succeed();
  }
 
  @GameTest(template="empty")
@@ -53,6 +92,13 @@ public final class IrrigationControlGameTests {
   var watering = SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden");
   h.assertTrue(watering.getFirst().contains("Supply water: 1000 / 33000 mB"), "An empty basin adds capacity and no water");
   h.assertTrue(watering.getFirst().contains("Sprinklers: 1/1 active"), "A current spray counts as active");
+  var stopped = valve.above();
+  level.setBlock(stopped, AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), Block.UPDATE_ALL);
+  ((IrrigationSprinklerBlockEntity) level.getBlockEntity(stopped)).configure(true);
+  var mixed = SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden");
+  h.assertTrue(mixed.getFirst().contains("Sprinklers: 1/2 active")
+          && mixed.get(1).contains(stopped.toShortString()) && mixed.get(1).contains("Waiting for redstone"),
+          "The report identifies the stopped sprinkler even while another one runs");
   h.succeed();
  }
 

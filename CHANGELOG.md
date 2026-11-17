@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.27
+
+- Named valves keep their zone name when moved. The name appears on the item and in the Spanner overlay.
+- Renaming a valve saves its name without checking comparators or loading neighboring chunks.
+- Valve zone reports show why the nearest inactive sprinkler is stopped, even while other heads are running.
+- Zone reports give the coordinates of the closed valve or disabled pipe face blocking the supply.
+- Oversized zones report that supply and sprinkler counts are unavailable, including when the valve is closed.
+
 ## 1.2.26
 
 - Sprinklers repair both ends of their pipe connections when loaded. Disabled faces stay closed.

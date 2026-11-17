@@ -26,6 +26,8 @@ public final class IrrigationComponentItem extends BlockItem {
             lines.add(Component.literal("Sneak-click to build against valves and sprinklers."));
             lines.add(Component.literal("Loaded networks only; maximum 512 connected nodes."));
         } else {
+            String zone = IrrigationValveBlockEntity.storedZone(stack);
+            if (!zone.isEmpty()) lines.add(Component.literal("Zone: " + zone));
             lines.add(Component.literal("Connect a basin or reservoir through pipes to a sprinkler."));
             lines.add(Component.literal("Auto-aligns to the head, including above or below."));
             lines.add(Component.literal("Right-click toggles flow; sneak-click to place against it."));

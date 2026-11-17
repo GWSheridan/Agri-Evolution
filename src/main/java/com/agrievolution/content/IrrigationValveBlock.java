@@ -8,6 +8,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -63,6 +64,13 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
         return connectedState(context.getLevel(), context.getClickedPos(),
                 defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite()));
+    }
+
+    @Override public void setPlacedBy(Level level, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve) {
+            String name = IrrigationValveBlockEntity.storedZone(stack);
+            if (!name.isEmpty()) valve.rename(name);
+        }
     }
 
     public static boolean connects(BlockState state, Direction side) {

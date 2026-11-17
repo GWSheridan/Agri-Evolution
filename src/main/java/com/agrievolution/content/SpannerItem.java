@@ -116,16 +116,22 @@ public final class SpannerItem extends Item {
     static List<String> describeZone(net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos,
             net.minecraft.world.level.block.state.BlockState state, String name) {
         var status = IrrigationNetwork.inspectZone(level, pos);
+        if (status.limit()) {
+            String valveStatus = IrrigationValveBlock.flowStatus(level, pos, state);
+            return List.of(name + " | " + valveStatus + " | Pipe network exceeds " + IrrigationNetwork.MAX_NODES
+                    + " nodes. Supply and sprinkler counts unavailable.");
+        }
         String flow;
         if (!state.getValue(IrrigationValveBlock.OPEN)) flow = "Valve closed";
         else if (!IrrigationValveBlock.permitsFlow(level, pos, state)) flow = "Valve paused by redstone";
-        else if (status.limit()) flow = "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
         else if (status.supplies().isEmpty()) {
             if (status.closedValve() != null) {
                 BlockPos shutoff = status.closedValve();
-                flow = IrrigationValveBlock.flowStatus(level, shutoff, level.getBlockState(shutoff)) + " along supply path";
-            } else if (status.disabledSide() != null) flow = "Supply blocked by disabled " + status.disabledSide().getName() + " pipe port";
-            else if (status.unloadedConnection()) flow = "Connection leads into an unloaded chunk";
+                flow = IrrigationValveBlock.flowStatus(level, shutoff, level.getBlockState(shutoff))
+                        + " along supply path [" + shutoff.toShortString() + "]";
+            } else if (status.disabledSide() != null) {
+                flow = "Supply blocked by disabled " + status.disabledSide().getName() + " pipe port [" + status.disabledPipe().toShortString() + "]";
+            } else if (status.unloadedConnection()) flow = "Connection leads into an unloaded chunk";
             else if (status.incompleteReservoir()) flow = ReservoirStructure.Status.INCOMPLETE.message;
             else flow = "No connected water source";
         } else if (status.supplies().stream().noneMatch(supply -> supply.hasBucket(level))) flow = "Connected sources short of a full bucket";
@@ -136,13 +142,17 @@ public final class SpannerItem extends Item {
             capacity += supply.capacity();
         }
         String tanks = capacity == 0 ? "No reachable water storage" : "Supply water: " + water + " / " + capacity + " mB";
-        long active = status.sprinklers().stream().map(level::getBlockEntity)
-                .filter(entity -> entity instanceof IrrigationSprinklerBlockEntity head && head.growthActive()).count();
+        int active = 0;
+        IrrigationSprinklerBlockEntity nearestStopped = null;
+        for (BlockPos headPos : status.sprinklers()) {
+            if (!(level.getBlockEntity(headPos) instanceof IrrigationSprinklerBlockEntity head)) continue;
+            if (head.growthActive()) active++;
+            else if (nearestStopped == null) nearestStopped = head;
+        }
         var lines = new ArrayList<String>();
         lines.add(name + " | " + flow + " | " + tanks + " | Sprinklers: " + active + "/" + status.sprinklers().size() + " active");
-        if (active == 0 && !status.sprinklers().isEmpty()
-                && level.getBlockEntity(status.sprinklers().getFirst()) instanceof IrrigationSprinklerBlockEntity head) {
-            lines.add("Nearest sprinkler: " + head.inspectionStatus());
+        if (nearestStopped != null) {
+            lines.add("Nearest inactive sprinkler [" + nearestStopped.getBlockPos().toShortString() + "]: " + nearestStopped.inspectionStatus());
         }
         return List.copyOf(lines);
     }

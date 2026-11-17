@@ -411,6 +411,14 @@ public final class ReservoirGameTests {
             level.setBlock(origin.offset(x,y,z),AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(),2);
         var head=origin.west();level.setBlock(head,AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(),3);
         var search=IrrigationNetwork.search(level,head);
-        h.assertTrue(search.overflow()&&search.supplies().isEmpty(),"Oversized network must stop at the traversal limit without exposing partial supply");h.succeed();
+        h.assertTrue(search.overflow()&&search.supplies().isEmpty(),"Oversized network must stop at the traversal limit without exposing partial supply");
+        var valve = origin.north();
+        var closed = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState().setValue(IrrigationValveBlock.OPEN, false);
+        level.setBlock(valve, closed, Block.UPDATE_ALL);
+        var report = SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Overfed");
+        h.assertTrue(report.size() == 1 && report.getFirst().contains("Valve closed")
+                        && report.getFirst().contains("counts unavailable") && !report.getFirst().contains("0/"),
+                "A closed valve still reports the network limit without presenting partial counts");
+        h.succeed();
     }
 }

@@ -110,7 +110,8 @@ public final class ValveJunctionGameTests {
                         && route.disabledSide() == Direction.DOWN && IrrigationNetwork.inspectZone(level, valve).blockedPath(),
                 "The Spanner identifies the face that isolates the basin");
         h.assertTrue(SpannerItem.describeZone(level, valve, level.getBlockState(valve), "Garden").getFirst()
-                        .contains("Supply blocked by disabled down pipe port"), "The zone report identifies the same blocked face");
+                        .contains("Supply blocked by disabled down pipe port [" + corner.toShortString() + "]"),
+                "The zone report gives the face and coordinates of the blocked pipe");
 
         var shutoff = corner.below();
         var valveState = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState();

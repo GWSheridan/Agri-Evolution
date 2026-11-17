@@ -64,7 +64,12 @@ public final class FarmInspection {
                 String disabled=java.util.Arrays.stream(Direction.values()).filter(d->!IrrigationPipeBlock.enabled(state,d)).map(Direction::getName).collect(java.util.stream.Collectors.joining(", "));
                 lines.add("Disabled ports: "+(disabled.isEmpty()?"none":disabled));lines.add("Click a face with Spanner to toggle its port");
             }
-            if (state.getBlock() instanceof IrrigationValveBlock) lines.add(IrrigationValveBlock.flowStatus(level, pos, state));
+            if (state.getBlock() instanceof IrrigationValveBlock) {
+                if (level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve && !valve.zoneName().isEmpty()) {
+                    lines.add("Zone: " + valve.zoneName());
+                }
+                lines.add(IrrigationValveBlock.flowStatus(level, pos, state));
+            }
             if(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head){
                 lines.add("Head: "+head.water()+" / 4000 mB | Comparator: "+head.comparatorSignal()+" / 15");
                 lines.add(head.controls());
