@@ -9,9 +9,11 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
@@ -743,6 +745,51 @@ public final class IrrigationGameTests {
                     && !state.getValue(IrrigationSprinklerBlock.connection(Direction.EAST)), "The loaded fitting provides the only connection");
         }
         h.assertFalse(level.hasChunkAt(edge.east()), "Placement connection checks must leave the neighboring chunk unloaded");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void placingIrrigationItemsConnectsWithoutLoadingTheNextChunk(GameTestHelper h) {
+        var level = h.getLevel();
+        var chunk = new ChunkPos(h.absolutePos(new BlockPos(5888, 100, 4)));
+        var edge = new BlockPos(chunk.getMaxBlockX(), 100, chunk.getMiddleBlockZ());
+        var outside = edge.east();
+        var neighbor = edge.west();
+        var oldBasinPos = edge.west(3);
+        int quiet = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        level.getChunkAt(edge);
+        level.setBlock(edge.below(), Blocks.STONE.defaultBlockState(), quiet);
+        level.setBlock(neighbor, AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(), quiet);
+        var oldBasinState = AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
+                .setValue(IrrigationBasinBlock.UPGRADE, 2).setValue(IrrigationBasinBlock.FILLED, true);
+        level.setBlock(oldBasinPos, oldBasinState, quiet);
+        var basinItem = Block.getDrops(oldBasinState, level, oldBasinPos, level.getBlockEntity(oldBasinPos)).getFirst();
+        h.assertFalse(level.hasChunkAt(outside), "The neighboring chunk starts unloaded");
+
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        var hit = new BlockHitResult(Vec3.atBottomCenterOf(edge), Direction.UP, edge.below(), false);
+        var east = IrrigationSprinklerBlock.connection(Direction.EAST);
+        var west = IrrigationSprinklerBlock.connection(Direction.WEST);
+        var placements = List.of(new ItemStack(AEItems.IRRIGATION_PIPE.get()), new ItemStack(AEItems.IRRIGATION_VALVE.get()),
+                new ItemStack(AEItems.IRRIGATION_SPRINKLER.get()), basinItem);
+        for (var stack : placements) {
+            var block = ((BlockItem) stack.getItem()).getBlock();
+            player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+            h.assertTrue(stack.useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit)).consumesAction() && stack.isEmpty(),
+                    "Place one " + block.getDescriptionId() + " from the player's hand");
+            var placed = level.getBlockState(edge);
+            h.assertTrue(placed.is(block) && level.getBlockState(neighbor).getValue(east) && !level.hasChunkAt(outside),
+                    block.getDescriptionId() + " connects on placement without loading the other chunk");
+            if (placed.hasProperty(west)) {
+                h.assertTrue(placed.getValue(west) && !placed.getValue(east), "The new fitting only connects to the loaded pipe");
+            }
+            if (level.getBlockEntity(edge) instanceof IrrigationBasinBlockEntity basin) {
+                h.assertTrue(basin.upgradeTier() == 2 && placed.getValue(IrrigationBasinBlock.UPGRADE) == 2
+                                && !placed.getValue(IrrigationBasinBlock.FILLED), "The moved Mk III basin starts dry at its saved tier");
+            }
+            level.setBlock(edge, Blocks.AIR.defaultBlockState(), quiet);
+            h.assertTrue(!level.getBlockState(neighbor).getValue(east) && !level.hasChunkAt(outside), "Removal clears the arm before the next placement");
+        }
         h.succeed();
     }
 

@@ -2,21 +2,24 @@ package com.agrievolution.content;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.Block;
 import java.util.List;
 
-public final class IrrigationBasinItem extends BlockItem {
+public final class IrrigationBasinItem extends IrrigationFittingItem {
     public IrrigationBasinItem(Block block, Properties properties) { super(block, properties); }
+
+    static int storedTier(ItemStack stack) {
+        Integer tier = stack.getOrDefault(DataComponents.BLOCK_STATE, BlockItemStateProperties.EMPTY).get(IrrigationBasinBlock.UPGRADE);
+        return tier == null ? 0 : tier;
+    }
 
     @Override
     public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
         super.appendHoverText(stack, context, lines, flag);
-        Integer storedTier = stack.getOrDefault(DataComponents.BLOCK_STATE, BlockItemStateProperties.EMPTY).get(IrrigationBasinBlock.UPGRADE);
-        int tier = storedTier == null ? 0 : storedTier;
+        int tier = storedTier(stack);
         lines.add(Component.literal("Mk " + (tier + 1) + " | Watering radius " + IrrigationBasinBlockEntity.wateringRadius(tier) + " blocks"));
         lines.add(Component.literal("Fill with a water bucket to hydrate farmland."));
         lines.add(Component.literal("Use an empty bucket to retrieve its water."));

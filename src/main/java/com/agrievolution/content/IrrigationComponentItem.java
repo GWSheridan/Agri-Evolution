@@ -2,12 +2,11 @@ package com.agrievolution.content;
 
 import java.util.List;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.block.Block;
 
-public final class IrrigationComponentItem extends BlockItem {
+public final class IrrigationComponentItem extends IrrigationFittingItem {
     public IrrigationComponentItem(Block block, Properties properties) { super(block, properties); }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
         super.appendHoverText(stack, context, lines, flag);

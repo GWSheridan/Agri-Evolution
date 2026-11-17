@@ -101,6 +101,9 @@ public final class IrrigationBasinGameTests {
         h.assertTrue(level.getBlockState(pos).getValue(IrrigationBasinBlock.UPGRADE) == 1
                         && FarmlandWaterManager.hasBlockWaterTicket(level, soil) && !level.hasChunkAt(edge.east()),
                 "The NBT-only upgrade sets the correct block state and range using loaded chunks");
+        h.assertTrue(basin.upgradeTo(2) && level.getBlockState(pos).getValue(IrrigationBasinBlock.UPGRADE) == 2
+                        && FarmlandWaterManager.hasBlockWaterTicket(level, soil) && !level.hasChunkAt(edge.east()),
+                "Saving the next upgrade preserves hydration without checking behind the solid block");
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), quiet);
         h.assertTrue(level.getBlockEntity(pos) == null && !FarmlandWaterManager.hasBlockWaterTicket(level, soil)
                         && !level.hasChunkAt(edge.east()),

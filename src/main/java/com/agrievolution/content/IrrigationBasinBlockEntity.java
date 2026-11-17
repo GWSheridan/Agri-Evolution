@@ -86,6 +86,12 @@ public final class IrrigationBasinBlockEntity extends BlockEntity {
         upgradeTier = state.getValue(IrrigationBasinBlock.UPGRADE);
     }
 
+    @Override public void setChanged() {
+        if (level == null || !level.hasChunkAt(worldPosition)) return;
+        level.blockEntityChanged(worldPosition);
+        IrrigationNetwork.updateComparators(level, worldPosition, getBlockState().getBlock());
+    }
+
     @Override
     public void onLoad() {
         super.onLoad();

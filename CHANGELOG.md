@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.33
+
+- Placing pipes, valves, sprinklers, and basins from the inventory keeps adjacent unloaded chunks asleep.
+- Newly placed fittings connect to their loaded neighbors immediately, including at chunk borders.
+- Moved Mk II and Mk III basins place at their saved tier in one step and start empty.
+- Saving basin upgrades leaves chunks beyond neighboring solid blocks unloaded.
+
 ## 1.2.32
 
 - The Spanner tells you when a reservoir blueprint crosses into an unloaded chunk.
