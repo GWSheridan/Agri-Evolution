@@ -68,6 +68,12 @@ public final class IrrigationControlGameTests {
           && status.supplies().getFirst().reservoir() == tank && tank.water() == 1000
           && IrrigationNetwork.trace(level, head).flow() == IrrigationNetwork.Flow.CLOSED_VALVE,
           "Zone names persist and inspection can see supply and heads around a closed valve without moving water");
+  var overlay = FarmInspection.describe(level, pos, true, false);
+  helper.assertTrue(overlay.contains("Zone: North garden") && overlay.contains("Valve closed")
+          && overlay.contains("Zone sources ready: 1/1 | 1000 mB total")
+          && SpannerItem.describeZone(level, pos, level.getBlockState(pos), valve.zone()).getFirst().contains("Sources ready: 1/1")
+          && tank.water() == 1000 && !level.getBlockState(pos).getValue(IrrigationValveBlock.OPEN),
+          "The overlay and right-click report describe the same closed valve and stored water");
   helper.succeed();
  }
 

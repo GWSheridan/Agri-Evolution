@@ -12,6 +12,34 @@ import net.neoforged.neoforge.gametest.*;
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class ValveJunctionGameTests {
     @GameTest(template = "empty")
+    public static void pipeOverlayExplainsTheRemoteSupplyStop(GameTestHelper h) {
+        var level = h.getLevel();
+        var target = h.absolutePos(new BlockPos(4, 171, 4));
+        var junction = target.east();
+        var valve = junction.east();
+        var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
+        var shutValve = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState().setValue(IrrigationValveBlock.OPEN, false);
+        level.setBlock(target, pipe, Block.UPDATE_ALL);
+        level.setBlock(junction, pipe, Block.UPDATE_ALL);
+        level.setBlock(valve, shutValve, Block.UPDATE_ALL);
+        level.setBlock(valve.east(), AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
+                .setValue(IrrigationBasinBlock.FILLED, true), Block.UPDATE_ALL);
+        h.assertTrue(FarmInspection.describe(level, target, true, false).contains("Pipe supply: Valve closed [" + valve.toShortString() + "]"),
+                "Aiming at a pipe identifies the remote shut valve by position");
+
+        level.setBlock(valve, level.getBlockState(valve).setValue(IrrigationValveBlock.OPEN, true), Block.UPDATE_ALL);
+        h.assertTrue(IrrigationPipeBlock.toggle(level, junction, Direction.EAST), "Cap the upstream pipe");
+        h.assertTrue(FarmInspection.describe(level, target, true, false).contains("Pipe supply: Disabled east pipe port [" + junction.toShortString() + "]"),
+                "The same pipe overlay points to the capped face");
+        h.assertTrue(FarmInspection.canInspect(pipe, true, false) && !FarmInspection.canInspect(pipe, false, true)
+                        && FarmInspection.canInspect(Blocks.WHEAT.defaultBlockState(), false, true)
+                        && !FarmInspection.canInspect(Blocks.WHEAT.defaultBlockState(), true, false)
+                        && !FarmInspection.canInspect(Blocks.STONE.defaultBlockState(), true, true),
+                "The overlay is only eligible for the matching tool and block");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void loadedValvesUseTheirCurrentRedstoneSignal(GameTestHelper h) {
         var level = h.getLevel();
         var unpowered = h.absolutePos(new BlockPos(3, 165, 3));

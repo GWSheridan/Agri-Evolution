@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.35
+
+- The Spanner shows how much water a valve's zone contains while the valve is shut, with the same flow status as the right-click report.
+- A pipe inspection shows where its supply trace ends and why, including remote valves and capped ports.
+- The inspection overlay clears when you switch to the wrong tool, replace the inspected block, or leave the world.
+- The server skips empty inspection packets, and the sprinkler preview waits for its target chunk to load.
+
 ## 1.2.34
 
 - Reopening an adjacent valve by hand resumes an already-paid spray immediately.

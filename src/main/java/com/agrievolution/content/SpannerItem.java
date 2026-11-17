@@ -122,21 +122,7 @@ public final class SpannerItem extends Item {
                     + " nodes. Supply and sprinkler counts unavailable.");
         }
         var amounts = IrrigationNetwork.supplyWater(level, status.supplies());
-        String flow;
-        if (!state.getValue(IrrigationValveBlock.OPEN)) flow = "Valve closed";
-        else if (!IrrigationValveBlock.permitsFlow(level, pos, state)) flow = "Valve paused by redstone";
-        else if (status.supplies().isEmpty()) {
-            if (status.closedValve() != null) {
-                BlockPos shutoff = status.closedValve();
-                flow = IrrigationValveBlock.flowStatus(level, shutoff, level.getBlockState(shutoff))
-                        + " along supply path [" + shutoff.toShortString() + "]";
-            } else if (status.disabledSide() != null) {
-                flow = "Supply blocked by disabled " + status.disabledSide().getName() + " pipe port [" + status.disabledPipe().toShortString() + "]";
-            } else if (status.unloadedConnection()) flow = "Connection leads into an unloaded chunk";
-            else if (status.incompleteReservoir()) flow = ReservoirStructure.Status.INCOMPLETE.message;
-            else flow = "No connected water source";
-        } else if (amounts.ready() == 0) flow = "Connected sources short of a full bucket";
-        else flow = "Water supply ready";
+        String flow = zoneFlow(level, pos, state, status, amounts);
         String tanks = status.supplies().isEmpty() ? "No reachable water storage"
                 : "Supply water: " + amounts.total() + " / " + amounts.capacity() + " mB | Sources ready: "
                 + amounts.ready() + "/" + status.supplies().size();
@@ -153,6 +139,27 @@ public final class SpannerItem extends Item {
             lines.add("Nearest inactive sprinkler [" + nearestStopped.getBlockPos().toShortString() + "]: " + nearestStopped.inspectionStatus());
         }
         return List.copyOf(lines);
+    }
+
+    static String zoneFlow(Level level, BlockPos pos, net.minecraft.world.level.block.state.BlockState state,
+                           IrrigationNetwork.ZoneStatus status, IrrigationNetwork.SupplyWater amounts) {
+        if (!state.getValue(IrrigationValveBlock.OPEN)) return "Valve closed";
+        if (!IrrigationValveBlock.permitsFlow(level, pos, state)) return "Valve paused by redstone";
+        if (status.limit()) return "Valve open";
+        if (!status.supplies().isEmpty()) {
+            return amounts.ready() == 0 ? "Connected sources short of a full bucket" : "Water supply ready";
+        }
+        if (status.closedValve() != null) {
+            BlockPos shutoff = status.closedValve();
+            return IrrigationValveBlock.flowStatus(level, shutoff, level.getBlockState(shutoff))
+                    + " along supply path [" + shutoff.toShortString() + "]";
+        }
+        if (status.disabledSide() != null) {
+            return "Supply blocked by disabled " + status.disabledSide().getName() + " pipe port [" + status.disabledPipe().toShortString() + "]";
+        }
+        if (status.unloadedConnection()) return "Connection leads into an unloaded chunk";
+        if (status.incompleteReservoir()) return ReservoirStructure.Status.INCOMPLETE.message;
+        return "No connected water source";
     }
     public SpannerItem(Properties properties){super(properties);}
 
