@@ -1,15 +1,21 @@
 package com.agrievolution.client.journal;
 
 import com.agrievolution.client.GardenGuiTheme;
+import com.agrievolution.content.FlowerHarvests;
 
 import com.agrievolution.genetics.CropSpecies;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 /** Reusable pixel-art drawing primitives. No game state is stored here. */
 public final class JournalRenderer {
     private JournalRenderer() {}
+
+    static String flowerHarvestName(CropSpecies species) {
+        return new ItemStack(FlowerHarvests.dye(species)).getHoverName().getString();
+    }
 
     public static void frame(GuiGraphics gui, Font font, JournalNavigation nav,
                              JournalSnapshot snapshot, int mx, int my) {

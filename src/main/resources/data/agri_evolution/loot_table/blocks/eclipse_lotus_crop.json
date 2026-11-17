@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "minecraft:ender_pearl",
+          "name": "minecraft:pink_dye",
           "conditions": [
             {
               "condition": "minecraft:block_state_property",

@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "minecraft:glowstone_dust",
+          "name": "minecraft:magenta_dye",
           "conditions": [
             {
               "condition": "minecraft:block_state_property",

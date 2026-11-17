@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.29
+
+- Eclipse Lotus now gives pink dye and Moon Orchid gives light blue dye. Sunfire Lily gives yellow dye and Twilight Sage gives magenta dye.
+- Field harvests, both greenhouses, and Grandmas Journal now agree on what each flower produces. Breed the dedicated resource crops for Ender Pearls, Amethyst Shards, Glow Berries, and Glowstone Dust.
+
 ## 1.2.28
 
 - The Spanner shows how many connected sources can deliver a full bucket, alongside their combined water level.

@@ -168,15 +168,8 @@ public final class CompactJournalRenderer {
     private static String harvest(CropSpecies plant) {
         return switch (plant) {
             case WILD -> "Wheat";
-            case CRIMSON_CLOVER -> "Red Dye";
-            case AZURE_FLAX -> "Blue Dye";
-            case VIOLET_STARFLOWER -> "Purple Dye";
-            case AMBER_MARIGOLD -> "Orange Dye";
-            case SILVER_THISTLE -> "Light Gray Dye";
-            case SUNFIRE_LILY -> "Glow Berries";
-            case MOON_ORCHID -> "Amethyst Shard";
-            case ECLIPSE_LOTUS -> "Ender Pearl";
-            case TWILIGHT_SAGE -> "Glowstone Dust";
+            case CRIMSON_CLOVER, AZURE_FLAX, VIOLET_STARFLOWER, AMBER_MARIGOLD, SILVER_THISTLE,
+                    SUNFIRE_LILY, MOON_ORCHID, ECLIPSE_LOTUS, TWILIGHT_SAGE -> JournalRenderer.flowerHarvestName(plant);
             case DIRT -> com.agrievolution.farming.ResourceCropRules.produceName(plant);
             case WOOD -> com.agrievolution.farming.ResourceCropRules.produceName(plant);
             case STONE -> com.agrievolution.farming.ResourceCropRules.produceName(plant);

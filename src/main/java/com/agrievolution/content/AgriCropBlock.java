@@ -176,15 +176,8 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
                     + (rare == RareTrait.ABUNDANT ? 1 : 0);
             Block.popResource(level, pos, new ItemStack(switch (species) {
                 case WILD -> Items.WHEAT;
-                case CRIMSON_CLOVER -> Items.RED_DYE;
-                case AZURE_FLAX -> Items.BLUE_DYE;
-                case VIOLET_STARFLOWER -> Items.PURPLE_DYE;
-                case AMBER_MARIGOLD -> Items.ORANGE_DYE;
-                case SILVER_THISTLE -> Items.LIGHT_GRAY_DYE;
-                case SUNFIRE_LILY -> Items.GLOW_BERRIES;
-                case MOON_ORCHID -> Items.AMETHYST_SHARD;
-                case ECLIPSE_LOTUS -> Items.ENDER_PEARL;
-                case TWILIGHT_SAGE -> Items.GLOWSTONE_DUST;
+                case CRIMSON_CLOVER, AZURE_FLAX, VIOLET_STARFLOWER, AMBER_MARIGOLD, SILVER_THISTLE,
+                        SUNFIRE_LILY, MOON_ORCHID, ECLIPSE_LOTUS, TWILIGHT_SAGE -> FlowerHarvests.dye(species);
                 case DIRT -> com.agrievolution.farming.ResourceCropRules.produce(species);
                 case WOOD -> com.agrievolution.farming.ResourceCropRules.produce(species);
                 case STONE -> com.agrievolution.farming.ResourceCropRules.produce(species);

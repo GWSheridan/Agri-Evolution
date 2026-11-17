@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "minecraft:amethyst_shard",
+          "name": "minecraft:light_blue_dye",
           "conditions": [
             {
               "condition": "minecraft:block_state_property",

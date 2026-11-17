@@ -1,5 +1,6 @@
 package com.agrievolution.content;
 
+import com.agrievolution.genetics.CropSpecies;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -45,6 +46,30 @@ public final class VerticalGreenhouseGameTests {
 
     private static void seconds(GameTestHelper helper, VerticalGreenhouseBlockEntity greenhouse, int seconds) {
         for (int i = 0; i < seconds; i++) greenhouse.runSecond(helper.getLevel());
+    }
+
+    @GameTest(template = "empty")
+    public static void flowerTraysProduceDyeAlongsideDedicatedResourceTrays(GameTestHelper helper) {
+        var greenhouse = place(helper, helper.absolutePos(new BlockPos(4, 241, 4)));
+        var species = List.of(CropSpecies.ECLIPSE_LOTUS, CropSpecies.MOON_ORCHID, CropSpecies.SUNFIRE_LILY,
+                CropSpecies.TWILIGHT_SAGE, CropSpecies.ENDER_PEARL, CropSpecies.AMETHYST);
+        var produce = List.of(Items.PINK_DYE, Items.LIGHT_BLUE_DYE, Items.YELLOW_DYE,
+                Items.MAGENTA_DYE, Items.ENDER_PEARL, Items.AMETHYST_SHARD);
+        for (int tray = 0; tray < species.size(); tray++) {
+            greenhouse.setItem(tray, new ItemStack(AEItems.seedFor(species.get(tray))));
+        }
+        greenhouse.toggle(1); // Isolate tray harvests from the shared tank's breeding water use.
+        helper.assertTrue(greenhouse.addBucket() && greenhouse.addBucket(), "Two buckets water all six trays");
+        seconds(helper, greenhouse, 145);
+        for (var item : produce) {
+            int count = 0;
+            for (int slot = VerticalGreenhouseBlockEntity.HARVEST; slot < VerticalGreenhouseBlockEntity.OFFSPRING; slot++) {
+                var stack = greenhouse.getItem(slot);
+                if (stack.is(item)) count += stack.getCount();
+            }
+            helper.assertTrue(count == 1, "Expected one " + item + ", got " + count);
+        }
+        helper.succeed();
     }
 
     @GameTest(template = "empty")
