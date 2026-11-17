@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.30
+
+- Pipes placed by a structure repair their own connectors and the ones on adjoining fittings. Disabled faces stay capped.
+- Removing a pipe clears the arms on its loaded neighbors, including when the removal skips normal block updates.
+- Adding or removing an Irrigation Basin updates adjoining pipe, valve, and sprinkler connectors at chunk borders.
+- Breaking a connected reservoir outlet clears its pipe arm when the tank dismantles.
+
 ## 1.2.29
 
 - Eclipse Lotus now gives pink dye and Moon Orchid gives light blue dye. Sunfire Lily gives yellow dye and Twilight Sage gives magenta dye.

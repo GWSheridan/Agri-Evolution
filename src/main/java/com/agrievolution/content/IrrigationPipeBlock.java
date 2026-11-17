@@ -2,6 +2,8 @@ package com.agrievolution.content;
 
 import java.util.function.UnaryOperator;
 import net.minecraft.core.*;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.*;
@@ -61,6 +63,22 @@ public final class IrrigationPipeBlock extends Block {
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
         return IrrigationNetwork.loadedConnections(defaultBlockState(), context.getLevel(), context.getClickedPos());
     }
+
+    @Override protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moving) {
+        if (level instanceof ServerLevel server && !old.is(this)) server.scheduleTick(pos, this, 1);
+    }
+
+    @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        // Structure placement can skip shape updates. Repair both sides after the blocks are in the world.
+        BlockState updated = IrrigationNetwork.loadedConnections(state, level, pos);
+        if (state != updated) level.setBlock(pos, updated, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+        IrrigationNetwork.syncLoadedFittings(level, pos, updated, this);
+    }
+
+    @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
+        if (!level.isClientSide && !replacement.is(this)) IrrigationNetwork.syncLoadedFittings(level, pos, replacement, this);
+    }
+
     @Override protected BlockState updateShape(BlockState state,Direction side,BlockState neighbor,LevelAccessor level,BlockPos pos,BlockPos other) {
         return state.setValue(IrrigationSprinklerBlock.connection(side),enabled(state,side)&&IrrigationNetwork.port(neighbor,side.getOpposite()));
     }

@@ -77,9 +77,8 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState replacement,boolean piston){
         if (state.is(replacement.getBlock())) return;
         ReservoirStructure.dismantle(level, core(pos, state), pos);
-        // Level.removeBlockEntity also scans for comparators through blocks in unloaded chunks.
-        level.getChunkAt(pos).removeBlockEntity(pos);
-        IrrigationNetwork.updateComparators(level, pos, this);
+        IrrigationNetwork.removeFittingEntity(level, pos, this);
+        if (!level.isClientSide) IrrigationNetwork.syncLoadedFittings(level, pos, replacement, this);
         invalidatePort(level, pos, state);
     }
 

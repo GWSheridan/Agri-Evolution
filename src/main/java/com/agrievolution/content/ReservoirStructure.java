@@ -103,10 +103,7 @@ public final class ReservoirStructure {
                 var s=level.getBlockState(p);
                 if (s.getBlock() instanceof WaterReservoirBlock && WaterReservoirBlock.core(p, s).equals(core)) {
                     BlockState replacement = (p.equals(core) ? (restoreWater ? Blocks.WATER : Blocks.AIR) : Blocks.COPPER_BLOCK).defaultBlockState();
-                    int flags = IrrigationNetwork.loadedUpdateFlags(level, p, Block.UPDATE_ALL);
-                    if (level.setBlock(p, replacement, flags) && flags != Block.UPDATE_ALL) {
-                        IrrigationNetwork.syncLoadedFittings(level, p, replacement, s.getBlock());
-                    }
+                    level.setBlock(p, replacement, IrrigationNetwork.loadedUpdateFlags(level, p, Block.UPDATE_ALL));
                 }
             }
         } finally {changing=false;}

@@ -63,11 +63,15 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
     }
 
     @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState old, boolean moving) {
+        if (!level.isClientSide && !old.is(this)) IrrigationNetwork.syncLoadedFittings(level, pos, state, this);
+    }
+
+    @Override
     protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
         if (state.is(replacement.getBlock())) return;
-        // The Level helper would also look for comparators beyond a loaded chunk.
-        level.getChunkAt(pos).removeBlockEntity(pos);
-        IrrigationNetwork.updateComparators(level, pos, this);
+        IrrigationNetwork.removeFittingEntity(level, pos, this);
+        if (!level.isClientSide) IrrigationNetwork.syncLoadedFittings(level, pos, replacement, this);
     }
 
     @Override

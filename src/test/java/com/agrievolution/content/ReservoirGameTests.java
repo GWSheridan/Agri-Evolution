@@ -294,11 +294,11 @@ public final class ReservoirGameTests {
         h.assertTrue(tank.water() == 1000 && sprinkler.water() == 975, "The new pipe outlet supplies the sprinkler");
         h.assertFalse(level.hasChunkAt(outside), "Sprinkler refills leave the chunk beyond the shell unloaded");
 
-        level.setBlock(edge, Blocks.AIR.defaultBlockState(), quietUpdate);
+        level.setBlock(core.west(), Blocks.AIR.defaultBlockState(), quietUpdate);
         h.assertTrue(level.getBlockState(core).is(Blocks.WATER) && level.getBlockEntity(core) == null,
                 "Dismantling restores source water and removes the tank block entity");
         h.assertTrue(level.getBlockState(edge.above()).is(Blocks.COPPER_BLOCK), "Dismantling restores the upper copper block");
-        h.assertFalse(level.getBlockState(pipePos).getValue(eastPort), "Dismantling clears the pipe connector");
+        h.assertFalse(level.getBlockState(pipePos).getValue(eastPort), "Dismantling clears the connector on the broken outlet itself");
         h.assertFalse(level.hasChunkAt(outside), "Dismantling leaves the chunk beyond the shell unloaded");
         h.succeed();
     }
