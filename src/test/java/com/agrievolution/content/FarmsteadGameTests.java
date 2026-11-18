@@ -210,21 +210,61 @@ public final class FarmsteadGameTests {
         var b = new GardenWorkMenu(2, second.getInventory(), access, false);
         a.clickMenuButton(first, a.pageAction(GardenWorkMenu.SHARED_PAGE));
         b.clickMenuButton(second, b.pageAction(GardenWorkMenu.SHARED_PAGE));
+        first.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(AEItems.TOMATO.get(), 3));
+        h.assertTrue(!a.canContribute(0) && !a.clickMenuButton(first, a.contributeAction(0)),
+                "Offhand supplies neither light the button nor count toward delivery");
         first.getInventory().setItem(0, new ItemStack(AEItems.TOMATO.get(), 12));
-        h.assertTrue(a.clickMenuButton(first, a.action(0)) && b.remaining(0, 0) == 20 && a.claimable(0) == 0,
+        h.assertTrue(a.canContribute(0) && a.clickMenuButton(first, a.contributeAction(0))
+                        && b.remaining(0, 0) == 20 && a.claimable(0) == 0 && a.contributed(0) == 12,
                 "One delivery updates the shared count without paying early");
         second.getInventory().setItem(0, new ItemStack(AEItems.TOMATO.get(), 24));
         second.getInventory().setItem(1, new ItemStack(AEItems.LETTUCE.get(), 24));
         second.getInventory().setItem(2, new ItemStack(AEItems.CUCUMBER.get(), 24));
-        int contribute = b.action(0);
+        int contribute = b.contributeAction(0);
         h.assertTrue(b.clickMenuButton(second, contribute) && second.getInventory().getItem(0).getCount() == 4,
                 "Only goods still required are taken and the second delivery completes the round");
         h.assertTrue(a.claimable(0) == 1 && b.claimable(0) > 1 && b.remaining(0, 0) == 32, "All contributors can claim after the round resets");
-        int claim = a.action(0);
+        h.assertTrue(!b.clickMenuButton(second, contribute) && second.getInventory().getItem(0).getCount() == 4,
+                "Repeating a delivery from the completed round cannot touch the next round");
+        h.assertTrue(b.canContribute(0) && b.canClaim(0) && a.contributed(0) == 0,
+                "A pending reward doesn't block the next round and contributions reset");
+        int claim = a.claimAction(0);
         h.assertTrue(a.clickMenuButton(first, claim) && !a.clickMenuButton(first, claim)
                         && first.getInventory().countItem(Items.EMERALD) == 1, "A reward can be claimed once per finished round");
-        h.assertTrue(b.clickMenuButton(second, b.action(0)) && second.getInventory().countItem(Items.EMERALD) > 1,
+        h.assertTrue(b.clickMenuButton(second, b.claimAction(0)) && second.getInventory().countItem(Items.EMERALD) > 1,
                 "The second contributor can claim independently");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void sharedOrderRewardsSurviveClosedInventoryAndReload(GameTestHelper h) {
+        var registries = h.getLevel().registryAccess();
+        var player = h.makeMockPlayer(GameType.CREATIVE);
+        var inventory = player.getInventory();
+        var orders = new SharedMarketOrders();
+        inventory.setItem(0, new ItemStack(AEItems.TOMATO.get(), 32));
+        inventory.setItem(1, new ItemStack(AEItems.LETTUCE.get(), 24));
+        h.assertTrue(orders.contribute(0, 0, player), "Partial delivery begins the saved round");
+        orders = SharedMarketOrders.load(orders.save(new CompoundTag(), registries), registries);
+        h.assertTrue(orders.contributed(0, player.getUUID()) == 56 && orders.remaining(0, 2) == 24,
+                "The personal contribution and the unfinished item counts survive reload");
+        inventory.setItem(0, new ItemStack(AEItems.CUCUMBER.get(), 24));
+        h.assertTrue(orders.contribute(0, 0, player) && orders.reward(0, player.getUUID()) == 6, "Complete the original round");
+        orders = SharedMarketOrders.load(orders.save(new CompoundTag(), registries), registries);
+        h.assertTrue(orders.round(0) == 1 && orders.reward(0, player.getUUID()) == 6, "Round identity and reward survive reload");
+
+        for (int slot = 0; slot < inventory.items.size(); slot++) inventory.setItem(slot, new ItemStack(Items.DIRT, 64));
+        h.assertTrue(!SharedMarketOrders.hasRewardSpace(inventory) && !orders.claim(0, player)
+                        && orders.reward(0, player.getUUID()) == 6,
+                "A full creative inventory cannot erase the reward");
+        inventory.setItem(0, new ItemStack(Items.EMERALD, 63));
+        h.assertTrue(SharedMarketOrders.hasRewardSpace(inventory) && orders.claim(0, player)
+                        && inventory.getItem(0).getCount() == 64 && orders.reward(0, player.getUUID()) == 5,
+                "Only the emerald that fits is withdrawn");
+        inventory.setItem(1, ItemStack.EMPTY);
+        h.assertTrue(orders.claim(0, player) && inventory.getItem(1).getCount() == 5
+                        && !orders.claim(0, player),
+                "The remainder can be claimed exactly once later");
         h.succeed();
     }
 

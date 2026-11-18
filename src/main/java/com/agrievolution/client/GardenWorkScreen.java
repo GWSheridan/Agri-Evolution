@@ -12,11 +12,17 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
     private static final int GREEN = 0xFF285947, MUTED = 0xFF806849;
     private static final int ROW_Y = 36, ROW_PITCH = 41, ITEM_X = 20, ITEM_Y = 18, ITEM_PITCH = 21;
     private static final int REWARD_X = 204, ACTION_X = 232, ACTION_Y = 11, ACTION_WIDTH = 62;
+    private static final int CONTRIBUTE_X = 162, CONTRIBUTE_WIDTH = 69, CLAIM_X = 236, CLAIM_WIDTH = 60;
+    private static final int SHARED_ACTION_Y = 5, SHARED_ACTION_HEIGHT = 15;
     private static final String[] TIERS = {"Early", "Mid", "Late"};
     private static final String[] TABS = {"Early", "Mid", "Late", "Commissions", "Seeds", "Shared", "Custom"};
     private static final int[] TAB_X = {11, 46, 77, 111, 186, 221, 262};
     private static final int[] TAB_WIDTH = {32, 28, 31, 72, 32, 38, 39};
     private static final int TAB_Y = 146;
+    private final int[] shownAction = new int[GardenWork.ROWS];
+    private final boolean[] shownReady = new boolean[GardenWork.ROWS];
+    private final boolean[] shownClaimReady = new boolean[GardenWork.ROWS];
+    private boolean shownShared;
 
     public GardenWorkScreen(GardenWorkMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -29,6 +35,7 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
         GardenGuiTheme.panel(gui, x, y, imageWidth, imageHeight, DARK);
         GardenGuiTheme.panel(gui, x + 8, y + 7, imageWidth - 16, 24, GREEN);
         gui.drawCenteredString(font, title, x + imageWidth / 2, y + 15, PAPER);
+        shownShared = menu.shared();
         for (int row = 0; row < GardenWork.ROWS; row++) drawJob(gui, row);
         if (!menu.preserving()) for (int page = 0; page < tabCount(); page++) {
             int tab = x + TAB_X[page], width = TAB_WIDTH[page];
@@ -46,6 +53,7 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
     }
 
     private void drawJob(GuiGraphics gui, int row) {
+        shownReady[row] = shownClaimReady[row] = false;
         var job = menu.job(row);
         if (job == null) return;
         int x = leftPos, y = rowTop(row);
@@ -57,7 +65,8 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
                     x + ITEM_X, y + 22, MUTED, false);
             return;
         }
-        gui.drawString(font, font.plainSubstrByWidth(job.title(), ACTION_X - ITEM_X - 8), x + ITEM_X, y + 5, INK, false);
+        int titleEnd = shownShared ? CONTRIBUTE_X : ACTION_X;
+        gui.drawString(font, font.plainSubstrByWidth(job.title(), titleEnd - ITEM_X - 8), x + ITEM_X, y + 5, INK, false);
         for (int i = 0; i < job.ingredients().size(); i++) {
             if (menu.shared()) {
                 int remaining = menu.remaining(row, i);
@@ -70,16 +79,36 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
             var rules = job.ingredients().getFirst().requirements(true);
             gui.drawString(font, font.plainSubstrByWidth(rules, 120), x + ITEM_X + ITEM_PITCH, y + 22, INK, false);
         }
-        if (menu.shared()) gui.drawString(font, menu.claimable(row) > 0 ? "Emeralds ×" + menu.claimable(row) : "Still needed", x + 141, y + 22, INK, false);
-        else {
-            gui.drawString(font, menu.preserving() ? "Makes" : "Reward", x + 165, y + 22, INK, false);
-            drawItem(gui, job.reward(), x + REWARD_X, y + ITEM_Y);
+        if (shownShared) {
+            drawSharedControls(gui, row, x, y);
+            return;
         }
+        gui.drawString(font, menu.preserving() ? "Makes" : "Reward", x + 165, y + 22, INK, false);
+        drawItem(gui, job.reward(), x + REWARD_X, y + ITEM_Y);
         boolean ready = menu.ready(row);
+        shownReady[row] = ready;
+        shownAction[row] = menu.action(row);
         GardenGuiTheme.panel(gui, x + ACTION_X, y + ACTION_Y, ACTION_WIDTH, 18, ready ? GREEN : MUTED);
-        gui.drawCenteredString(font, menu.shared() ? (menu.claimable(row) > 0 ? "Claim" : "Contribute")
-                        : menu.preserving() ? "Preserve" : menu.claimed(row) ? "Claimed" : "Deliver",
+        gui.drawCenteredString(font, menu.preserving() ? "Preserve" : menu.claimed(row) ? "Claimed" : "Deliver",
                 x + ACTION_X + ACTION_WIDTH / 2, y + ACTION_Y + 5, PAPER);
+    }
+
+    private void drawSharedControls(GuiGraphics gui, int row, int x, int y) {
+        shownAction[row] = menu.contributeAction(row);
+        shownReady[row] = menu.canContribute(row);
+        shownClaimReady[row] = menu.canClaim(row);
+        sharedButton(gui, x + CONTRIBUTE_X, y, CONTRIBUTE_WIDTH, "Contribute", shownReady[row]);
+        sharedButton(gui, x + CLAIM_X, y, CLAIM_WIDTH, "Claim", shownClaimReady[row]);
+        int contributed = menu.contributed(row);
+        gui.drawString(font, contributed > 0 ? "You gave " + contributed : "Still needed", x + 105, y + 23, INK, false);
+        if (menu.claimable(row) > 0) {
+            gui.drawString(font, "Emeralds ×" + menu.claimable(row), x + 204, y + 23, INK, false);
+        }
+    }
+
+    private void sharedButton(GuiGraphics gui, int x, int y, int width, String label, boolean ready) {
+        GardenGuiTheme.panel(gui, x, y + SHARED_ACTION_Y, width, SHARED_ACTION_HEIGHT, ready ? GREEN : MUTED);
+        GardenGuiTheme.center(gui, label, x + width / 2, y + SHARED_ACTION_Y + 4, PAPER);
     }
 
     private int tabCount() { return menu.customPages() == 0 ? TABS.length - 1 : TABS.length; }
@@ -123,18 +152,31 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
             return true;
         }
         if (button == 0) for (int row = 0; row < GardenWork.ROWS; row++) {
-            if (menu.job(row) == null || !menu.unlocked(row) || !inside(mouseX, mouseY, ACTION_X, rowTop(row) + ACTION_Y, ACTION_WIDTH, 18)) continue;
-            if (menu.ready(row) && minecraft != null && minecraft.gameMode != null) {
-                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, menu.action(row));
+            if (shownShared) {
+                int y = rowTop(row) + SHARED_ACTION_Y;
+                if (inside(mouseX, mouseY, CONTRIBUTE_X, y, CONTRIBUTE_WIDTH, SHARED_ACTION_HEIGHT)) {
+                    if (shownReady[row]) send(shownAction[row]);
+                    return true;
+                }
+                if (inside(mouseX, mouseY, CLAIM_X, y, CLAIM_WIDTH, SHARED_ACTION_HEIGHT)) {
+                    if (shownClaimReady[row]) send(menu.claimAction(row));
+                    return true;
+                }
+            } else if (inside(mouseX, mouseY, ACTION_X, rowTop(row) + ACTION_Y, ACTION_WIDTH, 18)) {
+                if (shownReady[row]) send(shownAction[row]);
+                return true;
             }
-            return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     private void switchPage(int page) {
+        send(menu.pageAction(page));
+    }
+
+    private void send(int action) {
         if (minecraft != null && minecraft.gameMode != null) {
-            minecraft.gameMode.handleInventoryButtonClick(menu.containerId, menu.pageAction(page));
+            minecraft.gameMode.handleInventoryButtonClick(menu.containerId, action);
         }
     }
 
@@ -165,7 +207,18 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
                 gui.renderTooltip(font, job.reward().stack(), mouseX, mouseY);
                 return;
             }
-            if (!menu.ready(row) && !menu.claimed(row) && inside(mouseX, mouseY, ACTION_X, rowTop(row) + ACTION_Y, ACTION_WIDTH, 18)) {
+            if (shownShared) {
+                int actionY = rowTop(row) + SHARED_ACTION_Y;
+                if (inside(mouseX, mouseY, CLAIM_X, actionY, CLAIM_WIDTH, SHARED_ACTION_HEIGHT) && !shownClaimReady[row]) {
+                    String message = menu.claimable(row) > 0 ? "Make room for emeralds in your inventory" : "Rewards are ready when the order is filled";
+                    gui.renderTooltip(font, Component.literal(message), mouseX, mouseY);
+                    return;
+                }
+                if (inside(mouseX, mouseY, CONTRIBUTE_X, actionY, CONTRIBUTE_WIDTH, SHARED_ACTION_HEIGHT) && !shownReady[row]) {
+                    gui.renderTooltip(font, Component.literal("Bring needed items in your main inventory"), mouseX, mouseY);
+                    return;
+                }
+            } else if (!shownReady[row] && !menu.claimed(row) && inside(mouseX, mouseY, ACTION_X, rowTop(row) + ACTION_Y, ACTION_WIDTH, 18)) {
                 gui.renderTooltip(font, Component.literal("Bring the listed items in your inventory"), mouseX, mouseY);
                 return;
             }

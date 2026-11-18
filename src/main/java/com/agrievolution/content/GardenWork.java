@@ -25,7 +25,7 @@ public final class GardenWork {
         public Ingredient(Supplier<? extends Item> item, int count) { this(item, count, 0, 0, 0, false); }
         public ItemStack stack() { return new ItemStack(item.get(), count); }
 
-        private boolean matches(ItemStack stack, Item required) {
+        boolean matches(ItemStack stack, Item required) {
             if (!stack.is(required)) return false;
             if (!qualified()) return true;
             if (!(stack.getItem() instanceof SpeciesSeedItem)) return false;

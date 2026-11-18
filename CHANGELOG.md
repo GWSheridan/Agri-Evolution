@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.3
+
+- A late delivery click can’t hand over supplies for a new Shared order round.
+- The Contribute button checks the same main inventory slots as the delivery itself. Offhand items stay put.
+- Claiming emeralds only withdraws what fits in your inventory, including in Creative. The rest stay on the board.
+- Shared orders have separate Contribute and Claim buttons so an older reward won’t hold up a new delivery.
+- The board shows how many items you’ve personally delivered toward each open order.
+
 ## 1.3.2
 
 - The Batch Cooking Station queues the recipe shown when you click, even while browsing recipes quickly.
