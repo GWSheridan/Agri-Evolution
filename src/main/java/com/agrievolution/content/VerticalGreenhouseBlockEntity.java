@@ -361,7 +361,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         }
         if (CAPACITY - water < BUCKET) return WaterStatus.READY;
 
-        var inspection = IrrigationNetwork.inspectSupply(server, worldPosition);
+        var inspection = IrrigationNetwork.inspectRefill(server, worldPosition);
         var network = inspection.network();
         if (network.overflow()) return WaterStatus.NETWORK_LIMIT;
         for (var supply : network.supplies()) {

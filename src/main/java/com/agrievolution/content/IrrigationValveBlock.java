@@ -108,8 +108,12 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     public static boolean permitsFlow(Level level, BlockPos pos, BlockState state) {
+        return permitsFlow(level, pos, state, false, null);
+    }
+
+    static boolean permitsFlow(Level level, BlockPos pos, BlockState state, boolean refill, BlockPos closedController) {
         return hardwareOpen(level, pos, state) && (!(level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve)
-                || valve.scheduleAllowsFlow());
+                || ((closedController == null || !valve.controlledBy(closedController)) && valve.scheduleAllowsFlow(refill)));
     }
 
     static boolean hardwareOpen(Level level, BlockPos pos, BlockState state) {

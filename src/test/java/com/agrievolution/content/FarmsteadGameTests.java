@@ -29,6 +29,95 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class FarmsteadGameTests {
     @GameTest(template = "empty")
+    public static void irrigationControllerReusesBrokenZoneSlotsAndEnforcesRange(GameTestHelper h) {
+        var world = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 200, 4));
+        world.setBlockAndUpdate(pos, AEBlocks.IRRIGATION_CONTROLLER.get().defaultBlockState());
+        var controller = (IrrigationControllerBlockEntity) world.getBlockEntity(pos);
+        var oldPos = pos.north(2);
+        var original = namedValve(h, oldPos, "Old orchard");
+        controller.link(original);
+        var viewer = h.makeMockPlayer(GameType.SURVIVAL);
+        var menu = new IrrigationControllerMenu(1, viewer.getInventory(), controller);
+        original.rename("North orchard");
+        h.assertTrue(menu.label(0).equals("North orchard"), "The open controller uses the current valve name");
+        world.removeBlock(oldPos, false);
+        controller.checkSchedules();
+        h.assertTrue(!controller.linked(0) && menu.label(0).equals("Unlinked"), "Breaking a valve clears its loaded slot");
+        var replacement = namedValve(h, pos.above(32), "Replacement");
+        replacement.setController(pos.above());
+        controller.link(replacement);
+        h.assertTrue(replacement.controlledBy(pos) && menu.label(0).equals("Replacement"), "The slot is reusable up to exactly 32 blocks");
+        var tooFar = namedValve(h, pos.above(32).east(), "Too far");
+        controller.link(tooFar);
+        h.assertTrue(!controller.linked(1) && tooFar.controller() == null, "The diagonal beyond 32 blocks is rejected");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void irrigationSwitchCannotBorrowSupplyThroughItsPreviousZone(GameTestHelper h) {
+        var world = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 209, 4));
+        world.setBlockAndUpdate(pos, AEBlocks.IRRIGATION_CONTROLLER.get().defaultBlockState());
+        var controller = (IrrigationControllerBlockEntity) world.getBlockEntity(pos);
+        var downstream = namedValve(h, pos.north(2), "Beds");
+        var upstream = namedValve(h, pos.north(3), "Supply zone");
+        world.setBlockAndUpdate(pos.north(4), AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
+                .setValue(IrrigationBasinBlock.FILLED, true));
+        controller.link(downstream);
+        controller.link(upstream);
+        long time = world.getDayTime();
+        try {
+            world.setDayTime(0);
+            controller.action(1, 2);
+            h.assertTrue(controller.active() == 1, "The supply zone opens on a manual run");
+            controller.action(1, 2);
+            h.assertTrue(controller.active() == -1, "The beds cannot use a supply through a sibling valve that is closing");
+        } finally { world.setDayTime(time); }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void twoSprinklersCannotDrawBelowTheReserveBetweenChecks(GameTestHelper h) {
+        var world = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(5, 239, 5));
+        world.setBlockAndUpdate(pos, AEBlocks.IRRIGATION_CONTROLLER.get().defaultBlockState());
+        var controller = (IrrigationControllerBlockEntity) world.getBlockEntity(pos);
+        var junction = pos.north(2);
+        var valve = namedValve(h, junction, "Orchard");
+        for (var source : List.of(junction.north(), junction.south())) {
+            world.setBlockAndUpdate(source, AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
+                    .setValue(IrrigationBasinBlock.FILLED, true));
+        }
+        world.setBlockAndUpdate(junction.west(), AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState());
+        world.setBlockAndUpdate(junction.east(), AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState());
+        var first = (IrrigationSprinklerBlockEntity) world.getBlockEntity(junction.west());
+        var second = (IrrigationSprinklerBlockEntity) world.getBlockEntity(junction.east());
+        long time = world.getDayTime();
+        try {
+            world.setDayTime(0);
+            controller.link(valve);
+            controller.action(0, 4);
+            h.assertTrue(controller.active() == 0, "Two full basins allow a draw with a one-bucket reserve");
+            first.irrigateCycle();
+            second.irrigateCycle();
+            h.assertTrue(first.water() > 0 && second.water() == 0, "Only one sprinkler draws down to the reserve");
+            controller.action(0, 2);
+            second.irrigateCycle();
+            h.assertTrue(second.water() > 0, "A manual run still overrides the reserve before the next check");
+        } finally { world.setDayTime(time); }
+        h.succeed();
+    }
+
+    private static IrrigationValveBlockEntity namedValve(GameTestHelper h, BlockPos pos, String name) {
+        var world = h.getLevel();
+        world.setBlockAndUpdate(pos, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState());
+        var valve = (IrrigationValveBlockEntity) world.getBlockEntity(pos);
+        valve.rename(name);
+        return valve;
+    }
+
+    @GameTest(template = "empty")
     public static void irrigationControllerSchedulesOneZoneAndRespectsReserve(GameTestHelper h) {
         var world = h.getLevel();
         var pos = h.absolutePos(new BlockPos(4, 173, 4));

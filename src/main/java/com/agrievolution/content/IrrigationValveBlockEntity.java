@@ -32,10 +32,12 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
     BlockPos controller() { return controller; }
     boolean controlledBy(BlockPos pos) { return pos.equals(controller); }
 
-    boolean scheduleAllowsFlow() {
-        return controller == null || (level != null && level.hasChunkAt(controller) && (
-                !(level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner)
-                        || !owner.contains(worldPosition) || scheduledOpen));
+    boolean scheduleAllowsFlow(boolean refill) {
+        if (controller == null) return true;
+        if (level == null || !level.hasChunkAt(controller)) return false;
+        return !(level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner)
+                || !owner.contains(worldPosition)
+                || (scheduledOpen && (!refill || owner.permitsRefill(worldPosition)));
     }
 
     void setController(BlockPos pos) {

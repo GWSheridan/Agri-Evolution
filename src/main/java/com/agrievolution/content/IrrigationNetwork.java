@@ -215,6 +215,11 @@ public final class IrrigationNetwork {
         return new SupplyInspection(origin, search(level, origin, trace), trace);
     }
 
+    static SupplyInspection inspectRefill(Level level, BlockPos origin) {
+        var trace = new Trace();
+        return new SupplyInspection(origin, search(level, origin, trace, false, true, null), trace);
+    }
+
     private static Route supplyRoute(Level level, BlockPos head, Search network, Trace trace) {
         if (network.overflow()) return new Route(List.of(head), Flow.TOO_LARGE, null);
         Endpoint fullest = null;
@@ -244,12 +249,17 @@ public final class IrrigationNetwork {
 
     static ZoneStatus inspectZone(Level level, BlockPos valve) {
         var trace = new Trace();
-        var network = search(level, valve, trace, true);
+        var network = search(level, valve, trace, true, false, null);
         if (network.overflow()) return new ZoneStatus(List.of(), List.of(), true, null, null, null, null, false);
         var port = trace.blockingPort();
         return new ZoneStatus(network.supplies(), List.copyOf(trace.sprinklers), false,
                 trace.valve, port == null ? null : port.pipe(), port == null ? null : port.side(),
                 trace.unloaded, trace.incompleteReservoir != null);
+    }
+
+    static Search controllerSupply(Level level, BlockPos valve, BlockPos controller) {
+        // Ignore the selected valve's own gate and treat its siblings as already closed.
+        return search(level, valve, null, true, false, controller);
     }
 
     private static Route route(Trace trace, BlockPos end, Flow flow) {
@@ -267,14 +277,20 @@ public final class IrrigationNetwork {
         return search(level, head, null);
     }
 
-    private static Search search(Level level, BlockPos head, Trace trace) {
-        return search(level, head, trace, false);
+    static Search searchForRefill(Level level, BlockPos head) {
+        return search(level, head, null, false, true, null);
     }
 
-    private static Search search(Level level, BlockPos head, Trace trace, boolean inspectClosedOrigin) {
+    private static Search search(Level level, BlockPos head, Trace trace) {
+        return search(level, head, trace, false, false, null);
+    }
+
+    private static Search search(Level level, BlockPos head, Trace trace, boolean inspectClosedOrigin,
+                                 boolean refill, BlockPos closedController) {
         if (!level.hasChunkAt(head)) return new Search(false, List.of(), false, false);
         var initial=level.getBlockState(head);
-        if(!inspectClosedOrigin && initial.getBlock() instanceof IrrigationValveBlock && !IrrigationValveBlock.permitsFlow(level,head,initial)){
+        if (!inspectClosedOrigin && initial.getBlock() instanceof IrrigationValveBlock
+                && !IrrigationValveBlock.permitsFlow(level, head, initial, refill, closedController)) {
             if (trace != null) trace.valve = head;
             return new Search(true,List.of(),false,true);
         }
@@ -316,7 +332,7 @@ public final class IrrigationNetwork {
                 if (trace != null) trace.parents.put(next, pos);
                 if(neighbor.getBlock() instanceof IrrigationPipeBlock) queue.add(next);
                 else if(neighbor.getBlock() instanceof IrrigationValveBlock) {
-                    if(IrrigationValveBlock.permitsFlow(level,next,neighbor))queue.add(next);
+                    if(IrrigationValveBlock.permitsFlow(level,next,neighbor,refill,closedController))queue.add(next);
                     else {blockedValve=true;if (trace != null && trace.valve == null) trace.valve = next;}
                 } else if(neighbor.getBlock() instanceof IrrigationBasinBlock) {
                     if(sources.add(next))addSupply(supplies, trace, next, new Supply(next,null));

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.1
+
+- Breaking a linked valve frees its Irrigation Controller slot once the valve’s chunk is loaded. A replacement can use that slot straight away.
+- New links now enforce the 32-block range, including diagonal placements. Existing links keep their settings.
+- A scheduled zone only opens if its water path will still work after the controller closes the other zones.
+- Sprinklers and Vertical Greenhouses check the reserve before drawing a bucket. Two machines refilling at once can no longer draw through a scheduled valve below its reserve.
+- The controller screen updates valve names and links while it’s open.
+
 ## 1.3.0
 
 - Schedule six named irrigation zones from one controller. Set a water reserve or run a zone by hand from the controller screen.

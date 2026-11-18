@@ -1,6 +1,8 @@
 package com.agrievolution.content;
 
+import java.util.List;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -8,6 +10,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class IrrigationControllerMenu extends AbstractContainerMenu {
     private static final int ZONES = IrrigationControllerBlockEntity.ZONES;
@@ -15,6 +18,7 @@ public final class IrrigationControllerMenu extends AbstractContainerMenu {
     private final ContainerData data;
     private final String[] labels = new String[ZONES];
     private final IrrigationControllerBlockEntity controller;
+    private final Player viewer;
 
     public IrrigationControllerMenu(int id, Inventory inv, FriendlyByteBuf buf) {
         this(id, inv, (IrrigationControllerBlockEntity) null);
@@ -24,6 +28,10 @@ public final class IrrigationControllerMenu extends AbstractContainerMenu {
     IrrigationControllerMenu(int id, Inventory inv, IrrigationControllerBlockEntity controller) {
         super(AEMenus.IRRIGATION_CONTROLLER.get(), id);
         this.controller = controller;
+        viewer = inv.player;
+        if (controller != null) {
+            for (int row = 0; row < ZONES; row++) labels[row] = controller.label(row);
+        }
         data = controller == null ? new SimpleContainerData(COUNT) : new ContainerData() {
             @Override public int get(int index) {
                 if (index == 0) return controller.enabled() ? 1 : 0;
@@ -50,7 +58,26 @@ public final class IrrigationControllerMenu extends AbstractContainerMenu {
     public boolean linked(int row) { return data.get(4 + row * 3) != 0; }
     public int hour(int row) { return data.get(5 + row * 3); }
     public int duration(int row) { return data.get(6 + row * 3); }
-    public String label(int row) { return linked(row) ? labels[row] : "Unlinked"; }
+    public String label(int row) {
+        if (!linked(row)) return "Unlinked";
+        return controller == null ? labels[row] : controller.label(row);
+    }
+
+    void updateLabels(List<String> updated) {
+        for (int row = 0; row < ZONES; row++) labels[row] = updated.get(row);
+    }
+
+    @Override public void broadcastChanges() {
+        super.broadcastChanges();
+        if (controller == null || !(viewer instanceof ServerPlayer player) || player.connection == null) return;
+        boolean changed = false;
+        for (int row = 0; row < ZONES; row++) {
+            String label = controller.label(row);
+            changed |= !label.equals(labels[row]);
+            labels[row] = label;
+        }
+        if (changed) PacketDistributor.sendToPlayer(player, new IrrigationZoneLabelsPayload(containerId, List.of(labels)));
+    }
 
     @Override public boolean stillValid(Player player) {
         if (controller == null) return true;

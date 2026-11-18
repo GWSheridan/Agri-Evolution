@@ -240,7 +240,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public void irrigateCycle() {
         if (!(level instanceof ServerLevel server) || isRemoved()) return;
         if (localShutoff() != null) { stopWatering(); return; }
-        var network = IrrigationNetwork.search(server, worldPosition);
+        var network = water < WATER_PER_SPRAY ? IrrigationNetwork.searchForRefill(server, worldPosition)
+                : IrrigationNetwork.search(server, worldPosition);
         if (networkBlocked(network)) { stopWatering(); return; }
         growthUntil = 0;
         var soils=wateredSoils();

@@ -43,7 +43,11 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
 
     String link(IrrigationValveBlockEntity valve) {
         if (valve.zoneName().isEmpty()) return "Name the valve before linking it.";
-        if (!worldPosition.closerThan(valve.getBlockPos(), RANGE + 1)) return "The valve must be within 32 blocks.";
+        if (valve.getLevel() != level || worldPosition.distSqr(valve.getBlockPos()) > RANGE * RANGE) {
+            return "The valve must be within 32 blocks.";
+        }
+        pruneMissingValves();
+        valve.clearMissingController();
         if (contains(valve.getBlockPos())) return "This valve is already linked.";
         if (valve.controller() != null && !valve.controlledBy(worldPosition)) {
             return "The valve already belongs to another controller.";
@@ -102,6 +106,17 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
         if (valve != null) valve.setController(null);
     }
 
+    private void pruneMissingValves() {
+        if (!(level instanceof ServerLevel server)) return;
+        for (int slot = 0; slot < ZONES; slot++) {
+            var pos = valves[slot];
+            if (pos != null && server.hasChunkAt(pos) && valve(slot) == null) {
+                unlink(slot);
+                setChanged();
+            }
+        }
+    }
+
     void release() {
         for (int slot = 0; slot < ZONES; slot++) unlink(slot);
     }
@@ -115,19 +130,28 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
         if (level instanceof ServerLevel && level.getGameTime() % 20 == 0) checkSchedules();
     }
 
+    private boolean availableWater(BlockPos zone, int minimum) {
+        var status = IrrigationNetwork.controllerSupply(level, zone, worldPosition);
+        if (status.overflow()) return false;
+        var amounts = IrrigationNetwork.supplyWater(level, status.supplies());
+        return amounts.ready() > 0 && amounts.total() >= minimum;
+    }
+
+    boolean permitsRefill(BlockPos zone) {
+        // The consumer is about to withdraw a bucket; the last scheduling check may be stale.
+        return reserveWater() == 0 || (manual >= 0 && level.getGameTime() < manualUntil && zone.equals(valves[manual]))
+                || availableWater(zone, 1000 + reserveWater());
+    }
+
     private boolean canRun(int slot, boolean override) {
         var valve = valve(slot);
-        if (valve == null || !IrrigationValveBlock.hardwareOpen(level, valve.getBlockPos(), valve.getBlockState())) {
-            return false;
-        }
-        var status = IrrigationNetwork.inspectZone(level, valve.getBlockPos());
-        if (status.limit()) return false;
-        var amounts = IrrigationNetwork.supplyWater(level, status.supplies());
-        return amounts.ready() > 0 && (override || amounts.total() >= 1000 + reserveWater());
+        return valve != null && IrrigationValveBlock.hardwareOpen(level, valve.getBlockPos(), valve.getBlockState())
+                && availableWater(valve.getBlockPos(), override ? 1000 : 1000 + reserveWater());
     }
 
     void checkSchedules() {
         if (!(level instanceof ServerLevel server) || isRemoved()) return;
+        pruneMissingValves();
         if (manual >= 0 && server.getGameTime() >= manualUntil) manual = -1;
         int next = -1;
         if (manual >= 0) {
