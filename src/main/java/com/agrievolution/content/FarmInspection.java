@@ -7,6 +7,7 @@ import net.minecraft.core.*;
 import net.minecraft.server.level.*;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
@@ -133,7 +134,12 @@ public final class FarmInspection {
                 lines.add("Catalyst: x"+ResourceCropRules.growthMultiplier(crop.species(),level,pos)+" | Soil: x"+(1<<SoilResearch.soilTier(level.getBlockState(pos.below()))));
                 lines.add("Trait: "+plant.rareTrait().name()+" | Basin: "+(FarmEnvironment.irrigated(level,pos.below())?"active":"none"));
             }else lines.add("Genes and nutrition: not supplied by this crop");
-            lines.add("Sprinkler: "+(SprinklerGrowth.covers(level,pos)?"x5 active":"inactive"));
+            String sprinkler = "inactive";
+            if (SprinklerGrowth.covers(level, pos)) {
+                sprinkler = level.getGameRules().getInt(GameRules.RULE_RANDOMTICKING) == 0
+                        ? "watering; random crop growth is disabled" : "x5 active";
+            }
+            lines.add("Sprinkler: " + sprinkler);
         }
         return List.copyOf(lines);
     }

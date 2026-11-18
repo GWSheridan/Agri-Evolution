@@ -112,16 +112,27 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     static String flowStatus(Level level, BlockPos pos, BlockState state) {
-        if (!state.getValue(OPEN)) return "Valve closed";
-        return permitsFlow(level, pos, state) ? "Valve open" : "Valve paused by redstone";
+        return "Valve " + flowState(level, pos, state);
     }
 
-    private static void notifySprinklers(Level level, BlockPos pos, boolean resume) {
+    static String namedFlowStatus(Level level, BlockPos pos, String label) {
+        String status = label + " " + flowState(level, pos, level.getBlockState(pos));
+        if (level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve && !valve.zoneName().isEmpty()) {
+            return status + " (" + valve.zoneName() + ")";
+        }
+        return status;
+    }
+
+    private static String flowState(Level level, BlockPos pos, BlockState state) {
+        if (!state.getValue(OPEN)) return "closed";
+        return permitsFlow(level, pos, state) ? "open" : "paused by redstone";
+    }
+
+    private static void notifySprinklers(Level level, BlockPos pos) {
         for (Direction side : Direction.values()) {
             BlockPos target=pos.relative(side);
             if (level.hasChunkAt(target) && level.getBlockEntity(target) instanceof IrrigationSprinklerBlockEntity sprinkler) {
-                if (resume) sprinkler.updatePaidSpray();
-                else sprinkler.checkFlow();
+                sprinkler.checkFlow();
             }
         }
     }
@@ -129,7 +140,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         refreshConnections(level, pos, state);
         IrrigationNetwork.syncLoadedFittings(level, pos, level.getBlockState(pos), this);
-        notifySprinklers(level, pos, false);
+        notifySprinklers(level, pos);
     }
 
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState replacement, boolean moving) {
@@ -147,7 +158,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
                                               BlockPos fromPos, boolean movedByPiston) {
         if (!level.isClientSide) {
             refreshConnections(level, pos, state);
-            notifySprinklers(level, pos, false);
+            notifySprinklers(level, pos);
         }
     }
 
@@ -159,7 +170,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
             player.displayClientMessage(Component.literal(!next.getValue(OPEN) ? "Valve closed - flow through this valve stopped"
                     : next.getValue(POWERED) ? "Valve OPEN, but REDSTONE POWER is holding it shut"
                     : "Valve open - flow permitted through this valve"), true);
-            notifySprinklers(level, pos, true);
+            notifySprinklers(level, pos);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

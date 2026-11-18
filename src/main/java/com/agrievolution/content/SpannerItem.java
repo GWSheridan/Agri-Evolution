@@ -63,7 +63,7 @@ public final class SpannerItem extends Item {
         return switch (route.flow()) {
             case READY -> "Water source ready" + sourceAmount(route);
             case EMPTY -> "Water source has less than a bucket" + sourceAmount(route);
-            case CLOSED_VALVE -> closedValveStatus(level, end);
+            case CLOSED_VALVE -> IrrigationValveBlock.namedFlowStatus(level, end, "Valve");
             case DISABLED_PORT -> "Disabled " + route.disabledSide().getName() + " pipe port";
             case DISCONNECTED -> "No connected water source";
             case TOO_LARGE -> "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
@@ -78,14 +78,6 @@ public final class SpannerItem extends Item {
 
     private static String sourceAmount(IrrigationNetwork.Route route) {
         return route.sourceWater() < 0 ? "" : " (" + route.sourceWater() + " mB)";
-    }
-
-    private static String closedValveStatus(Level level, BlockPos pos) {
-        String status = IrrigationValveBlock.flowStatus(level, pos, level.getBlockState(pos));
-        if (level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve && !valve.zoneName().isEmpty()) {
-            return status + " (" + valve.zoneName() + ")";
-        }
-        return status;
     }
 
     public static void onRightClick(net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock event){
@@ -167,7 +159,7 @@ public final class SpannerItem extends Item {
         }
         if (status.closedValve() != null) {
             BlockPos shutoff = status.closedValve();
-            return closedValveStatus(level, shutoff)
+            return IrrigationValveBlock.namedFlowStatus(level, shutoff, "Valve")
                     + " along supply path [" + shutoff.toShortString() + "]";
         }
         if (status.disabledSide() != null) {

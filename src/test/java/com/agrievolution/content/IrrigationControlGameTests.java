@@ -174,8 +174,14 @@ public final class IrrigationControlGameTests {
   h.assertTrue(tank.water()==1000&&head.water()==0,"Inspection leaves both tanks intact");
   h.assertTrue(tank.takeBucket(),"Drain reservoir for the next check");
   h.assertTrue(head.inspectionStatus().equals("Connected sources short of a full bucket"),"Empty source is still connected");
+  ((IrrigationValveBlockEntity) level.getBlockEntity(valve)).rename("Back Beds");
+  level.setBlock(valve.above(), Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
+  h.assertTrue(head.inspectionStatus().equals("Supply valve paused by redstone (Back Beds) [" + valve.toShortString() + "]"),
+          "Remote valve reports the zone, location and redstone shutoff");
+  level.removeBlock(valve.above(), false);
   level.setBlock(valve,level.getBlockState(valve).setValue(IrrigationValveBlock.OPEN,false),3);
-  h.assertTrue(head.inspectionStatus().equals("Valve shut along pipe network"),"Remote shut valve is reported");
+  h.assertTrue(head.inspectionStatus().equals("Supply valve closed (Back Beds) [" + valve.toShortString() + "]"),
+          "Manual closure differs from redstone shutoff");
   level.setBlock(pipe,Blocks.AIR.defaultBlockState(),3);
   h.assertTrue(head.inspectionStatus().equals("Empty, no reachable water source"),"Disconnected head differs from a dry source");
   level.setBlock(pos.east(),Blocks.REDSTONE_BLOCK.defaultBlockState(),3);

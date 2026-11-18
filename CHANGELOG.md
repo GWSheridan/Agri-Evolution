@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.38
+
+- Removing redstone power from a sprinkler or its adjacent valve resumes the current spray straight away, without charging the tank again.
+- You can fill or empty a sprinkler with a bucket in your offhand while your main hand is empty.
+- Sprinkler reports show the shut valve's location and zone name, and say when redstone is holding it shut.
+- Sprinklers still water soil with random ticks turned off. The status now explains why crops get no growth boost.
+
 ## 1.2.37
 
 - Iron and obsidian crop sticks now give the advertised +8 and +12 percentage points on field and Breeding Station mutations. Wood still gives +5.

@@ -12,6 +12,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -35,7 +36,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (redstone) redstoneMode = (redstoneMode + 1) % 3;
         else smartWatering = !smartWatering;
         setChanged();
-        updatePaidSpray();
+        checkFlow();
     }
     private SimpleTicket<Vec3> waterTicket;
     private Set<BlockPos> paidSoils = Set.of();
@@ -101,7 +102,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
 
     private boolean flowAllowed() {
         return level instanceof ServerLevel && localShutoff() == null
-                && networkBlockage(IrrigationNetwork.search(level, worldPosition)) == null;
+                && !networkBlocked(IrrigationNetwork.search(level, worldPosition));
     }
 
     record LocalShutoff(Flow flow, BlockPos pos, String message, Direction boundarySide) {
@@ -127,17 +128,18 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             BlockState state = level.getBlockState(pos);
             if (IrrigationValveBlock.connects(state, side)
                     && !IrrigationValveBlock.permitsFlow(level, pos, state)) {
-                String message = state.getValue(IrrigationValveBlock.OPEN) ? "Adjacent valve held shut by redstone" : "Adjacent valve closed";
-                return new LocalShutoff(Flow.CLOSED_VALVE, pos, message);
+                return new LocalShutoff(Flow.CLOSED_VALVE, pos, describeValveStop(pos, "Adjacent valve"));
             }
         }
         return null;
     }
 
-    private static String networkBlockage(IrrigationNetwork.Search network) {
-        if (network.overflow()) return "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
-        if (network.blockedValve() && network.supplies().isEmpty()) return "Valve shut along pipe network";
-        return null;
+    private static boolean networkBlocked(IrrigationNetwork.Search network) {
+        return network.overflow() || network.blockedValve() && network.supplies().isEmpty();
+    }
+
+    private String describeValveStop(BlockPos pos, String label) {
+        return IrrigationValveBlock.namedFlowStatus(level, pos, label) + " [" + pos.toShortString() + "]";
     }
 
     /** Read-only status for empty-hand inspection and the Spanner preview. */
@@ -151,8 +153,10 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (stop != null) return stop.message();
         if (inspection == null) inspection = IrrigationNetwork.inspectSupply(level, worldPosition);
         var network = inspection.network();
-        String blockage = networkBlockage(network);
-        if (blockage != null) return blockage;
+        if (network.overflow()) return "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
+        if (networkBlocked(network)) {
+            return describeValveStop(inspection.route(level).blocks().getLast(), "Supply valve");
+        }
         if (hasPaidTime(server) && !hasCurrentSpray()) return "Paid spray ready to resume";
         var soils = inspectedSoils == null ? wateredSoils() : inspectedSoils;
         if (hasCurrentSpray()) {
@@ -161,6 +165,9 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
             if (watered == 0) return "Reachable farmland waits for the next spray";
             if (watered < soils.size()) return "Watering " + watered + "/" + soils.size()
                     + " reachable plots; new plots wait for the next spray";
+            if (server.getGameRules().getInt(GameRules.RULE_RANDOMTICKING) == 0) {
+                return "Watering; random crop growth is disabled";
+            }
             return "Watering, x5 natural crop growth";
         }
         if (smartWatering) {
@@ -191,13 +198,8 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         }
         return false;
     }
-    /** Loaded network check; closes water and growth tickets after valve/redstone changes. */
+    /** Pause or resume the current paid interval after neighbor or control changes. */
     public void checkFlow() {
-        if (hasCurrentSpray() && !flowAllowed()) stopWatering();
-    }
-
-    /** Resume the paid interval after an explicit control change or when the head ticks. */
-    void updatePaidSpray() {
         if (!(level instanceof ServerLevel server) || !hasPaidTime(server)) return;
         if (!flowAllowed()) {
             if (getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE)) stopWatering();
@@ -211,7 +213,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         long now = server.getGameTime();
         if (now % WATERING_INTERVAL == 0) refreshFittings(server);
         if (now < growthUntil) {
-            updatePaidSpray();
+            checkFlow();
             return;
         }
         if (growthUntil == 0 && now % WATERING_INTERVAL != 0) return;
@@ -239,7 +241,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (!(level instanceof ServerLevel server) || isRemoved()) return;
         if (localShutoff() != null) { stopWatering(); return; }
         var network = IrrigationNetwork.search(server, worldPosition);
-        if (networkBlockage(network) != null) { stopWatering(); return; }
+        if (networkBlocked(network)) { stopWatering(); return; }
         growthUntil = 0;
         var soils=wateredSoils();
         if (smartWatering && !hasDrySoil(soils)) {

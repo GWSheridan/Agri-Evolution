@@ -41,6 +41,34 @@ public final class SprinklerStorageGameTests {
         tag.putInt("SprinklerWater",975);copy.loadAdditional(tag,h.getLevel().registryAccess());
         h.assertTrue(copy.water()==975,"Legacy stored water remains usable without its old source");h.succeed();
     }
+
+    @GameTest(template = "empty")
+    public static void offhandBucketsTakePriorityOverInspection(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(3, 175, 3));
+        var sprinkler = head(h, pos);
+        var block = AEBlocks.IRRIGATION_SPRINKLER.get();
+        var player = h.makeMockPlayer(net.minecraft.world.level.GameType.SURVIVAL);
+        var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
+        level.setBlock(pos.west(), Blocks.REDSTONE_BLOCK.defaultBlockState(), 3);
+        for (var bucket : new Item[]{Items.WATER_BUCKET, Items.BUCKET}) {
+            player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(bucket));
+            h.assertTrue(block.useItemOn(ItemStack.EMPTY, level.getBlockState(pos), level, pos, player,
+                            InteractionHand.MAIN_HAND, hit) == ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION,
+                    "The empty main hand leaves the click to the offhand bucket");
+            block.useItemOn(player.getOffhandItem(), level.getBlockState(pos), level, pos, player,
+                    InteractionHand.OFF_HAND, hit);
+            boolean filling = bucket == Items.WATER_BUCKET;
+            h.assertTrue(sprinkler.water() == (filling ? 1000 : 0)
+                            && player.getOffhandItem().is(filling ? Items.BUCKET : Items.WATER_BUCKET),
+                    "The transfer conserves water and updates the offhand");
+        }
+        player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
+        h.assertTrue(block.useItemOn(ItemStack.EMPTY, level.getBlockState(pos), level, pos, player,
+                        InteractionHand.MAIN_HAND, hit) == ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION,
+                "A normal empty-hand click still reaches inspection");
+        h.succeed();
+    }
     @GameTest(template="empty") public static void manualBucketWorksWithOrphanPipes(GameTestHelper h){
         var level=h.getLevel();var pos=h.absolutePos(new BlockPos(3,130,3));var head=head(h,pos);
         level.setBlock(pos.east(),AEBlocks.IRRIGATION_PIPE.get().defaultBlockState(),3);

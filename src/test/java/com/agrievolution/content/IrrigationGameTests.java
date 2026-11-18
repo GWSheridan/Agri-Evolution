@@ -516,7 +516,8 @@ public final class IrrigationGameTests {
                 && level.getBlockState(soil).getValue(FarmBlock.MOISTURE) == 7, "Stored water still reaches loaded farmland");
         h.assertFalse(level.hasChunkAt(outside), "Irrigation must not load the neighboring chunk");
         var watering = FarmInspection.describe(level, pos, true, false);
-        h.assertTrue(watering.contains("Watering, x5 natural crop growth") && watering.contains("Reachable farmland: 1 / 81"),
+        h.assertTrue(watering.stream().anyMatch(line -> line.startsWith("Watering"))
+                        && watering.contains("Reachable farmland: 1 / 81"),
                 "The coverage panel shows the loaded plot being watered");
         h.assertFalse(level.hasChunkAt(outside), "Inspecting the active head must leave the neighboring chunk unloaded");
 

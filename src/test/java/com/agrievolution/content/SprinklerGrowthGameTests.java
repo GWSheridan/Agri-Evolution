@@ -82,6 +82,33 @@ public final class SprinklerGrowthGameTests {
         h.assertTrue(Math.abs(attempts-11718.75)<250,"Default randomTickSpeed must yield four extra natural opportunities, not five extra");
         h.succeed();
     }
+
+    @GameTest(template = "empty")
+    public static void redstoneResumesThePaidSprayAtTheHeadAndAdjacentValve(GameTestHelper h) {
+        var level = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 108, 4));
+        var soil = pos.below(3);
+        var valve = pos.east();
+        level.setBlock(soil, Blocks.FARMLAND.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(valve, AEBlocks.IRRIGATION_VALVE.get().defaultBlockState(), Block.UPDATE_ALL);
+        var sprinkler = head(h, pos);
+        for (int cycle = 1; cycle < 40; cycle++) sprinkler.irrigateCycle();
+        for (BlockPos power : new BlockPos[]{pos.west(), valve.east()}) {
+            level.setBlock(power, Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+            h.assertFalse(sprinkler.hasCurrentSpray() || FarmlandWaterManager.hasBlockWaterTicket(level, soil),
+                    "Power immediately pauses the head or adjacent valve");
+            level.removeBlock(power, false);
+            h.assertTrue(sprinkler.water() == 0 && FarmlandWaterManager.hasBlockWaterTicket(level, soil)
+                            && SprinklerGrowth.covers(level, soil.above()),
+                    "Removing power resumes the same paid spray in the neighbor update");
+        }
+        sprinkler.configure(true);
+        h.assertFalse(sprinkler.hasCurrentSpray(), "Requires power pauses while the input is off");
+        level.setBlock(pos.west(), Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+        h.assertTrue(sprinkler.water() == 0 && SprinklerGrowth.covers(level, soil.above()),
+                "In Requires power mode, restoring the signal also resumes the paid spray immediately");
+        h.succeed();
+    }
     @GameTest(template="empty")
     public static void overlapAndShutdown(GameTestHelper h) {
         var level=h.getLevel(); var pos=h.absolutePos(new BlockPos(4,30,4));
@@ -113,6 +140,11 @@ public final class SprinklerGrowthGameTests {
         try {
             rule.set(0,level.getServer()); SprinklerGrowth.boost(level);
             h.assertTrue(level.getBlockState(vanilla).getValue(CropBlock.AGE)==0,"Zero randomTickSpeed prevents boost");
+            h.assertTrue(head.inspectionStatus().equals("Watering; random crop growth is disabled")
+                            && FarmInspection.describe(level, vanilla, false, true)
+                                    .contains("Sprinkler: watering; random crop growth is disabled")
+                            && FarmlandWaterManager.hasBlockWaterTicket(level, vanilla.below()),
+                    "No growth bonus is advertised when only hydration is active");
             rule.set(4096,level.getServer()); SprinklerGrowth.boost(level);
             h.assertTrue(level.getBlockState(vanilla).getValue(CropBlock.AGE)>0,"Vanilla crop should grow using its own tick logic");
             h.assertTrue(level.getBlockState(agri).getValue(CropBlock.AGE)>0,"Agri crop should grow using its own tick logic");

@@ -137,6 +137,12 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                         Player player, InteractionHand hand, BlockHitResult hit) {
+        if (hand == InteractionHand.MAIN_HAND && stack.isEmpty()) {
+            var offhand = player.getOffhandItem();
+            if (offhand.is(Items.WATER_BUCKET) || offhand.is(Items.BUCKET)) {
+                return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+            }
+        }
         boolean filling = stack.is(Items.WATER_BUCKET);
         if ((filling || stack.is(Items.BUCKET)) && level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler) {
             if (!level.isClientSide) {
