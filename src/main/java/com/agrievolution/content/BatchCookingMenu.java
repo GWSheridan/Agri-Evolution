@@ -12,9 +12,11 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public final class BatchCookingMenu extends AbstractContainerMenu {
-    public static final int SELECT_PREVIOUS = 0, SELECT_NEXT = 1, QUEUE_ONE = 2, QUEUE_FOUR = 3, QUEUE_SIXTEEN = 4;
-    public static final int CANCEL_START = 100;
-    private static final int DATA_COUNT = 2 + BatchCookingBlockEntity.QUEUE_LIMIT * 2;
+    public static final int SELECT_PREVIOUS = 0, SELECT_NEXT = 1;
+    private static final int QUEUE_START = 2;
+    private static final int[] BATCH_SIZES = {1, 4, 16};
+    private static final int ORDER_DATA_START = 3, ORDER_DATA_SIZE = 4;
+    private static final int DATA_COUNT = ORDER_DATA_START + BatchCookingBlockEntity.QUEUE_LIMIT * ORDER_DATA_SIZE;
     private final BatchCookingBlockEntity kitchen;
     private final ContainerData data;
     private int selection;
@@ -29,8 +31,17 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
             @Override public int get(int index) {
                 if (index == 0) return selection;
                 if (index == 1) return kitchen.status().ordinal();
-                var order = kitchen.order((index - 2) / 2);
-                return order == null ? 0 : (index % 2 == 0 ? order.dish() + 1 : order.count());
+                if (index == 2) return recipeAvailable(selection) ? 1 : 0;
+                int offset = index - ORDER_DATA_START;
+                var order = kitchen.order(offset / ORDER_DATA_SIZE);
+                if (order == null) return 0;
+                // Vanilla menu data is signed 16-bit. Keep the full ID across two fields.
+                return switch (offset % ORDER_DATA_SIZE) {
+                    case 0 -> order.dish() + 1;
+                    case 1 -> order.count();
+                    case 2 -> (short) order.id();
+                    default -> order.id() >>> 16;
+                };
             }
             @Override public void set(int index, int value) { }
             @Override public int getCount() { return DATA_COUNT; }
@@ -50,10 +61,24 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
 
     public int selection() { return data.get(0); }
     public BatchCookingBlockEntity.Status status() { return BatchCookingBlockEntity.Status.values()[data.get(1)]; }
-    public int dish(int row) { return data.get(2 + row * 2) - 1; }
-    public int queued(int row) { return data.get(3 + row * 2); }
+    public int dish(int row) { return data.get(ORDER_DATA_START + row * ORDER_DATA_SIZE) - 1; }
+    public int queued(int row) { return data.get(ORDER_DATA_START + row * ORDER_DATA_SIZE + 1); }
+    public boolean selectedRecipeAvailable() { return data.get(2) != 0; }
+    public boolean queueFull() { return queued(BatchCookingBlockEntity.QUEUE_LIMIT - 1) > 0; }
 
-    public int cancelAction(int row) { return CANCEL_START + (row * CookingFoods.ALL.size() + dish(row)) * 16 + queued(row) - 1; }
+    public static int queueAction(int dish, int sizeIndex) { return QUEUE_START + dish * BATCH_SIZES.length + sizeIndex; }
+
+    public int cancelAction(int row) {
+        int offset = ORDER_DATA_START + row * ORDER_DATA_SIZE;
+        int id = (data.get(offset + 3) << 16) | (data.get(offset + 2) & 0xffff);
+        return -id;
+    }
+
+    private boolean recipeAvailable(int dish) {
+        var world = kitchen.getLevel();
+        return world != null && BatchCookingBlockEntity.recipe(world.getRecipeManager(), world.registryAccess(),
+                CookingFoods.ALL.get(dish)) != null;
+    }
 
     @Override public boolean stillValid(Player player) {
         if (kitchen == null) return true;
@@ -67,13 +92,11 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
             selection = Math.floorMod(selection + (action == SELECT_NEXT ? 1 : -1), CookingFoods.ALL.size());
             return true;
         }
-        if (action >= QUEUE_ONE && action <= QUEUE_SIXTEEN) {
-            return kitchen.enqueue(selection, 1 << ((action - QUEUE_ONE) * 2));
-        }
-        if (action < CANCEL_START || action >= CANCEL_START + BatchCookingBlockEntity.QUEUE_LIMIT * CookingFoods.ALL.size() * 16) return false;
-        int index = action - CANCEL_START;
-        int dish = index / 16 % CookingFoods.ALL.size();
-        return kitchen.cancel(index / 16 / CookingFoods.ALL.size(), dish, index % 16 + 1);
+        if (action < 0) return kitchen.cancel(-action);
+        int index = action - QUEUE_START;
+        int dish = index / BATCH_SIZES.length;
+        return dish < CookingFoods.ALL.size() && recipeAvailable(dish)
+                && kitchen.enqueue(dish, BATCH_SIZES[index % BATCH_SIZES.length]);
     }
 
     @Override public ItemStack quickMoveStack(Player player, int slotIndex) {

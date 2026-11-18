@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.2
+
+- The Batch Cooking Station queues the recipe shown when you click, even while browsing recipes quickly.
+- The cancel button follows its batch as the list shifts. A stale click can’t cancel another batch of the same dish.
+- When the container slots are full, the station can use fresh ingredients in place of preserves. It tells you whether to clear a finished meal slot or a container slot.
+- The station shows when a batch is queued and returns to idle as soon as the last batch finishes or is cancelled.
+- The queue buttons show when all eight spaces are occupied or the selected recipe is unavailable. Ingredient previews follow the active recipes.
+
 ## 1.3.1
 
 - Breaking a linked valve frees its Irrigation Controller slot once the valve’s chunk is loaded. A replacement can use that slot straight away.

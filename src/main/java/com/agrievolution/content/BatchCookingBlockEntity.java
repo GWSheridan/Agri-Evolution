@@ -21,6 +21,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,8 +33,9 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     private NonNullList<ItemStack> items = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
     private final ArrayList<Order> queue = new ArrayList<>();
     private Status status = Status.IDLE;
-    record Order(int dish, int count) {}
-    public enum Status { IDLE, COOKING, MISSING_INGREDIENTS, OUTPUT_FULL, RECIPE_UNAVAILABLE }
+    private int nextOrderId;
+    record Order(int id, int dish, int count) {}
+    public enum Status { IDLE, COOKING, MISSING_INGREDIENTS, OUTPUT_FULL, RECIPE_UNAVAILABLE, CONTAINERS_FULL, QUEUED }
 
     public BatchCookingBlockEntity(BlockPos pos, BlockState state) {
         super(AEBlockEntities.BATCH_COOKING_STATION.get(), pos, state);
@@ -54,15 +56,31 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
 
     boolean enqueue(int dish, int count) {
         if (queue.size() >= QUEUE_LIMIT || dish < 0 || dish >= CookingFoods.ALL.size() || count < 1 || count > 16) return false;
-        queue.add(new Order(dish, count));
+        addOrder(dish, count);
+        if (queue.size() == 1) status = Status.QUEUED;
         setChanged();
         return true;
     }
 
-    boolean cancel(int index, int dish, int count) {
-        var job = order(index);
-        if (job == null || job.dish() != dish || job.count() != count) return false;
-        queue.remove(index);
+    private void addOrder(int dish, int count) {
+        do {
+            nextOrderId = nextOrderId == Integer.MAX_VALUE ? 1 : nextOrderId + 1;
+        } while (indexOfOrder(nextOrderId) >= 0);
+        queue.add(new Order(nextOrderId, dish, count));
+    }
+
+    private int indexOfOrder(int id) {
+        for (int row = 0; row < queue.size(); row++) {
+            if (queue.get(row).id() == id) return row;
+        }
+        return -1;
+    }
+
+    boolean cancel(int id) {
+        int row = indexOfOrder(id);
+        if (row < 0) return false;
+        queue.remove(row);
+        if (row == 0) status = queue.isEmpty() ? Status.IDLE : Status.QUEUED;
         setChanged();
         return true;
     }
@@ -75,52 +93,82 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
         var job = order(0);
         if (job == null) { status = Status.IDLE; return; }
         var dish = CookingFoods.ALL.get(job.dish());
-        var recipe = server.getRecipeManager().byKey(ResourceLocation.fromNamespaceAndPath("agri_evolution", dish.id())).orElse(null);
-        if (recipe == null || !(recipe.value() instanceof ShapelessRecipe shaped)
-                || !shaped.getResultItem(server.registryAccess()).is(dish.item().get())) {
+        var shaped = recipe(server.getRecipeManager(), server.registryAccess(), dish);
+        if (shaped == null) {
             status = Status.RECIPE_UNAVAILABLE;
             return;
         }
         var ingredients = shaped.getIngredients();
-        if (ingredients.isEmpty() || ingredients.size() > 9) { status = Status.RECIPE_UNAVAILABLE; return; }
-        int[] matches = new int[ingredients.size()];
-        Arrays.fill(matches, -1);
-        for (int i = 0; i < matches.length; i++) {
-            if (!findSlot(ingredients, i, matches, new boolean[FOOD])) { status = Status.MISSING_INGREDIENTS; return; }
+        int[] matches = matchIngredients(ingredients, true);
+        if (matches == null) { status = Status.MISSING_INGREDIENTS; return; }
+        status = tryCook(server, shaped, dish, matches);
+        if (status == Status.CONTAINERS_FULL) {
+            // Try fresh ingredients when a preserve would produce a bottle we cannot store.
+            var fresh = matchIngredients(ingredients, false);
+            if (fresh != null && tryCook(server, shaped, dish, fresh) == Status.COOKING) status = Status.COOKING;
         }
-        var grid = NonNullList.withSize(9, ItemStack.EMPTY);
-        for (int i = 0; i < matches.length; i++) grid.set(i, items.get(matches[i]).copyWithCount(1));
-        var input = CraftingInput.of(3, 3, grid);
-        if (!shaped.matches(input, server)) { status = Status.RECIPE_UNAVAILABLE; return; }
+        if (status != Status.COOKING) return;
+        if (job.count() == 1) queue.removeFirst();
+        else queue.set(0, new Order(job.id(), job.dish(), job.count() - 1));
+        if (queue.isEmpty()) status = Status.IDLE;
+        setChanged();
+    }
 
-        var result = shaped.assemble(input, server.registryAccess());
+    private Status tryCook(ServerLevel server, ShapelessRecipe recipe, CookingFoods.Dish dish, int[] matches) {
+        var input = craftingInput(matches);
+        if (!recipe.matches(input, server)) return Status.RECIPE_UNAVAILABLE;
+        var result = recipe.assemble(input, server.registryAccess());
+        if (result.isEmpty() || !result.is(dish.item().get())) return Status.RECIPE_UNAVAILABLE;
         var next = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
         for (int i = 0; i < SLOTS; i++) next.set(i, items.get(i).copy());
-        if (result.isEmpty() || !result.is(dish.item().get())) { status = Status.RECIPE_UNAVAILABLE; return; }
-        if (!insert(next, result, FOOD, RETURNS)) { status = Status.OUTPUT_FULL; return; }
-        for (ItemStack remainder : shaped.getRemainingItems(input)) {
-            if (!remainder.isEmpty() && !insert(next, remainder, RETURNS, SLOTS)) {
-                status = Status.OUTPUT_FULL;
-                return;
-            }
-        }
+        if (!insert(next, result, FOOD, RETURNS)) return Status.OUTPUT_FULL;
+        if (!insertContainers(next, recipe, input)) return Status.CONTAINERS_FULL;
         for (int slot : matches) {
             var stack = next.get(slot);
             stack.shrink(1);
             if (stack.isEmpty()) next.set(slot, ItemStack.EMPTY);
         }
         items = next;
-        if (job.count() == 1) queue.removeFirst();
-        else queue.set(0, new Order(job.dish(), job.count() - 1));
-        status = Status.COOKING;
-        setChanged();
+        return Status.COOKING;
+    }
+
+    public static ShapelessRecipe recipe(RecipeManager manager, HolderLookup.Provider registries, CookingFoods.Dish dish) {
+        var entry = manager.byKey(ResourceLocation.fromNamespaceAndPath("agri_evolution", dish.id())).orElse(null);
+        if (entry == null || !(entry.value() instanceof ShapelessRecipe recipe)
+                || !recipe.getResultItem(registries).is(dish.item().get())
+                || recipe.getIngredients().isEmpty() || recipe.getIngredients().size() > 9) return null;
+        return recipe;
+    }
+
+    private int[] matchIngredients(List<Ingredient> ingredients, boolean useContainers) {
+        int[] matches = new int[ingredients.size()];
+        Arrays.fill(matches, -1);
+        for (int i = 0; i < matches.length; i++) {
+            if (!findSlot(ingredients, i, matches, new boolean[FOOD], useContainers)) return null;
+        }
+        return matches;
+    }
+
+    private CraftingInput craftingInput(int[] matches) {
+        var grid = NonNullList.withSize(9, ItemStack.EMPTY);
+        for (int i = 0; i < matches.length; i++) grid.set(i, items.get(matches[i]).copyWithCount(1));
+        return CraftingInput.of(3, 3, grid);
+    }
+
+    private static boolean insertContainers(NonNullList<ItemStack> into, ShapelessRecipe recipe, CraftingInput input) {
+        for (ItemStack remainder : recipe.getRemainingItems(input)) {
+            if (!remainder.isEmpty() && !insert(into, remainder, RETURNS, SLOTS)) return false;
+        }
+        return true;
     }
 
     /** Reassign earlier flexible ingredients when a later one needs their stack. */
-    private boolean findSlot(List<Ingredient> ingredients, int ingredient, int[] matches, boolean[] visited) {
+    private boolean findSlot(List<Ingredient> ingredients, int ingredient, int[] matches, boolean[] visited,
+                             boolean useContainers) {
         for (int slot = 0; slot < FOOD; slot++) {
             var stack = items.get(slot);
-            if (visited[slot] || stack.isEmpty() || !ingredients.get(ingredient).test(stack)) continue;
+            if (visited[slot] || stack.isEmpty() || !ingredients.get(ingredient).test(stack)
+                    || (!useContainers && stack.copyWithCount(1).hasCraftingRemainingItem())) continue;
             visited[slot] = true;
             int used = 0;
             for (int taken : matches) if (taken == slot) used++;
@@ -129,7 +177,7 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
                 return true;
             }
             for (int i = 0; i < matches.length; i++) {
-                if (matches[i] != slot || !findSlot(ingredients, i, matches, visited)) continue;
+                if (matches[i] != slot || !findSlot(ingredients, i, matches, visited, useContainers)) continue;
                 matches[ingredient] = slot;
                 return true;
             }
@@ -142,7 +190,7 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
         for (int slot = first; slot < end && remaining > 0; slot++) {
             var existing = into.get(slot);
             if (!ItemStack.isSameItemSameComponents(existing, addition)) continue;
-            int count = Math.min(remaining, existing.getMaxStackSize() - existing.getCount());
+            int count = Math.min(remaining, Math.max(0, existing.getMaxStackSize() - existing.getCount()));
             existing.grow(count);
             remaining -= count;
         }
@@ -181,9 +229,10 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
             if (count < 1 || count > 16) continue;
             for (int i = 0; i < CookingFoods.ALL.size(); i++) {
                 if (!CookingFoods.ALL.get(i).id().equals(dish)) continue;
-                queue.add(new Order(i, count));
+                addOrder(i, count);
                 break;
             }
         }
+        status = queue.isEmpty() ? Status.IDLE : Status.QUEUED;
     }
 }

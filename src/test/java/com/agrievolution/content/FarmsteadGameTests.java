@@ -245,7 +245,7 @@ public final class FarmsteadGameTests {
             kitchen.setItem(slot, new ItemStack(Items.DIRT, 64));
         }
         kitchen.cookOne(world);
-        h.assertTrue(kitchen.status() == BatchCookingBlockEntity.Status.OUTPUT_FULL && kitchen.getItem(3).getCount() == 2
+        h.assertTrue(kitchen.status() == BatchCookingBlockEntity.Status.CONTAINERS_FULL && kitchen.getItem(3).getCount() == 2
                         && kitchen.getItem(BatchCookingBlockEntity.FOOD).isEmpty(), "Full container output leaves all ingredients and meals untouched");
         kitchen.setItem(BatchCookingBlockEntity.RETURNS, ItemStack.EMPTY);
         kitchen.cookOne(world);
@@ -259,6 +259,77 @@ public final class FarmsteadGameTests {
                         && kitchen.getItem(BatchCookingBlockEntity.RETURNS).is(Items.GLASS_BOTTLE)
                         && kitchen.getItem(BatchCookingBlockEntity.RETURNS).getCount() == 2,
                 "Both tarts use the jam substitute and return exactly two bottles after a save/load");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void batchCookingUsesFreshAlternativesWithFullContainerSlots(GameTestHelper h) {
+        var world = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 252, 4));
+        world.setBlockAndUpdate(pos, AEBlocks.BATCH_COOKING_STATION.get().defaultBlockState());
+        var kitchen = (BatchCookingBlockEntity) world.getBlockEntity(pos);
+        int tart = 0;
+        while (!CookingFoods.ALL.get(tart).id().equals("strawberry_tart")) tart++;
+        h.assertTrue(kitchen.enqueue(tart, 1), "Queue one tart");
+        kitchen.setItem(0, new ItemStack(Items.WHEAT));
+        kitchen.setItem(1, new ItemStack(Items.EGG));
+        kitchen.setItem(2, new ItemStack(Items.SUGAR));
+        kitchen.setItem(3, new ItemStack(AEItems.BERRY_JAM.get()));
+        kitchen.setItem(4, new ItemStack(AEItems.STRAWBERRY.get()));
+        for (int slot = BatchCookingBlockEntity.RETURNS; slot < BatchCookingBlockEntity.SLOTS; slot++) {
+            kitchen.setItem(slot, new ItemStack(Items.DIRT, 64));
+        }
+        for (int slot = BatchCookingBlockEntity.FOOD; slot < BatchCookingBlockEntity.RETURNS; slot++) {
+            kitchen.setItem(slot, new ItemStack(Items.DIRT, 64));
+        }
+        kitchen.cookOne(world);
+        h.assertTrue(kitchen.status() == BatchCookingBlockEntity.Status.OUTPUT_FULL && kitchen.getItem(4).getCount() == 1
+                        && kitchen.getItem(3).getCount() == 1, "Full meal slots are reported separately without charging ingredients");
+        kitchen.setItem(BatchCookingBlockEntity.FOOD, ItemStack.EMPTY);
+        kitchen.cookOne(world);
+        h.assertTrue(kitchen.status() == BatchCookingBlockEntity.Status.IDLE && kitchen.order(0) == null
+                && kitchen.getItem(4).isEmpty() && kitchen.getItem(3).is(AEItems.BERRY_JAM.get())
+                && kitchen.getItem(BatchCookingBlockEntity.FOOD).is(CookingFoods.ALL.get(tart).item().get()),
+                "A full container row uses the fresh alternative, keeps the jam and returns the empty queue to idle");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void batchCookingQueuesTheDisplayedRecipeAndCancelsExactJobs(GameTestHelper h) {
+        var world = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 258, 4));
+        world.setBlockAndUpdate(pos, AEBlocks.BATCH_COOKING_STATION.get().defaultBlockState());
+        var kitchen = (BatchCookingBlockEntity) world.getBlockEntity(pos);
+        var player = h.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(Vec3.atCenterOf(pos));
+        var menu = new BatchCookingMenu(5, player.getInventory(), kitchen);
+        int displayedDish = menu.selection();
+        h.assertTrue(menu.clickMenuButton(player, BatchCookingMenu.SELECT_NEXT), "Server browses to the next dish");
+        int displayedAction = BatchCookingMenu.queueAction(displayedDish, 1);
+        h.assertTrue(menu.selection() != displayedDish && menu.clickMenuButton(player, displayedAction)
+                && kitchen.order(0).dish() == displayedDish && kitchen.order(0).count() == 4,
+                "The click carries the recipe the player saw and adds the right batch size");
+
+        for (int i = 1; i < BatchCookingBlockEntity.QUEUE_LIMIT; i++) {
+            h.assertTrue(menu.clickMenuButton(player, displayedAction), "The queue can hold eight identical jobs");
+        }
+        h.assertTrue(menu.queueFull() && !menu.clickMenuButton(player, displayedAction), "A ninth job is rejected");
+        var first = menu.cancelAction(0);
+        var second = menu.cancelAction(1);
+        var third = menu.cancelAction(2);
+        kitchen.setItem(0, new ItemStack(Items.BREAD));
+        kitchen.setItem(1, new ItemStack(AEItems.LETTUCE.get()));
+        kitchen.setItem(2, new ItemStack(AEItems.TOMATO.get()));
+        kitchen.setItem(3, new ItemStack(AEItems.CUCUMBER.get()));
+        kitchen.setItem(4, new ItemStack(AEItems.RADISH.get()));
+        kitchen.cookOne(world);
+        h.assertTrue(kitchen.order(0).count() == 3 && menu.cancelAction(0) == first,
+                "A job keeps its identity as individual meals finish");
+        h.assertTrue(menu.clickMenuButton(player, first), "Remove the first batch");
+        h.assertTrue(!menu.clickMenuButton(player, first) && menu.cancelAction(0) == second,
+                "Repeating a stale click cannot cancel an identical replacement row");
+        h.assertTrue(menu.clickMenuButton(player, second) && menu.cancelAction(0) == third && !menu.queueFull(),
+                "A queued batch can still be cancelled after it shifts rows");
         h.succeed();
     }
 
