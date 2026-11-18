@@ -12,6 +12,8 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public final class IrrigationValveBlockEntity extends BlockEntity {
     private String zone = "";
+    private BlockPos controller;
+    private boolean scheduledOpen;
 
     public IrrigationValveBlockEntity(BlockPos pos, BlockState state) {
         super(AEBlockEntities.IRRIGATION_VALVE.get(), pos, state);
@@ -26,6 +28,36 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
 
     String zone() { return zone.isEmpty() ? "Irrigation zone" : zone; }
     String zoneName() { return zone; }
+
+    BlockPos controller() { return controller; }
+    boolean controlledBy(BlockPos pos) { return pos.equals(controller); }
+
+    boolean scheduleAllowsFlow() {
+        return controller == null || (level != null && level.hasChunkAt(controller) && (
+                !(level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner)
+                        || !owner.contains(worldPosition) || scheduledOpen));
+    }
+
+    void setController(BlockPos pos) {
+        controller = pos;
+        scheduledOpen = false;
+        if (level instanceof ServerLevel && level.hasChunkAt(worldPosition)) {
+            level.blockEntityChanged(worldPosition);
+            IrrigationValveBlock.notifySprinklers(level, worldPosition);
+        }
+    }
+
+    void setScheduledOpen(boolean value) {
+        if (scheduledOpen == value) return;
+        scheduledOpen = value;
+        IrrigationValveBlock.notifySprinklers(level, worldPosition);
+    }
+
+    void clearMissingController() {
+        if (controller != null && level.hasChunkAt(controller) && (
+                !(level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner)
+                        || !owner.contains(worldPosition))) setController(null);
+    }
 
     static String storedZone(ItemStack stack) {
         return shorten(stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getString("IrrigationZone"));
@@ -47,10 +79,13 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
     @Override protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         if (!zone.isEmpty()) tag.putString("Zone", zone);
+        if (controller != null) tag.putLong("Controller", controller.asLong());
     }
 
     @Override protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         zone = shorten(tag.getString("Zone"));
+        controller = tag.contains("Controller", net.minecraft.nbt.Tag.TAG_LONG) ? BlockPos.of(tag.getLong("Controller")) : null;
+        scheduledOpen = false;
     }
 }

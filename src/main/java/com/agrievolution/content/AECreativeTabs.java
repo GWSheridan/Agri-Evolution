@@ -301,7 +301,9 @@ public final class AECreativeTabs {
                         output.accept(AEItems.PULLED_WEEDS.get());
                         output.accept(AEItems.SEED_VAULT.get());
                         output.accept(AEItems.GARDEN_ORDER_BOARD.get());
+                        output.accept(AEItems.IRRIGATION_CONTROLLER.get());
                         output.accept(AEItems.PRESERVING_STATION.get());
+                        output.accept(AEItems.BATCH_COOKING_STATION.get());
                         output.accept(AEItems.SOIL_SAMPLE.get());
                         output.accept(AEItems.SOIL_RESEARCH_TABLE.get());
                         output.accept(AEItems.SOIL_RESEARCH_REFINEMENT_UPGRADE.get());

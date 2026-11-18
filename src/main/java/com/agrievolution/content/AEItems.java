@@ -18,6 +18,10 @@ public final class AEItems {
 
     public static final DeferredItem<BlockItem> VERTICAL_GREENHOUSE = ITEMS.registerItem("vertical_greenhouse",
             properties -> new IrrigationFittingItem(AEBlocks.VERTICAL_GREENHOUSE.get(), properties), new Item.Properties());
+    public static final DeferredItem<BlockItem> IRRIGATION_CONTROLLER = ITEMS.registerItem("irrigation_controller",
+            properties -> new BlockItem(AEBlocks.IRRIGATION_CONTROLLER.get(), properties), new Item.Properties());
+    public static final DeferredItem<BlockItem> BATCH_COOKING_STATION = ITEMS.registerItem("batch_cooking_station",
+            properties -> new BlockItem(AEBlocks.BATCH_COOKING_STATION.get(), properties), new Item.Properties());
     public static final DeferredItem<BlockItem> GARDEN_ORDER_BOARD = ITEMS.registerItem("garden_order_board",
             properties -> new BlockItem(AEBlocks.GARDEN_ORDER_BOARD.get(), properties), new Item.Properties());
     public static final DeferredItem<BlockItem> PRESERVING_STATION = ITEMS.registerItem("preserving_station",

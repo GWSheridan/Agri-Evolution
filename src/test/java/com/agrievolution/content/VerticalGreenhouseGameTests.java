@@ -442,6 +442,45 @@ public final class VerticalGreenhouseGameTests {
     }
 
     @GameTest(template = "empty")
+    public static void targetBatchCountsOnlyRequestedSpeciesAndGenes(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var pos = helper.absolutePos(new BlockPos(5, 220, 5));
+        var greenhouse = place(helper, pos);
+        var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(Vec3.atCenterOf(pos.south()));
+        var menu = new VerticalGreenhouseMenu(1, player.getInventory(), greenhouse);
+        menu.clickMenuButton(player, VerticalGreenhouseMenu.TOGGLE_GROW);
+        menu.clickMenuButton(player, VerticalGreenhouseMenu.CYCLE_BATCH);
+        var tomato = new ItemStack(AEItems.TOMATO_SEED.get());
+        menu.setCarried(tomato);
+        helper.assertTrue(menu.clickMenuButton(player, VerticalGreenhouseMenu.TARGET_SEED) && menu.getCarried() == tomato,
+                "A cursor seed sets the species without consuming the sample");
+        for (int i = 0; i < 8; i++) menu.clickMenuButton(player, VerticalGreenhouseMenu.TARGET_GENE + 1);
+        greenhouse.addBucket();
+        greenhouse.addBucket();
+        greenhouse.setItem(0, tomato.copy());
+        greenhouse.setItem(1, tomato.copy());
+        seconds(helper, greenhouse, 35);
+        helper.assertTrue(menu.batchCount() == 0 && greenhouse.water() == 1500
+                        && greenhouse.getItem(VerticalGreenhouseBlockEntity.REJECTS).is(AEItems.TOMATO_SEED.get()),
+                "A seed below the minimum is paid for and routed to the reject buffer without completing the batch");
+        var saved = new CompoundTag();
+        greenhouse.saveAdditional(saved, level.registryAccess());
+        greenhouse.loadAdditional(saved, level.registryAccess());
+        helper.assertTrue(menu.targetSeed() == CropSpecies.TOMATO.ordinal() + 1 && menu.minimumGene(1) == 80,
+                "Species and minimums survive reloading");
+        com.agrievolution.genetics.GenomeStorage.putOnSeed(tomato, new com.agrievolution.genetics.CropGenome(100, 100, 100));
+        greenhouse.setItem(0, tomato.copy());
+        greenhouse.setItem(1, tomato.copy());
+        seconds(helper, greenhouse, 80);
+        helper.assertTrue(menu.batchCount() == 1 && greenhouse.water() == 1000
+                        && greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING).is(AEItems.TOMATO_SEED.get())
+                        && menu.breedStatus() == VerticalGreenhouseBlockEntity.Status.BATCH_COMPLETE,
+                "The first qualifying seed completes the batch and preserves the rejected seed");
+        helper.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void routedBatchStopsAfterSuccessfulStorage(GameTestHelper helper) {
         var level = helper.getLevel();
         var pos = helper.absolutePos(new BlockPos(4, 215, 4));

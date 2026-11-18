@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "agri_evolution:block/batch_cooking_station_side",
+    "north": "agri_evolution:block/batch_cooking_station_front",
+    "south": "agri_evolution:block/batch_cooking_station_side",
+    "west": "agri_evolution:block/batch_cooking_station_side",
+    "east": "agri_evolution:block/batch_cooking_station_side",
+    "up": "agri_evolution:block/batch_cooking_station_top",
+    "down": "agri_evolution:block/batch_cooking_station_side"
+  }
+}

@@ -3,6 +3,7 @@ package com.agrievolution.client.greenhouse;
 import com.agrievolution.client.GardenGuiTheme;
 import com.agrievolution.content.VerticalGreenhouseBlockEntity;
 import com.agrievolution.content.VerticalGreenhouseMenu;
+import com.agrievolution.genetics.CropSpecies;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -11,41 +12,42 @@ import net.minecraft.world.entity.player.Inventory;
 public final class VerticalGreenhouseScreen extends AbstractContainerScreen<VerticalGreenhouseMenu> {
     private static final int DARK = 0xFF302419, PAPER = 0xFFF1DFB8, INK = 0xFF342519;
     private static final int GREEN = 0xFF285947, MUTED = 0xFF806849, BLUE = 0xFF367F96;
-    private static final int CONTROL_Y = 36, CONTROL_HEIGHT = 19, CONTROL_WIDTH = 54;
+    private static final int CONTROL_Y = 32, CONTROL_HEIGHT = 19, CONTROL_WIDTH = 54;
     private static final int GROW_X = 137, BREED_X = 195, PAIR_X = 253;
-    private static final int PARENT_Y = 73, PARENT_WIDTH = 14, PARENT_HEIGHT = 14, PARENT_PITCH = 16;
-    private static final int INTAKE_X = 17, INTAKE_Y = 117, INTAKE_WIDTH = 103, INTAKE_HEIGHT = 13;
-    private static final int ROUTE_X = 16, ROUTE_Y = 188, ROUTE_PITCH = 13, ROUTE_WIDTH = 62;
-    private static final int BATCH_X = 247, BATCH_Y = 188, BATCH_WIDTH = 62, RESET_Y = 203;
+    private static final int PARENT_Y = 65, PARENT_WIDTH = 14, PARENT_HEIGHT = 14, PARENT_PITCH = 16;
+    private static final int INTAKE_X = 17, INTAKE_Y = 104, INTAKE_WIDTH = 103, INTAKE_HEIGHT = 13;
+    private static final int ROUTE_X = 16, ROUTE_Y = 199, ROUTE_PITCH = 12, ROUTE_WIDTH = 62;
+    private static final int BATCH_X = 247, BATCH_Y = 199, BATCH_WIDTH = 62, RESET_Y = 214;
+    private static final int FILTER_Y = 172, FILTER_X = 17, FILTER_WIDTH = 124, GENE_X = 148, GENE_PITCH = 54;
 
     public VerticalGreenhouseScreen(VerticalGreenhouseMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         imageWidth = 322;
-        imageHeight = 265;
+        imageHeight = 267;
     }
 
     @Override protected void renderBg(GuiGraphics gui, float delta, int mouseX, int mouseY) {
         int x = leftPos, y = topPos;
         GardenGuiTheme.panel(gui, x, y, imageWidth, imageHeight, DARK);
-        GardenGuiTheme.panel(gui, x + 8, y + 7, 306, 23, GREEN);
-        gui.drawCenteredString(font, title, x + imageWidth / 2, y + 14, PAPER);
-        GardenGuiTheme.panel(gui, x + 8, y + 33, 306, 136, PAPER);
-        GardenGuiTheme.panel(gui, x + 8, y + 173, 306, 84, PAPER);
+        GardenGuiTheme.panel(gui, x + 8, y + 5, 306, 22, GREEN);
+        gui.drawCenteredString(font, title, x + imageWidth / 2, y + 12, PAPER);
+        GardenGuiTheme.panel(gui, x + 8, y + 29, 306, 157, PAPER);
+        GardenGuiTheme.panel(gui, x + 8, y + 188, 306, 76, PAPER);
 
-        gui.drawString(font, menu.water() + " / " + VerticalGreenhouseBlockEntity.CAPACITY + " mB", x + 17, y + 39, INK, false);
-        bar(gui, x + 17, y + 51, 111, menu.water(), VerticalGreenhouseBlockEntity.CAPACITY, BLUE);
+        gui.drawString(font, menu.water() + " / " + VerticalGreenhouseBlockEntity.CAPACITY + " mB", x + 17, y + 35, INK, false);
+        bar(gui, x + 17, y + 47, 111, menu.water(), VerticalGreenhouseBlockEntity.CAPACITY, BLUE);
         control(gui, menu.growEnabled() ? "Grow ON" : "Grow OFF", menu.growEnabled(), GROW_X);
         control(gui, menu.breedEnabled() ? "Breed ON" : "Breed OFF", menu.breedEnabled(), BREED_X);
         control(gui, menu.fixedPair() ? "Fixed pair" : "Auto pair", true, PAIR_X);
-        gui.drawString(font, "Growth: " + status(menu.growStatus()), x + 17, y + 61, INK, false);
+        gui.drawString(font, "Growth: " + status(menu.growStatus()), x + 17, y + 54, INK, false);
         String breeding = "Breeding: " + status(menu.breedStatus());
         if (menu.fixedPair() && menu.breedProgress() > 0) breeding += " " + menu.breedProgress() + "%";
-        gui.drawString(font, breeding, x + 168, y + 61, INK, false);
+        gui.drawString(font, breeding, x + 168, y + 54, INK, false);
         if (!menu.fixedPair()) {
-            gui.drawString(font, "Seed trays", x + 17, y + 76, GREEN, false);
+            gui.drawString(font, "Seed trays", x + 17, y + 68, GREEN, false);
             if (menu.parentA() > 0 && menu.parentB() > 0) {
                 String pair = "Trays " + menu.parentA() + " + " + menu.parentB() + "   " + menu.breedProgress() + "%";
-                gui.drawString(font, pair, x + 194, y + 76, GREEN, false);
+                gui.drawString(font, pair, x + 194, y + 68, GREEN, false);
             }
         }
 
@@ -57,17 +59,25 @@ public final class VerticalGreenhouseScreen extends AbstractContainerScreen<Vert
                 parentButton(gui, "B", parentX(tray) + PARENT_PITCH, menu.selectedB() == tray + 1);
             }
             int progress = menu.trayProgress(tray);
-            bar(gui, trayX - 7, y + 109, 30, progress, 100, GREEN);
-            if (progress < 0) gui.drawCenteredString(font, "-", trayX + 8, y + 105, MUTED);
+            bar(gui, trayX - 7, y + 98, 30, progress, 100, GREEN);
+            if (progress < 0) gui.drawCenteredString(font, "-", trayX + 8, y + 94, MUTED);
         }
         drawWaterIntake(gui);
         gui.drawString(font, "Harvest", x + 17, y + VerticalGreenhouseMenu.HARVEST_Y + 4, INK, false);
         gui.drawString(font, "Offspring", x + 17, y + VerticalGreenhouseMenu.OFFSPRING_Y + 4, INK, false);
-        gui.drawString(font, "Seed batch", x + BATCH_X, y + 177, INK, false);
+        gui.drawString(font, "Rejected seeds", x + 17, y + VerticalGreenhouseMenu.REJECTS_Y + 4, INK, false);
+        int target = menu.targetSeed();
+        String species = target == 0 ? "Any species" : CropSpecies.values()[target - 1].displayName();
+        smallButton(gui, font.plainSubstrByWidth(species, FILTER_WIDTH - 9), FILTER_X, FILTER_Y, FILTER_WIDTH, GREEN);
+        String[] names = {"G", "Y", "R"};
+        for (int i = 0; i < names.length; i++) {
+            smallButton(gui, names[i] + " ≥ " + menu.minimumGene(i), GENE_X + i * GENE_PITCH, FILTER_Y, 51, GREEN);
+        }
+        gui.drawString(font, "Seed batch", x + BATCH_X, y + 190, INK, false);
         String batch = menu.batchTarget() == 0 ? "Unlimited" : menu.batchCount() + " / " + menu.batchTarget();
         smallButton(gui, batch, BATCH_X, BATCH_Y, BATCH_WIDTH, GREEN);
         if (menu.batchTarget() > 0) smallButton(gui, "Reset batch", BATCH_X, RESET_Y, BATCH_WIDTH, MUTED);
-        gui.drawString(font, "Outputs", x + ROUTE_X, y + 177, INK, false);
+        gui.drawString(font, "Outputs", x + ROUTE_X, y + 190, INK, false);
         for (int face = 0; face < VerticalGreenhouseBlockEntity.ROUTE_COUNT; face++) {
             var direction = VerticalGreenhouseBlockEntity.outputFace(face);
             var route = menu.outputRoute(face);
@@ -76,6 +86,7 @@ public final class VerticalGreenhouseScreen extends AbstractContainerScreen<Vert
                 case PRODUCE -> "Crops";
                 case SEEDS -> "Seeds";
                 case BOTH -> "Both";
+                case REJECTS -> "Rejects";
             };
             smallButton(gui, label, ROUTE_X, ROUTE_Y + face * ROUTE_PITCH, ROUTE_WIDTH, route == VerticalGreenhouseBlockEntity.OutputRoute.OFF ? MUTED : GREEN);
         }
@@ -177,12 +188,25 @@ public final class VerticalGreenhouseScreen extends AbstractContainerScreen<Vert
     }
 
     @Override public boolean mouseClicked(double x, double y, int button) {
+        int rejectFace = button == 1 ? outputButtonAt(x, y) : -1;
+        if (rejectFace >= 0 && minecraft != null && minecraft.gameMode != null) {
+            minecraft.gameMode.handleInventoryButtonClick(menu.containerId, VerticalGreenhouseMenu.REJECT_ROUTE + rejectFace);
+            return true;
+        }
+        if ((button == 0 || button == 1) && minecraft != null && minecraft.gameMode != null) {
+            for (int gene = 0; gene < 3; gene++) {
+                if (!inside(x, y, leftPos + GENE_X + gene * GENE_PITCH, topPos + FILTER_Y, 51, 12)) continue;
+                minecraft.gameMode.handleInventoryButtonClick(menu.containerId, VerticalGreenhouseMenu.TARGET_GENE + gene + button * 3);
+                return true;
+            }
+        }
         if (button == 0 && minecraft != null && minecraft.gameMode != null) {
             int action = parentButtonAt(x, y);
             if (overControl(x, y, GROW_X)) action = VerticalGreenhouseMenu.TOGGLE_GROW;
             else if (overControl(x, y, BREED_X)) action = VerticalGreenhouseMenu.TOGGLE_BREED;
             else if (overControl(x, y, PAIR_X)) action = VerticalGreenhouseMenu.TOGGLE_PAIRING;
             else if (overWaterIntake(x, y)) action = VerticalGreenhouseMenu.CYCLE_WATER_INTAKE;
+            else if (inside(x, y, leftPos + FILTER_X, topPos + FILTER_Y, FILTER_WIDTH, 12)) action = VerticalGreenhouseMenu.TARGET_SEED;
             else if (inside(x, y, leftPos + BATCH_X, topPos + BATCH_Y, BATCH_WIDTH, 12)) action = VerticalGreenhouseMenu.CYCLE_BATCH;
             else if (menu.batchTarget() > 0 && inside(x, y, leftPos + BATCH_X, topPos + RESET_Y, BATCH_WIDTH, 12)) action = VerticalGreenhouseMenu.RESET_BATCH;
             else {
@@ -209,11 +233,20 @@ public final class VerticalGreenhouseScreen extends AbstractContainerScreen<Vert
     @Override public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
         super.render(gui, mouseX, mouseY, delta);
         renderTooltip(gui, mouseX, mouseY);
+        if (inside(mouseX, mouseY, leftPos + FILTER_X, topPos + FILTER_Y, FILTER_WIDTH, 12)) {
+            gui.renderTooltip(font, font.split(Component.literal("Click with an Agri seed to set its species. Click with an empty cursor to clear."), 175), mouseX, mouseY);
+            return;
+        }
+        if (inside(mouseX, mouseY, leftPos + GENE_X, topPos + FILTER_Y, 3 * GENE_PITCH, 12)) {
+            gui.renderTooltip(font, font.split(Component.literal("Minimum Growth, Yield and Resilience. Left-click raises a minimum. Right-click lowers it."), 175), mouseX, mouseY);
+            return;
+        }
         int face = outputButtonAt(mouseX, mouseY);
         if (face >= 0) {
             String tip = face == 0 ? "Bottom hopper. Click to cycle crops, seeds, both or off."
                     : "Exports to the " + VerticalGreenhouseBlockEntity.outputFace(face).getName()
                             + " side. Click to choose what it sends to an adjacent inventory.";
+            tip += " Right-click to route rejected seeds.";
             gui.renderTooltip(font, font.split(Component.literal(tip), 190), mouseX, mouseY);
             return;
         }

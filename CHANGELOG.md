@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0
+
+- Schedule six named irrigation zones from one controller. Set a water reserve or run a zone by hand from the controller screen.
+- Set a species and minimum genes for Vertical Greenhouse batches. Only matching seeds count toward the target. The rest go into a separate output row.
+- Discover six companion planting pairings with Grandmas Journal. Each recorded trial shows how to plant the pair and what it does.
+- Fill shared market orders over several deliveries. The board keeps progress for the whole world, and every contributor can claim a reward after the order is filled.
+- Queue meals at the Batch Cooking Station. It uses the existing recipes and puts empty recipe containers in their own slots.
+- The new machines use the same copper fittings as the Seed Analyzer with their own 64×64 dials, oven and burners. Their screens use the garden-style controls.
+
 ## 1.2.38
 
 - Removing redstone power from a sprinkler or its adjacent valve resumes the current spray straight away, without charging the tank again.

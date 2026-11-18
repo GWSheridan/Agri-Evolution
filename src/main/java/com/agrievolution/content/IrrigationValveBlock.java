@@ -108,6 +108,11 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     public static boolean permitsFlow(Level level, BlockPos pos, BlockState state) {
+        return hardwareOpen(level, pos, state) && (!(level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve)
+                || valve.scheduleAllowsFlow());
+    }
+
+    static boolean hardwareOpen(Level level, BlockPos pos, BlockState state) {
         return state.getValue(OPEN) && !IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
     }
 
@@ -125,10 +130,11 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
 
     private static String flowState(Level level, BlockPos pos, BlockState state) {
         if (!state.getValue(OPEN)) return "closed";
-        return permitsFlow(level, pos, state) ? "open" : "paused by redstone";
+        if (!hardwareOpen(level, pos, state)) return "paused by redstone";
+        return permitsFlow(level, pos, state) ? "open" : "waiting for schedule";
     }
 
-    private static void notifySprinklers(Level level, BlockPos pos) {
+    static void notifySprinklers(Level level, BlockPos pos) {
         for (Direction side : Direction.values()) {
             BlockPos target=pos.relative(side);
             if (level.hasChunkAt(target) && level.getBlockEntity(target) instanceof IrrigationSprinklerBlockEntity sprinkler) {
@@ -138,6 +144,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve) valve.clearMissingController();
         refreshConnections(level, pos, state);
         IrrigationNetwork.syncLoadedFittings(level, pos, level.getBlockState(pos), this);
         notifySprinklers(level, pos);
@@ -168,8 +175,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
             BlockState next = connectedState(level, pos, state.cycle(OPEN));
             level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
             player.displayClientMessage(Component.literal(!next.getValue(OPEN) ? "Valve closed - flow through this valve stopped"
-                    : next.getValue(POWERED) ? "Valve OPEN, but REDSTONE POWER is holding it shut"
-                    : "Valve open - flow permitted through this valve"), true);
+                    : flowStatus(level, pos, next)), true);
             notifySprinklers(level, pos);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

@@ -13,9 +13,9 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
     private static final int ROW_Y = 36, ROW_PITCH = 41, ITEM_X = 20, ITEM_Y = 18, ITEM_PITCH = 21;
     private static final int REWARD_X = 204, ACTION_X = 232, ACTION_Y = 11, ACTION_WIDTH = 62;
     private static final String[] TIERS = {"Early", "Mid", "Late"};
-    private static final String[] TABS = {"Early", "Mid", "Late", "Commissions", "Seeds", "Custom"};
-    private static final int[] TAB_X = {14, 53, 91, 130, 208, 252};
-    private static final int[] TAB_WIDTH = {36, 35, 36, 75, 41, 46};
+    private static final String[] TABS = {"Early", "Mid", "Late", "Commissions", "Seeds", "Shared", "Custom"};
+    private static final int[] TAB_X = {11, 46, 77, 111, 186, 221, 262};
+    private static final int[] TAB_WIDTH = {32, 28, 31, 72, 32, 38, 39};
     private static final int TAB_Y = 146;
 
     public GardenWorkScreen(GardenWorkMenu menu, Inventory inventory, Component title) {
@@ -59,17 +59,26 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
         }
         gui.drawString(font, font.plainSubstrByWidth(job.title(), ACTION_X - ITEM_X - 8), x + ITEM_X, y + 5, INK, false);
         for (int i = 0; i < job.ingredients().size(); i++) {
-            drawItem(gui, job.ingredients().get(i), x + ITEM_X + i * ITEM_PITCH, y + ITEM_Y);
+            if (menu.shared()) {
+                int remaining = menu.remaining(row, i);
+                var stack = job.ingredients().get(i).stack().copyWithCount(Math.max(1, remaining));
+                drawStack(gui, stack, x + ITEM_X + i * ITEM_PITCH, y + ITEM_Y);
+                if (remaining == 0) gui.drawString(font, "✓", x + ITEM_X + i * ITEM_PITCH + 8, y + ITEM_Y + 8, GREEN, false);
+            } else drawItem(gui, job.ingredients().get(i), x + ITEM_X + i * ITEM_PITCH, y + ITEM_Y);
         }
         if (menu.seedCommissions()) {
             var rules = job.ingredients().getFirst().requirements(true);
             gui.drawString(font, font.plainSubstrByWidth(rules, 120), x + ITEM_X + ITEM_PITCH, y + 22, INK, false);
         }
-        gui.drawString(font, menu.preserving() ? "Makes" : "Reward", x + 165, y + 22, INK, false);
-        drawItem(gui, job.reward(), x + REWARD_X, y + ITEM_Y);
+        if (menu.shared()) gui.drawString(font, menu.claimable(row) > 0 ? "Emeralds ×" + menu.claimable(row) : "Still needed", x + 141, y + 22, INK, false);
+        else {
+            gui.drawString(font, menu.preserving() ? "Makes" : "Reward", x + 165, y + 22, INK, false);
+            drawItem(gui, job.reward(), x + REWARD_X, y + ITEM_Y);
+        }
         boolean ready = menu.ready(row);
         GardenGuiTheme.panel(gui, x + ACTION_X, y + ACTION_Y, ACTION_WIDTH, 18, ready ? GREEN : MUTED);
-        gui.drawCenteredString(font, menu.preserving() ? "Preserve" : menu.claimed(row) ? "Claimed" : "Deliver",
+        gui.drawCenteredString(font, menu.shared() ? (menu.claimable(row) > 0 ? "Claim" : "Contribute")
+                        : menu.preserving() ? "Preserve" : menu.claimed(row) ? "Claimed" : "Deliver",
                 x + ACTION_X + ACTION_WIDTH / 2, y + ACTION_Y + 5, PAPER);
     }
 
@@ -81,7 +90,10 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
     }
 
     private void drawItem(GuiGraphics gui, GardenWork.Ingredient ingredient, int x, int y) {
-        var stack = ingredient.stack();
+        drawStack(gui, ingredient.stack(), x, y);
+    }
+
+    private void drawStack(GuiGraphics gui, net.minecraft.world.item.ItemStack stack, int x, int y) {
         GardenGuiTheme.slot(gui, x, y);
         gui.renderItem(stack, x, y);
         gui.renderItemDecorations(font, stack, x, y);
@@ -143,11 +155,13 @@ public final class GardenWorkScreen extends AbstractContainerScreen<GardenWorkMe
                         var hint = Component.literal(ingredient.count() + " × " + ingredient.stack().getHoverName().getString()
                                 + "\n" + ingredient.requirements(false));
                         gui.renderTooltip(font, font.split(hint, 175), mouseX, mouseY);
-                    } else gui.renderTooltip(font, ingredient.stack(), mouseX, mouseY);
+                    } else if (menu.shared()) gui.renderTooltip(font, Component.literal(ingredient.stack().getHoverName().getString()
+                            + " · " + menu.remaining(row, i) + " still needed"), mouseX, mouseY);
+                    else gui.renderTooltip(font, ingredient.stack(), mouseX, mouseY);
                     return;
                 }
             }
-            if (inside(mouseX, mouseY, REWARD_X, y, 16, 16)) {
+            if (!menu.shared() && inside(mouseX, mouseY, REWARD_X, y, 16, 16)) {
                 gui.renderTooltip(font, job.reward().stack(), mouseX, mouseY);
                 return;
             }

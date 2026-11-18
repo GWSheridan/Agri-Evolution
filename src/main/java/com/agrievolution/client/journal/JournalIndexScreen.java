@@ -31,7 +31,9 @@ public final class JournalIndexScreen extends Screen {
         search.setResponder(value->{query=value;page=0;refresh();});
         refresh();
     }
-    private void button(String label,int x,int y,int width,Runnable action){addRenderableWidget(new GardenButton(x,y,width,label,action));}
+    private void button(String label,int x,int y,int width,Runnable action){
+        addRenderableWidget(GardenGuiTheme.button(Component.literal(label), x, y, width, 18, ignored -> action.run()));
+    }
     private void refresh(){
         boolean typing=search.isFocused();clearWidgets();addRenderableWidget(search);if(typing)setFocused(search);
         filtered=entries.stream().filter(e->e.matches(query)).filter(e->!starred||marks.contains(e.key()))
@@ -55,6 +57,8 @@ public final class JournalIndexScreen extends Screen {
         button("<",left+10,top+h-25,24,()->{page--;refresh();});
         button(">",left+38,top+h-25,24,()->{page++;refresh();});
         button("Back",left+w-60,top+h-25,50,this::onClose);
+        if (!nav.building()) button("Companion trials", left+w-160, top+h-25, 96,
+                () -> minecraft.setScreen(new CompanionTrialsScreen(this, snapshot.companions())));
     }
     @Override public void renderBackground(GuiGraphics g,int mx,int my,float delta){
         super.renderBackground(g,mx,my,delta);
@@ -73,15 +77,8 @@ public final class JournalIndexScreen extends Screen {
         if(filtered.isEmpty())g.drawString(font,"No matching pages.",left+12,top+78,0x52614B,false);
         String status=marks.error().isEmpty()?(page+1)+" / "+Math.max(1,(filtered.size()+rows-1)/rows)+"  |  "+filtered.size()+" pages":marks.error();
         if(progress&&marks.error().isEmpty())status="Found "+IllustratedBreedingRecipes.ALL.stream().filter(r->snapshot.entry(r.result()).discovered()).count()+"/"+IllustratedBreedingRecipes.ALL.size()+" | Page "+(page+1)+"/"+Math.max(1,(filtered.size()+rows-1)/rows);
-        g.drawString(font,status,left+72,top+h-20,0x254D37,false);
+        g.drawString(font,font.plainSubstrByWidth(status, Math.max(0, w - (nav.building() ? 136 : 236))),left+72,top+h-20,0x254D37,false);
     }
     @Override public void onClose(){minecraft.setScreen(parent);}
     @Override public boolean isPauseScreen(){return false;}
-    private static final class GardenButton extends Button {
-        GardenButton(int x,int y,int w,String text,Runnable action){super(x,y,w,18,Component.literal(text),b->action.run(),DEFAULT_NARRATION);}
-        @Override protected void renderWidget(GuiGraphics g,int mx,int my,float delta){
-            GardenGuiTheme.panel(g,getX(),getY(),width,height,isHoveredOrFocused()?0xFF397454:0xFF275841);
-            g.drawCenteredString(net.minecraft.client.Minecraft.getInstance().font,getMessage(),getX()+width/2,getY()+5,0xFFF0D0);
-        }
-    }
 }

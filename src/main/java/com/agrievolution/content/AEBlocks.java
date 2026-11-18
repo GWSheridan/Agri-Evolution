@@ -10,6 +10,10 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class AEBlocks {
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(AgriEvolution.MOD_ID);
     static { ResourceCropMigration.aliases(BLOCKS, "_crop"); }
+    public static final DeferredBlock<IrrigationControllerBlock> IRRIGATION_CONTROLLER = BLOCKS.register("irrigation_controller",
+            () -> new IrrigationControllerBlock(BlockBehaviour.Properties.of().strength(3).sound(SoundType.COPPER)));
+    public static final DeferredBlock<BatchCookingBlock> BATCH_COOKING_STATION = BLOCKS.register("batch_cooking_station",
+            () -> new BatchCookingBlock(BlockBehaviour.Properties.of().strength(3).sound(SoundType.COPPER)));
     public static final DeferredBlock<CompostBinBlock> COMPOST_BIN = BLOCKS.register("compost_bin",
             () -> new CompostBinBlock(BlockBehaviour.Properties.of().strength(2).sound(SoundType.WOOD)));
     public static final DeferredBlock<SeedVaultBlock> SEED_VAULT = BLOCKS.register("seed_vault",

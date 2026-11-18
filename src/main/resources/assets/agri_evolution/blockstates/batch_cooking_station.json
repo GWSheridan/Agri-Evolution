@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "agri_evolution:block/batch_cooking_station",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "agri_evolution:block/batch_cooking_station",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "agri_evolution:block/batch_cooking_station",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "agri_evolution:block/batch_cooking_station",
+      "y": 270
+    }
+  }
+}

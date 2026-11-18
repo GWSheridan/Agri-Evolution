@@ -131,7 +131,7 @@ public final class GardenWork {
 
     static Ingredient use(Supplier<? extends Item> item, int count) { return new Ingredient(item, count); }
 
-    private static Ingredient dish(String id, int count) {
+    static Ingredient dish(String id, int count) {
         return use(() -> BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(AgriEvolution.MOD_ID, id)), count);
     }
 

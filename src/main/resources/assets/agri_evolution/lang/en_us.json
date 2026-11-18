@@ -45,6 +45,8 @@
   "advancements.agri_evolution.farming.vertical_greenhouse.title": "A Garden in the Sky",
   "advancements.agri_evolution.farming.vertical_greenhouse.description": "Open a complete Vertical Greenhouse",
   "block.agri_evolution.preserving_station": "Preserving Station",
+  "block.agri_evolution.batch_cooking_station": "Batch Cooking Station",
+  "block.agri_evolution.irrigation_controller": "Irrigation Controller",
   "item.agri_evolution.berry_jam": "Berry Jam",
   "item.agri_evolution.dill_pickles": "Dill Pickles",
   "item.agri_evolution.garden_seasoning": "Garden Seasoning",

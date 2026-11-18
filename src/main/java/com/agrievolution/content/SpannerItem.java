@@ -23,6 +23,9 @@ import org.joml.Vector3f;
 
 /** Nonconsumable assembly tool; no soil research behavior. */
 public final class SpannerItem extends Item {
+    private static final String CONTROLLER_POS = "AgriControllerPos";
+    private static final String CONTROLLER_DIMENSION = "AgriControllerDimension";
+
     public static void onLeftClick(LeftClickBlock event) {
         var player = event.getEntity();
         var level = event.getLevel();
@@ -93,6 +96,7 @@ public final class SpannerItem extends Item {
         var side = event.getHitVec().getDirection();
         if ((!valve || player.isShiftKeyDown()) && !canEdit(player, level, pos, side, player.getMainHandItem())) return;
         if (valve) {
+            if (player.isShiftKeyDown() && linkController(player, level, pos, side)) return;
             inspectValve(player, level, pos, state);
         }else if(state.getBlock() instanceof IrrigationPipeBlock){
             if (IrrigationPipeBlock.toggle(level, pos, side)) {
@@ -103,6 +107,27 @@ public final class SpannerItem extends Item {
         }else if(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head){
             head.configure(player.isShiftKeyDown());player.displayClientMessage(Component.literal(head.controls()),true);
         }
+    }
+
+    private static boolean linkController(Player player, Level level, BlockPos valvePos, Direction side) {
+        ItemStack tool = player.getMainHandItem();
+        var selected = tool.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
+        if (!selected.contains(CONTROLLER_POS)) return false;
+        net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA, tool, tag -> {
+            tag.remove(CONTROLLER_POS);
+            tag.remove(CONTROLLER_DIMENSION);
+        });
+        BlockPos controllerPos = BlockPos.of(selected.getLong(CONTROLLER_POS));
+        String dimension = level.dimension().location().toString();
+        String result = "The selected Irrigation Controller is unavailable.";
+        if (dimension.equals(selected.getString(CONTROLLER_DIMENSION)) && level.hasChunkAt(controllerPos)
+                && level.getBlockEntity(controllerPos) instanceof IrrigationControllerBlockEntity controller
+                && level.getBlockEntity(valvePos) instanceof IrrigationValveBlockEntity valve) {
+            result = canEdit(player, level, controllerPos, side, tool) ? controller.link(valve)
+                    : "You need permission to edit the Irrigation Controller.";
+        }
+        player.displayClientMessage(Component.literal(result), true);
+        return true;
     }
     private static void inspectValve(net.minecraft.world.entity.player.Player player, net.minecraft.world.level.Level level,
             net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
@@ -151,8 +176,7 @@ public final class SpannerItem extends Item {
 
     static String zoneFlow(Level level, BlockPos pos, net.minecraft.world.level.block.state.BlockState state,
                            IrrigationNetwork.ZoneStatus status, IrrigationNetwork.SupplyWater amounts) {
-        if (!state.getValue(IrrigationValveBlock.OPEN)) return "Valve closed";
-        if (!IrrigationValveBlock.permitsFlow(level, pos, state)) return "Valve paused by redstone";
+        if (!IrrigationValveBlock.permitsFlow(level, pos, state)) return IrrigationValveBlock.flowStatus(level, pos, state);
         if (status.limit()) return "Valve open";
         if (!status.supplies().isEmpty()) {
             return amounts.ready() == 0 ? "Connected sources short of a full bucket" : "Water supply ready";
@@ -184,12 +208,24 @@ public final class SpannerItem extends Item {
         lines.add(Component.literal("Crouch-use on an Agri crop to recover its sticks."));
         lines.add(Component.literal("Crouch and left-click an irrigation fitting to trace water."));
         lines.add(Component.literal("Use on a valve to inspect its zone. Crouch-use a renamed Spanner to name it."));
+        lines.add(Component.literal("Crouch-use an Irrigation Controller, then a named valve, to link a zone."));
     }
 
     @Override public InteractionResult useOn(UseOnContext context){
         var level=context.getLevel();var pos=context.getClickedPos();var player=context.getPlayer();
         if (player == null) return InteractionResult.PASS;
         var state = level.getBlockState(pos);
+        if (player.isShiftKeyDown() && state.is(AEBlocks.IRRIGATION_CONTROLLER.get())) {
+            if (!canEdit(player, level, pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
+            if (!level.isClientSide) {
+                net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA, context.getItemInHand(), tag -> {
+                    tag.putLong(CONTROLLER_POS, pos.asLong());
+                    tag.putString(CONTROLLER_DIMENSION, level.dimension().location().toString());
+                });
+                player.displayClientMessage(Component.literal("Controller selected. Crouch-use a named valve to link it."), true);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
         if (player.isShiftKeyDown() && CropSupportItem.tier(state) > 0) {
             if (!canEdit(player, level, pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
             if (!level.isClientSide) {

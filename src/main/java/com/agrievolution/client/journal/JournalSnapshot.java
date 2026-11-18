@@ -30,14 +30,17 @@ public final class JournalSnapshot {
     private final int discoveredCount;
     private final java.util.Set<RareTrait> rareDiscovered;
     private final java.util.List<SeedVariety.Record> varieties;
+    private final java.util.Set<String> companions;
 
     private JournalSnapshot(Map<CropSpecies, Entry> entries, boolean parentSelected,
-                            int discoveredCount, java.util.Set<RareTrait> rareDiscovered, java.util.List<SeedVariety.Record> varieties) {
+                            int discoveredCount, java.util.Set<RareTrait> rareDiscovered, java.util.List<SeedVariety.Record> varieties,
+                            java.util.Set<String> companions) {
         this.entries = Map.copyOf(entries);
         this.parentSelected = parentSelected;
         this.discoveredCount = discoveredCount;
         this.rareDiscovered = java.util.Set.copyOf(rareDiscovered);
         this.varieties = varieties;
+        this.companions = companions;
     }
 
     public static JournalSnapshot from(ItemStack journal) {
@@ -70,7 +73,8 @@ public final class JournalSnapshot {
             RareTrait trait = RareTrait.fromName(found.getString(i));
             if (trait != RareTrait.NONE) rare.add(trait);
         }
-        return new JournalSnapshot(entries, root.contains(SELECTED, Tag.TAG_COMPOUND), total, rare, SeedVariety.records(root));
+        return new JournalSnapshot(entries, root.contains(SELECTED, Tag.TAG_COMPOUND), total, rare, SeedVariety.records(root),
+                com.agrievolution.farming.CompanionPlanting.discovered(root));
     }
 
     public Entry entry(CropSpecies species) { return entries.get(species); }
@@ -80,4 +84,5 @@ public final class JournalSnapshot {
     public int rareDiscoveredCount() { return rareDiscovered.size(); }
     public boolean rareDiscovered(RareTrait trait) { return rareDiscovered.contains(trait); }
     public java.util.List<SeedVariety.Record> varieties() { return varieties; }
+    public java.util.Set<String> companions() { return companions; }
 }

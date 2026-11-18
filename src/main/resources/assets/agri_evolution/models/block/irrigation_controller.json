@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "agri_evolution:block/irrigation_controller_side",
+    "north": "agri_evolution:block/irrigation_controller_front",
+    "south": "agri_evolution:block/irrigation_controller_side",
+    "west": "agri_evolution:block/irrigation_controller_side",
+    "east": "agri_evolution:block/irrigation_controller_side",
+    "up": "agri_evolution:block/irrigation_controller_top",
+    "down": "agri_evolution:block/irrigation_controller_side"
+  }
+}

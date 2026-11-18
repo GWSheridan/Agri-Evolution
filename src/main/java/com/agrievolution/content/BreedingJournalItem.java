@@ -69,6 +69,7 @@ public final class BreedingJournalItem extends Item {
         recordBestGenetics(root, crop.species(), genome);
         SeedVariety.record(root, target.variety(), crop.species(), genome, target.lineage());
         boolean newTrait = recordTrait(root, target.rareTrait());
+        int trials = com.agrievolution.farming.CompanionPlanting.record(root, level, pos, crop.species());
 
         if (player.isShiftKeyDown()) {
             if (!mature) {
@@ -92,7 +93,8 @@ public final class BreedingJournalItem extends Item {
 
         if (!root.contains(SELECTED, Tag.TAG_COMPOUND)) {
             save(journal, root);
-            status(player, newTrait ? "NEW GENETIC DISCOVERY: " + target.rareTrait().name()
+            status(player, trials > 0 ? "Companion planting trial discovered. Check Grandmas Journal."
+                    : newTrait ? "NEW GENETIC DISCOVERY: " + target.rareTrait().name()
                     : crop.species().displayName() + " recorded - open journal for details");
             return InteractionResult.CONSUME;
         }

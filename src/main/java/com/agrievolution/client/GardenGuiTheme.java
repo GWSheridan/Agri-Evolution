@@ -1,6 +1,9 @@
 package com.agrievolution.client;
 
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 /** Original garden-workbench artwork. Layout, font scale and hitboxes remain screen-owned. */
@@ -8,6 +11,8 @@ public final class GardenGuiTheme {
     private static final ResourceLocation FRAME = texture("garden_frame");
     private static final ResourceLocation HEADER = texture("garden_header");
     private static final ResourceLocation SLOT = texture("seed_tray_slot");
+    private static final int BUTTON_GREEN = 0xff275841, BUTTON_PAPER = 0xfff0dfbb;
+    private static final int BUTTON_INK = 0xff342519, BUTTON_MUTED = 0xff806849;
     private static ResourceLocation texture(String name) {
         return ResourceLocation.fromNamespaceAndPath("agri_evolution", "textures/gui/garden/" + name + ".png");
     }
@@ -15,6 +20,10 @@ public final class GardenGuiTheme {
     public static void panel(GuiGraphics g, int x, int y, int w, int h, int fill) {
         if (w <= 0 || h <= 0) return;
         if (w == 18 && h == 18) { slot(g, x + 1, y + 1); return; }
+        texturedPanel(g, x, y, w, h, fill);
+    }
+
+    private static void texturedPanel(GuiGraphics g, int x, int y, int w, int h, int fill) {
         int r = (fill >>> 16) & 255, green = (fill >>> 8) & 255, blue = fill & 255;
         boolean paper = r >= 150 && green >= 130 && blue >= 90;
         boolean foliage = green > r && green > blue;
@@ -34,6 +43,31 @@ public final class GardenGuiTheme {
     /** Retain the approved journal pages; add the same botanical binding around them. */
     public static void binding(GuiGraphics g, int x, int y, int w, int h) {
         frame(g,FRAME,x-4,y-4,w+8,h+8,8);
+    }
+
+    public static Button button(Component label, int x, int y, int width, int height, Button.OnPress action) {
+        return new GardenButton(label, x, y, width, height, action);
+    }
+
+    private static final class GardenButton extends Button {
+        GardenButton(Component label, int x, int y, int width, int height, OnPress action) {
+            super(x, y, width, height, label, action, DEFAULT_NARRATION);
+        }
+
+        @Override protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partial) {
+            boolean highlighted = active && isHoveredOrFocused();
+            int fill = highlighted ? BUTTON_PAPER : active ? BUTTON_GREEN : BUTTON_MUTED;
+            texturedPanel(g, getX(), getY(), getWidth(), getHeight(), fill);
+            var font = Minecraft.getInstance().font;
+            var label = getMessage();
+            g.drawString(font, label, getX() + (getWidth() - font.width(label)) / 2,
+                    getY() + (getHeight() - 8) / 2, highlighted ? BUTTON_INK : BUTTON_PAPER, false);
+        }
+    }
+
+    public static void center(GuiGraphics g, String text, int center, int y, int color) {
+        var font = Minecraft.getInstance().font;
+        g.drawString(font, text, center - font.width(text) / 2, y, color, false);
     }
 
     /** x/y are the inventory item's native 16x16 origin, never a shifted interaction slot. */

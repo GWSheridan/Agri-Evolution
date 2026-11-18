@@ -17,9 +17,11 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     public static final int CYCLE_WATER_INTAKE = CHOOSE_B + VerticalGreenhouseBlockEntity.TRAYS;
     public static final int CYCLE_ROUTE = CYCLE_WATER_INTAKE + 1;
     public static final int CYCLE_BATCH = CYCLE_ROUTE + VerticalGreenhouseBlockEntity.ROUTE_COUNT, RESET_BATCH = CYCLE_BATCH + 1;
-    public static final int FIRST_TRAY_X = 31, TRAY_PITCH = 46, TRAY_Y = 89;
-    public static final int FIRST_OUTPUT_X = 126, HARVEST_Y = 131, OFFSPRING_Y = 151;
-    public static final int INVENTORY_X = 81, INVENTORY_Y = 181, HOTBAR_Y = 239;
+    public static final int TARGET_SEED = RESET_BATCH + 1, TARGET_GENE = TARGET_SEED + 1;
+    public static final int REJECT_ROUTE = TARGET_GENE + 6;
+    public static final int FIRST_TRAY_X = 31, TRAY_PITCH = 46, TRAY_Y = 80;
+    public static final int FIRST_OUTPUT_X = 126, HARVEST_Y = 118, OFFSPRING_Y = 136, REJECTS_Y = 154;
+    public static final int INVENTORY_X = 81, INVENTORY_Y = 190, HOTBAR_Y = 244;
     private static final VerticalGreenhouseBlockEntity.Status[] STATUSES = VerticalGreenhouseBlockEntity.Status.values();
     private static final VerticalGreenhouseBlockEntity.WaterStatus[] WATER_STATUSES = VerticalGreenhouseBlockEntity.WaterStatus.values();
     private final VerticalGreenhouseBlockEntity greenhouse;
@@ -52,7 +54,8 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
         }
         for (int i = VerticalGreenhouseBlockEntity.HARVEST; i < VerticalGreenhouseBlockEntity.SLOTS; i++) {
             int col = (i - VerticalGreenhouseBlockEntity.HARVEST) % 9;
-            int y = i < VerticalGreenhouseBlockEntity.OFFSPRING ? HARVEST_Y : OFFSPRING_Y;
+            int y = i < VerticalGreenhouseBlockEntity.OFFSPRING ? HARVEST_Y
+                    : i < VerticalGreenhouseBlockEntity.REJECTS ? OFFSPRING_Y : REJECTS_Y;
             addSlot(new Slot(contents, i, FIRST_OUTPUT_X + col * 18, y) {
                 @Override public boolean mayPlace(ItemStack stack) { return false; }
             });
@@ -87,6 +90,8 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     }
     public int batchTarget() { return data.get(VerticalGreenhouseBlockEntity.BATCH_TARGET); }
     public int batchCount() { return data.get(VerticalGreenhouseBlockEntity.BATCH_COUNT); }
+    public int targetSeed() { return data.get(VerticalGreenhouseBlockEntity.TARGET_SEED); }
+    public int minimumGene(int gene) { return data.get(VerticalGreenhouseBlockEntity.MIN_GROWTH + gene) * 10; }
 
     @Override public boolean stillValid(Player player) { return stillValid(access, player, AEBlocks.VERTICAL_GREENHOUSE.get()); }
 
@@ -102,6 +107,12 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
             greenhouse.cycleBatchTarget();
         } else if (button == RESET_BATCH && batchTarget() > 0) {
             greenhouse.resetBatch();
+        } else if (button == TARGET_SEED) {
+            if (!greenhouse.setTargetSeed(getCarried())) return false;
+        } else if (button >= TARGET_GENE && button < TARGET_GENE + 6) {
+            greenhouse.cycleTargetGene((button - TARGET_GENE) % 3, button < TARGET_GENE + 3 ? 1 : -1);
+        } else if (button >= REJECT_ROUTE && button < REJECT_ROUTE + VerticalGreenhouseBlockEntity.ROUTE_COUNT) {
+            greenhouse.toggleRejectRoute(button - REJECT_ROUTE);
         } else if (button >= CYCLE_ROUTE && button < CYCLE_BATCH) {
             greenhouse.cycleOutputRoute(button - CYCLE_ROUTE);
         } else if (button >= CHOOSE_A && button < CYCLE_WATER_INTAKE) {

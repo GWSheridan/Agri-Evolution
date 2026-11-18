@@ -1,6 +1,7 @@
 package com.agrievolution.content;
 
 import com.agrievolution.genetics.GenomeBreeder;
+import com.agrievolution.genetics.CropSpecies;
 import com.agrievolution.genetics.GenomeStorage;
 import com.agrievolution.genetics.HybridLineageStorage;
 import com.agrievolution.genetics.RareTrait;
@@ -32,29 +33,32 @@ import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 /** The base owns the trays, output buffers and water for all three blocks. */
 public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntity implements WorldlyContainer, IFluidHandler {
-    public static final int TRAYS = 6, HARVEST = TRAYS, OFFSPRING = HARVEST + 9, SLOTS = OFFSPRING + 9;
+    public static final int TRAYS = 6, HARVEST = TRAYS, OFFSPRING = HARVEST + 9, REJECTS = OFFSPRING + 9, SLOTS = REJECTS + 9;
     public static final int CAPACITY = 16000, HARVEST_WATER = 250, BREED_WATER = 500;
     public static final int PROGRESS_START = 7, PAIR_MODE = PROGRESS_START + TRAYS;
     public static final int SELECTED_A = PAIR_MODE + 1, SELECTED_B = PAIR_MODE + 2;
     public static final int WATER_INTAKE = PAIR_MODE + 3, WATER_STATUS = PAIR_MODE + 4;
     public static final int ROUTE_START = WATER_STATUS + 1, ROUTE_COUNT = 5;
-    public static final int BATCH_TARGET = ROUTE_START + ROUTE_COUNT, BATCH_COUNT = BATCH_TARGET + 1, DATA_COUNT = BATCH_COUNT + 1;
+    public static final int BATCH_TARGET = ROUTE_START + ROUTE_COUNT, BATCH_COUNT = BATCH_TARGET + 1;
+    public static final int TARGET_SEED = BATCH_COUNT + 1, MIN_GROWTH = TARGET_SEED + 1, MIN_YIELD = MIN_GROWTH + 1,
+            MIN_RESILIENCE = MIN_YIELD + 1, DATA_COUNT = MIN_RESILIENCE + 1;
     private static final int BUCKET = 1000;
     private static final int BREED_SECONDS = 35;
-    private static final int[] OUTPUT_SLOTS = IntStream.range(HARVEST, SLOTS).toArray();
+    private static final int[] OUTPUT_SLOTS = IntStream.range(HARVEST, REJECTS).toArray();
     private static final int[] HARVEST_SLOTS = IntStream.range(HARVEST, OFFSPRING).toArray();
-    private static final int[] OFFSPRING_SLOTS = IntStream.range(OFFSPRING, SLOTS).toArray();
+    private static final int[] OFFSPRING_SLOTS = IntStream.range(OFFSPRING, REJECTS).toArray();
+    private static final int[] REJECT_SLOTS = IntStream.range(REJECTS, SLOTS).toArray();
     private static final int[] NO_SLOTS = {};
     private static final Direction[] OUTPUT_FACES = {Direction.DOWN, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
-    private static final int[] BATCH_TARGETS = {0, 1, 4, 8, 12, 16, 32, 64};
+    private static final int[] BATCH_TARGETS = {0, 1, 4, 8, 12, 16, 32, 64, 5};
 
     public enum Status { INCOMPLETE, OFF, NO_SEEDS, NO_HARVEST, NO_PAIR, NEED_WATER, OUTPUT_FULL, RUNNING, BATCH_COMPLETE }
     public enum OutputRoute {
-        OFF, PRODUCE, SEEDS, BOTH;
+        OFF, PRODUCE, SEEDS, BOTH, REJECTS;
 
         private static final OutputRoute[] ROUTES = values();
         static OutputRoute fromId(int id) { return id >= 0 && id < ROUTES.length ? ROUTES[id] : OFF; }
-        OutputRoute next() { return ROUTES[(ordinal() + 1) % ROUTES.length]; }
+        OutputRoute next() { return this == BOTH || this == REJECTS ? OFF : ROUTES[ordinal() + 1]; }
     }
 
     public enum WaterIntake {
@@ -82,6 +86,8 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     private final int[] progress = new int[TRAYS];
     private int water, growCursor, breedCursor, breeding;
     private int batchIndex, batchCount;
+    private CropSpecies targetSpecies;
+    private final int[] minimumGenes = new int[3];
     private final OutputRoute[] routes = {OutputRoute.BOTH, OutputRoute.OFF, OutputRoute.OFF, OutputRoute.OFF, OutputRoute.OFF};
     private int parentA = -1, parentB = -1;
     private int selectedA = -1, selectedB = -1;
@@ -109,6 +115,8 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
                 case WATER_STATUS -> waterStatus.ordinal();
                 case BATCH_TARGET -> BATCH_TARGETS[batchIndex];
                 case BATCH_COUNT -> batchCount;
+                case TARGET_SEED -> targetSpecies == null ? 0 : targetSpecies.ordinal() + 1;
+                case MIN_GROWTH, MIN_YIELD, MIN_RESILIENCE -> minimumGenes[index - MIN_GROWTH];
                 default -> index >= ROUTE_START ? routes[index - ROUTE_START].ordinal() : progress[index - PROGRESS_START];
             };
         }
@@ -140,6 +148,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
                 case PRODUCE -> HARVEST_SLOTS;
                 case SEEDS -> OFFSPRING_SLOTS;
                 case BOTH -> OUTPUT_SLOTS;
+                case REJECTS -> REJECT_SLOTS;
             };
         }
         return NO_SLOTS;
@@ -158,6 +167,12 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         level.invalidateCapabilities(worldPosition);
     }
 
+    void toggleRejectRoute(int face) {
+        routes[face] = routes[face] == OutputRoute.REJECTS ? OutputRoute.OFF : OutputRoute.REJECTS;
+        setChanged();
+        level.invalidateCapabilities(worldPosition);
+    }
+
     void cycleBatchTarget() {
         batchIndex = (batchIndex + 1) % BATCH_TARGETS.length;
         resetBatch();
@@ -167,6 +182,32 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         batchCount = 0;
         resetPair();
         setChanged();
+    }
+
+    boolean setTargetSeed(ItemStack sample) {
+        CropSpecies next = null;
+        if (!sample.isEmpty()) {
+            if (!(sample.getItem() instanceof SpeciesSeedItem seed)) return false;
+            next = seed.species();
+        }
+        if (targetSpecies == next) return true;
+        targetSpecies = next;
+        resetBatch();
+        return true;
+    }
+
+    void cycleTargetGene(int gene, int change) {
+        minimumGenes[gene] = Math.floorMod(minimumGenes[gene] + change, 11);
+        resetBatch();
+    }
+
+    private boolean qualifies(ItemStack seed) {
+        if (targetSpecies != null && (!(seed.getItem() instanceof SpeciesSeedItem agri) || agri.species() != targetSpecies)) return false;
+        if (minimumGenes[0] == 0 && minimumGenes[1] == 0 && minimumGenes[2] == 0) return true;
+        if (!(seed.getItem() instanceof SpeciesSeedItem)) return false;
+        var genes = GenomeStorage.fromSeed(seed);
+        return genes.growth() >= minimumGenes[0] * 10 && genes.yield() >= minimumGenes[1] * 10
+                && genes.resilience() >= minimumGenes[2] * 10;
     }
 
     private boolean batchComplete() {
@@ -291,7 +332,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
                 ItemStack stack = items.get(slot);
                 if (stack.isEmpty()) continue;
                 boolean exported = vault != null
-                        ? slot >= OFFSPRING && vault.receiveOffspring(stack)
+                        ? slot >= OFFSPRING && slot < REJECTS && vault.receiveOffspring(stack)
                         : ItemHandlerHelper.insertItemStacked(handler, stack.copyWithCount(1), false).isEmpty();
                 if (exported) {
                     stack.shrink(1);
@@ -409,8 +450,9 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         if (breeding < BREED_SECONDS) breeding++;
         if (breeding < BREED_SECONDS) return Status.RUNNING;
         if (pendingChild.isEmpty()) pendingChild = offspring(server, items.get(parentA), items.get(parentB));
-        if (!store(pendingChild, OFFSPRING, SLOTS)) return Status.OUTPUT_FULL;
-        if (batchIndex > 0) batchCount += pendingChild.getCount();
+        boolean accepted = qualifies(pendingChild);
+        if (!store(pendingChild, accepted ? OFFSPRING : REJECTS, accepted ? REJECTS : SLOTS)) return Status.OUTPUT_FULL;
+        if (batchIndex > 0 && accepted) batchCount += pendingChild.getCount();
         water -= BREED_WATER;
         if (!fixedPair) breedCursor = (parentA * TRAYS + parentB + 1) % (TRAYS * TRAYS);
         resetPair();
@@ -465,6 +507,8 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         tag.putIntArray("OutputRoutes", java.util.Arrays.stream(routes).mapToInt(OutputRoute::ordinal).toArray());
         tag.putInt("BatchIndex", batchIndex);
         tag.putInt("BatchCount", batchCount);
+        if (targetSpecies != null) tag.putString("TargetSpecies", targetSpecies.id());
+        tag.putIntArray("MinimumGenes", minimumGenes.clone());
         tag.putBoolean("Grow", growEnabled);
         tag.putBoolean("Breed", breedEnabled);
         tag.putBoolean("FixedPair", fixedPair);
@@ -493,6 +537,10 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         }
         batchIndex = Math.clamp(tag.getInt("BatchIndex"), 0, BATCH_TARGETS.length - 1);
         batchCount = Math.clamp(tag.getInt("BatchCount"), 0, BATCH_TARGETS[batchIndex]);
+        String target = tag.getString("TargetSpecies");
+        targetSpecies = java.util.Arrays.stream(CropSpecies.values()).filter(species -> species.id().equals(target)).findFirst().orElse(null);
+        int[] savedMinimums = tag.getIntArray("MinimumGenes");
+        for (int i = 0; i < minimumGenes.length; i++) minimumGenes[i] = i < savedMinimums.length ? Math.clamp(savedMinimums[i], 0, 10) : 0;
         growEnabled = !tag.contains("Grow") || tag.getBoolean("Grow");
         breedEnabled = !tag.contains("Breed") || tag.getBoolean("Breed");
         fixedPair = tag.getBoolean("FixedPair");
