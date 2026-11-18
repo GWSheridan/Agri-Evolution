@@ -7,7 +7,12 @@ import com.agrievolution.genetics.RareTrait;
 import com.agrievolution.genetics.SeedVariety;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -30,23 +35,35 @@ public final class AECropBlockEntity extends BlockEntity {
     private int supportTicks=-1;
     public int supportTicks(){return supportTicks<0?CropSupportItem.lifetime(CropSupportItem.tier(getBlockState())):supportTicks;}
     public void setSupportTicks(int ticks){supportTicks=ticks;setChanged();}
-    public net.minecraft.world.item.ItemStack recoverSupport(){
-        int tier=CropSupportItem.tier(getBlockState());
-        if(tier==0||supportTicks()==0)return net.minecraft.world.item.ItemStack.EMPTY;
-        var stack=new net.minecraft.world.item.ItemStack(CropSupportItem.itemFor(tier));
-        if(tier<3)net.minecraft.world.item.component.CustomData.update(net.minecraft.core.component.DataComponents.CUSTOM_DATA,stack,tag->tag.putInt("SupportTicks",supportTicks()));
+    public ItemStack recoverSupport() {
+        int tier = CropSupportItem.tier(getBlockState());
+        int remaining = supportTicks();
+        if (tier == 0 || remaining == 0) return ItemStack.EMPTY;
+        var stack = new ItemStack(CropSupportItem.itemFor(tier));
+        if (tier < 3 && remaining < CropSupportItem.lifetime(tier)) {
+            CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> tag.putInt("SupportTicks", remaining));
+        }
         return stack;
     }
-    public static void tickSupport(net.minecraft.world.level.Level level,BlockPos pos,BlockState state,AECropBlockEntity plant){
-        int tier=CropSupportItem.tier(state);
-        if(tier==0)return;
-        if(tier==3){if(state.getValue(AgriCropBlock.WEEDY))level.setBlock(pos,state.setValue(AgriCropBlock.WEEDY,false),3);return;}
-        if(plant.supportTicks<0)plant.supportTicks=CropSupportItem.lifetime(tier);
-        if(plant.supportTicks>0)plant.supportTicks--;
-        if(plant.supportTicks%20==0)plant.setChanged();
-        if(plant.supportTicks==0){
-            level.setBlock(pos,state.setValue(AgriCropBlock.SUPPORTED,false).setValue(AgriCropBlock.SUPPORT_TIER,0),3);
-            plant.supportTicks=-1;plant.setChanged();
+    public static void tickSupport(Level level, BlockPos pos, BlockState state, AECropBlockEntity plant) {
+        int tier = CropSupportItem.tier(state);
+        if (tier == 0) return;
+        if (tier == 3) {
+            if (state.getValue(AgriCropBlock.WEEDY)) {
+                level.setBlock(pos, state.setValue(AgriCropBlock.WEEDY, false), Block.UPDATE_ALL);
+            }
+            return;
+        }
+        if (plant.supportTicks < 0) plant.supportTicks = CropSupportItem.lifetime(tier);
+        if (plant.supportTicks > 0) {
+            plant.supportTicks--;
+            // The ticker's chunk is already loaded. Persist wear without updating neighboring comparators.
+            var chunk = level.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4);
+            if (chunk != null) chunk.setUnsaved(true);
+        }
+        if (plant.supportTicks == 0 && level.setBlock(pos, state.setValue(AgriCropBlock.SUPPORTED, false)
+                .setValue(AgriCropBlock.SUPPORT_TIER, 0), Block.UPDATE_ALL)) {
+            plant.setSupportTicks(-1);
         }
     }
 

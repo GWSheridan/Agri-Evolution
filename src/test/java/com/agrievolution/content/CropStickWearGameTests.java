@@ -13,7 +13,13 @@ public final class CropStickWearGameTests {
             level.setBlock(pos,Blocks.AIR.defaultBlockState(),2);level.setBlock(pos,state,2);
             var plant=(AECropBlockEntity)level.getBlockEntity(pos);
             h.assertTrue(plant.supportTicks()==(tier==1?24000:288000),"Correct full lifetime");
+            var fresh = new net.minecraft.world.item.ItemStack(CropSupportItem.itemFor(tier));
+            h.assertTrue(net.minecraft.world.item.ItemStack.isSameItemSameComponents(fresh, plant.recoverSupport()),
+                    "Unused supports can still stack after recovery");
+            var chunk = level.getChunkAt(pos);
+            chunk.setUnsaved(false);
             AECropBlockEntity.tickSupport(level,pos,state,plant);
+            h.assertTrue(chunk.isUnsaved(), "Wear after the last save marks the chunk dirty, even between whole seconds");
             var recovered=plant.recoverSupport();h.assertTrue(CropSupportItem.remaining(recovered)==CropSupportItem.lifetime(tier)-1,"Recovered item retains wear");
             var tag=new net.minecraft.nbt.CompoundTag();plant.saveAdditional(tag,level.registryAccess());
             var copy=new AECropBlockEntity(pos,state);copy.loadAdditional(tag,level.registryAccess());h.assertTrue(copy.supportTicks()==plant.supportTicks(),"Wear survives save/load");

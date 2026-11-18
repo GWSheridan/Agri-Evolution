@@ -75,9 +75,17 @@ public final class NativeSeedBreedingGameTests {
         helper.assertTrue(station.getItem(4).isEmpty() && station.data.get(0) == 0, "Native parents wait for compost");
         station.setItem(0, new ItemStack(AEItems.WILD_SEED.get()));
         station.setItem(1, new ItemStack(AEItems.WILD_SEED.get()));
+        station.setItem(3, new ItemStack(AEItems.IRON_CROP_SUPPORT.get(), 2));
         cycle(helper, station);
         helper.assertTrue(station.getItem(4).is(AEItems.WILD_SEED.get()) && station.getItem(0).isEmpty() && station.getItem(1).isEmpty(),
                 "Agri breeding still combines and consumes parents with optional compost");
+        helper.assertTrue(station.getItem(3).getCount() == 2, "Pairs with no mutation recipe keep their supports");
+        station.setItem(4, ItemStack.EMPTY);
+        station.setItem(0, new ItemStack(AEItems.WILD_SEED.get()));
+        station.setItem(1, new ItemStack(AEItems.DIRT_SEED.get()));
+        cycle(helper, station);
+        helper.assertTrue(!station.getItem(4).isEmpty() && station.getItem(3).isEmpty(),
+                "A supported mutation attempt spends two supports whether or not the mutation succeeds");
         helper.succeed();
     }
 }

@@ -13,7 +13,7 @@ public final class SpeciesBreeder {
         return cross(first, second, seed, 0);
     }
 
-    /** Compatibility overload: a supported pair gains up to +5 points to mutation chance. */
+    /** Breeding without a pollination bonus, as used by the Seed Breeding Station. */
     public static CropSpecies cross(CropSpecies first, CropSpecies second, long seed, int bonus) {
         return cross(first, second, seed, bonus, 0);
     }
@@ -407,7 +407,7 @@ public final class SpeciesBreeder {
 
     public record MutationRecipe(CropSpecies offspring, int baseChance) {
         public int chanceWithSupports(int bonus) {
-            return baseChance + Math.max(0, Math.min(5, bonus));
+            return baseChance + Math.clamp(bonus, 0, 12);
         }
     }
 

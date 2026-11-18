@@ -120,7 +120,7 @@ public final class BreedingJournalItem extends Item {
             return InteractionResult.CONSUME;
         }
 
-        // Visible supports on BOTH parents add five percentage points to rare mutations.
+        // Both parents need a support. The weaker tier sets the mutation bonus.
         int bonus = CropSupportItem.fieldBonus(Math.min(CropSupportItem.tier(parentState),CropSupportItem.tier(state)));
         int pollination = parent.pollinated(level.getGameTime()) || target.pollinated(level.getGameTime()) ? CropPollination.BONUS : 0;
         CropSpecies offspringSpecies = SpeciesBreeder.cross(first.species(), crop.species(),

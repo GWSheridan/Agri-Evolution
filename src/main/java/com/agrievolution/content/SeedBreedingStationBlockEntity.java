@@ -138,7 +138,7 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
         parentA.shrink(1);
         parentB.shrink(1);
         if (getItem(COMPOST).is(AEItems.NUTRIENT_COMPOST.get())) getItem(COMPOST).shrink(1);
-        if (bonus > 0) getItem(SUPPORT).shrink(2);
+        if (bonus > 0 && SpeciesBreeder.mutationRecipe(kindA, kindB) != null) getItem(SUPPORT).shrink(2);
         setItem(OUTPUT, offspring);
         setChanged();
     }

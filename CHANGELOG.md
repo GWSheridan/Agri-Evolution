@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.37
+
+- Iron and obsidian crop sticks now give the advertised +8 and +12 percentage points on field and Breeding Station mutations. Wood still gives +5.
+- The Breeding Station saves your sticks when the parents have no mutation recipe.
+- Unused sticks stack with fresh ones after you recover them. Worn sticks keep their remaining life.
+- Crop stick wear saves between whole seconds, so reloading a chunk no longer restores that wear.
+
 ## 1.2.36
 
 - Spanner traces show the exact amount of water at the source they find.

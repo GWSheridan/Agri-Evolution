@@ -83,7 +83,9 @@ public final class SeedAnalyzerSelfTest {
         require(forward.offspring() == output && reverse.offspring() == output, "wrong mutation");
         require(forward.baseChance() == percent, "incorrect base mutation chance");
         require(forward.chanceWithSupports(5) == percent + 5, "incorrect crop support bonus");
-        require(forward.chanceWithSupports(99) == percent + 5, "crop support bonus not clamped");
+        require(forward.chanceWithSupports(8) == percent + 8, "incorrect iron support bonus");
+        require(forward.chanceWithSupports(12) == percent + 12, "incorrect obsidian support bonus");
+        require(forward.chanceWithSupports(99) == percent + 12, "crop support bonus not clamped");
         for (long n = 0; n < 1000; n++) {
             require(SpeciesBreeder.cross(a, b, n) == SpeciesBreeder.cross(a, b, n),
                     "breeding became nondeterministic");
