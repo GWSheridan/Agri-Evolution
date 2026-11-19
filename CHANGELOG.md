@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.17
+
+- Seed Breeding Stations reject old ticks after removal or replacement. A late completion cannot spend parents, compost or supports, or create another offspring.
+- Breeding ticks check the machine's world, position and current block state before advancing progress or checking greenhouse bonuses. A rotated machine resumes on its next current tick.
+- Changing parents just before a save no longer carries the previous pair's progress into the replacement seeds. This also covers changes to seed genetics. Topping up the same parents still preserves progress across a reload.
+- Closing a Breeding Station disables its old pickup and shift-click actions. Another player, a spectator or a dead viewer cannot transfer items through that screen.
+- Parent, reagent, output and player-inventory slots apply the screen's access checks, including direct slot transfers after closing or removal.
+- Removed stations reject insertion queries. Normal Adventure inventory use, native seed variants, genetic crosses and world-free GUI previews remain supported.
+
 ## 1.3.16
 
 - Seed Vault screens check their owning viewer and reject spectator and dead-player transfers. A nearby player cannot use another viewer's inventory or lock controls.

@@ -20,6 +20,8 @@ public final class SeedBreedingStationMenu extends AbstractContainerMenu {
     private final Container station;
     private final ContainerLevelAccess access;
     private final ContainerData data;
+    private final Inventory inventory;
+    private boolean closed;
 
     /** Client uses a disposable inventory; network Slot updates fill it. */
     public SeedBreedingStationMenu(int id, Inventory inventory) {
@@ -39,28 +41,35 @@ public final class SeedBreedingStationMenu extends AbstractContainerMenu {
         this.station = station;
         this.access = access;
         this.data = data;
+        this.inventory = inventory;
         station.startOpen(inventory.player);
-        addSlot(new Slot(station, 0, 41, 57) {
-            @Override public boolean mayPlace(ItemStack stack) { return SeedBreedingParents.accepts(stack); }
+        addSlot(new AccessSlot(station, 0, 41, 57) {
+            @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && SeedBreedingParents.accepts(stack); }
         });
-        addSlot(new Slot(station, 1, 81, 57) {
-            @Override public boolean mayPlace(ItemStack stack) { return SeedBreedingParents.accepts(stack); }
+        addSlot(new AccessSlot(station, 1, 81, 57) {
+            @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && SeedBreedingParents.accepts(stack); }
         });
-        addSlot(new Slot(station, 2, 152, 57) {
-            @Override public boolean mayPlace(ItemStack stack) { return stack.is(AEItems.NUTRIENT_COMPOST.get()); }
+        addSlot(new AccessSlot(station, 2, 152, 57) {
+            @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && stack.is(AEItems.NUTRIENT_COMPOST.get()); }
         });
-        addSlot(new Slot(station, 3, 192, 57) {
-            @Override public boolean mayPlace(ItemStack stack) { return stack.getItem() instanceof CropSupportItem; }
+        addSlot(new AccessSlot(station, 3, 192, 57) {
+            @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && stack.getItem() instanceof CropSupportItem; }
         });
-        addSlot(new Slot(station, 4, 296, 57) {
+        addSlot(new AccessSlot(station, 4, 296, 57) {
             @Override public boolean mayPlace(ItemStack stack) { return false; }
         });
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++)
-                addSlot(new Slot(inventory, col + row * 9 + 9, 96 + col * 18, 132 + row * 18));
+                addSlot(new AccessSlot(inventory, col + row * 9 + 9, 96 + col * 18, 132 + row * 18));
         }
-        for (int col = 0; col < 9; col++) addSlot(new Slot(inventory, col, 96 + col * 18, 202));
+        for (int col = 0; col < 9; col++) addSlot(new AccessSlot(inventory, col, 96 + col * 18, 202));
         addDataSlots(data);
+    }
+
+    private class AccessSlot extends Slot {
+        AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
+        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
     }
 
     public int progress() { return data.get(0); }
@@ -74,7 +83,9 @@ public final class SeedBreedingStationMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return station.stillValid(player) && stillValid(access, player, AEBlocks.SEED_BREEDING_STATION.get());
+        return !closed && player == inventory.player && (player == null ? !(station instanceof SeedBreedingStationBlockEntity)
+                : player.isAlive() && !player.isSpectator() && station.stillValid(player)
+                    && stillValid(access, player, AEBlocks.SEED_BREEDING_STATION.get()));
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
@@ -83,6 +94,8 @@ public final class SeedBreedingStationMenu extends AbstractContainerMenu {
 
     @Override
     public void removed(Player player) {
+        if (player != inventory.player) return;
+        closed = true;
         super.removed(player);
         station.stopOpen(player); // Inventory stays in the workstation when GUI closes.
     }

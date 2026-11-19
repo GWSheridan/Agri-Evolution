@@ -67,6 +67,7 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
     }
 
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
+        if (!WorkstationAccess.isCurrent(this)) return false;
         return switch (slot) {
             case SEED_A, SEED_B -> SeedBreedingParents.accepts(stack);
             case COMPOST -> stack.is(AEItems.NUTRIENT_COMPOST.get());
@@ -86,6 +87,8 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, SeedBreedingStationBlockEntity station) {
+        if (level.isClientSide || station.getLevel() != level || !station.getBlockPos().equals(pos)
+                || !WorkstationAccess.isCurrent(station) || level.getBlockState(pos) != state) return;
         if (++station.greenhouseCheckTicks >= 40) {
             station.greenhouseCheckTicks = 0;
             station.greenhouseBoost = com.agrievolution.farming.BotanicalGreenhouseLayout
@@ -155,7 +158,7 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, items, registries);
-        tag.putInt("BreedingProgress", progress);
+        tag.putInt("BreedingProgress", sameParents() ? progress : 0);
     }
 
     @Override

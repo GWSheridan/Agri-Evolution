@@ -32,6 +32,7 @@ public final class NativeSeedBreedingGameTests {
     public static void breedsVanillaSeedsAndTagOptIns(GameTestHelper helper) {
         var station = station(helper);
         var player = helper.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(net.minecraft.world.phys.Vec3.atCenterOf(station.getBlockPos()));
         var menu = new SeedBreedingStationMenu(1, player.getInventory(), station);
         helper.assertTrue(SeedBagItem.accepts(new ItemStack(Items.CHORUS_FLOWER)), "Shared seed tag loads in the test datapack");
         helper.assertTrue(new ItemStack(Items.BAMBOO).is(SeedBreedingParents.EXTERNAL_SEEDS), "The optional legacy seed tag joins the opt-in tag");
