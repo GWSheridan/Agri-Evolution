@@ -33,8 +33,15 @@ public final class AECropBlockEntity extends BlockEntity {
     private long pollinatedUntil;
     private int soilNutrition = 40;
     private int supportTicks=-1;
-    public int supportTicks(){return supportTicks<0?CropSupportItem.lifetime(CropSupportItem.tier(getBlockState())):supportTicks;}
-    public void setSupportTicks(int ticks){supportTicks=ticks;setChanged();}
+    public int supportTicks(){
+        int life=CropSupportItem.lifetime(CropSupportItem.tier(getBlockState()));
+        return life<0?-1:supportTicks<0?life:Math.min(supportTicks,life);
+    }
+    private int boundedSupportTicks(int ticks){
+        int life=CropSupportItem.lifetime(CropSupportItem.tier(getBlockState()));
+        return life<0?-1:Math.clamp(ticks,-1,life);
+    }
+    public void setSupportTicks(int ticks){supportTicks=boundedSupportTicks(ticks);setChanged();}
     public ItemStack recoverSupport() {
         int tier = CropSupportItem.tier(getBlockState());
         int remaining = supportTicks();
@@ -46,6 +53,8 @@ public final class AECropBlockEntity extends BlockEntity {
         return stack;
     }
     public static void tickSupport(Level level, BlockPos pos, BlockState state, AECropBlockEntity plant) {
+        if (level.isClientSide || plant.getLevel() != level || !plant.getBlockPos().equals(pos)
+                || !WorkstationAccess.isCurrent(plant) || level.getBlockState(pos) != state) return;
         int tier = CropSupportItem.tier(state);
         if (tier == 0) return;
         if (tier == 3) {
@@ -129,7 +138,7 @@ public final class AECropBlockEntity extends BlockEntity {
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
-        supportTicks=tag.contains("SupportTicks")?Math.max(-1,tag.getInt("SupportTicks")):-1;
+        supportTicks=tag.contains("SupportTicks")?boundedSupportTicks(tag.getInt("SupportTicks")):-1;
         genome = tag.contains(GENOME, 10)
                 ? GenomeStorage.readGenome(tag.getCompound(GENOME)) : CropGenome.wild();
         rareTrait = RareTrait.fromName(tag.getString("AgriRareTrait"));

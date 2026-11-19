@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.13
+
+- Crop stick ticks check the live crop state and block entity before changing anything. Old expiry calls cannot restore removed crops, expire a replacement plant or rewind crop growth.
+- Stale wear ticks no longer charge a newer crop state. Obsidian weed cleanup cannot restore an old support tier over a newer state.
+- Loaded and assigned wooden and iron stick countdowns stay within their normal lifetimes. Obsidian sticks ignore old finite countdowns and remain recoverable as permanent supports.
+- Installing crop sticks and recovering them with a Spanner reject spectators and respect the clicked hand's item-use permission.
+- Support actions recheck the crop, block entity and held stack after permission hooks. Replaced plants and changed held items are left alone without charging an upgrade or returning another plant's sticks.
+- Obsidian installation clears weeds in the same block update as the upgrade. Failed installation writes report failure, and later callbacks cannot reset wear on a different plant or support tier.
+
 ## 1.3.12
 
 - Closing a Seed Bag or Lunch Box permanently disables that screen's old controls. Late deposits and withdrawals leave both inventories alone.

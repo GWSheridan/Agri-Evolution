@@ -46,17 +46,24 @@ public final class CropSupportItem extends Item {
         var level=context.getLevel();BlockPos pos=context.getClickedPos();var state=level.getBlockState(pos);
         var player=context.getPlayer();
         if(!(state.getBlock() instanceof AgriCropBlock)||tier(state)>=tier)return InteractionResult.PASS;
-        if(player==null||!player.mayBuild()||!level.mayInteract(player,pos)
-                ||!player.mayUseItemAt(pos,context.getClickedFace(),context.getItemInHand()))return InteractionResult.FAIL;
+        var held=context.getItemInHand();var beforeHeld=held.copy();
+        var entity=level.getBlockEntity(pos);
+        if(held.getItem()!=this || !(entity instanceof AECropBlockEntity plant)
+                || !WorkstationAccess.mayUse(level,pos,player,context.getClickedFace(),held))return InteractionResult.FAIL;
+        // Permission hooks can replace the plant or the held stack before they return.
+        if(level.getBlockState(pos)!=state || level.getBlockEntity(pos)!=plant
+                || player.getItemInHand(context.getHand())!=held || !ItemStack.matches(beforeHeld,held))return InteractionResult.FAIL;
         int previous=tier(state);
-        int remaining=remaining(context.getItemInHand());
+        int remaining=remaining(held);
         if(remaining==0)return InteractionResult.FAIL;
-        var returned=level.getBlockEntity(pos) instanceof AECropBlockEntity plant?plant.recoverSupport():new ItemStack(itemFor(Math.max(1,previous)));
-        if(!level.isClientSide&&level.setBlock(pos,state.setValue(AgriCropBlock.SUPPORTED,true).setValue(AgriCropBlock.SUPPORT_TIER,tier),3)) {
-            if(level.getBlockEntity(pos) instanceof AECropBlockEntity plant)plant.setSupportTicks(remaining);
-            if(tier==3)level.setBlock(pos,level.getBlockState(pos).setValue(AgriCropBlock.WEEDY,false),3);
+        var returned=plant.recoverSupport();
+        if(!level.isClientSide) {
+            var installed=state.setValue(AgriCropBlock.SUPPORTED,true).setValue(AgriCropBlock.SUPPORT_TIER,tier);
+            if(tier==3)installed=installed.setValue(AgriCropBlock.WEEDY,false);
+            if(!level.setBlock(pos,installed,Block.UPDATE_ALL))return InteractionResult.FAIL;
+            if(level.getBlockEntity(pos)==plant && tier(level.getBlockState(pos))==tier)plant.setSupportTicks(remaining);
             if(!player.getAbilities().instabuild) {
-                context.getItemInHand().shrink(1);
+                held.shrink(1);
                 if(previous>0) {
                     if(!player.getInventory().add(returned))Block.popResource(level,pos,returned);
                 }

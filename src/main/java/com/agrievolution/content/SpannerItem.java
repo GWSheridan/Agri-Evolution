@@ -229,13 +229,18 @@ public final class SpannerItem extends Item {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
         if (player.isShiftKeyDown() && CropSupportItem.tier(state) > 0) {
-            if (!canEdit(player, level, pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
+            var held = context.getItemInHand();
+            var beforeHeld = held.copy();
+            var entity = level.getBlockEntity(pos);
+            if (held.getItem() != this || !(entity instanceof AECropBlockEntity plant)
+                    || !WorkstationAccess.mayUse(level, pos, player, context.getClickedFace(), held)) return InteractionResult.FAIL;
+            if (level.getBlockState(pos) != state || level.getBlockEntity(pos) != plant
+                    || player.getItemInHand(context.getHand()) != held || !ItemStack.matches(beforeHeld, held)) return InteractionResult.FAIL;
             if (!level.isClientSide) {
-                if (!(level.getBlockEntity(pos) instanceof AECropBlockEntity plant)) return InteractionResult.FAIL;
                 var recovered = plant.recoverSupport();
                 var unsupported = state.setValue(AgriCropBlock.SUPPORTED, false).setValue(AgriCropBlock.SUPPORT_TIER, 0);
                 if (!level.setBlock(pos, unsupported, Block.UPDATE_ALL)) return InteractionResult.FAIL;
-                plant.setSupportTicks(-1);
+                if (level.getBlockEntity(pos) == plant && CropSupportItem.tier(level.getBlockState(pos)) == 0) plant.setSupportTicks(-1);
                 if (!recovered.isEmpty() && !player.getAbilities().instabuild && !player.getInventory().add(recovered)) {
                     Block.popResource(level, pos, recovered);
                 }
