@@ -31,12 +31,15 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
     @Override protected void setItems(NonNullList<ItemStack> items) { seeds = items; }
     @Override protected Component getDefaultName() { return Component.translatable("block.agri_evolution.seed_vault"); }
     @Override protected AbstractContainerMenu createMenu(int id, Inventory inventory) { return new SeedVaultMenu(id, inventory, this); }
-    @Override public boolean canPlaceItem(int slot, ItemStack stack) { return (locked & (1 << slot)) == 0 && SeedBagItem.accepts(stack); }
+    @Override public boolean canPlaceItem(int slot, ItemStack stack) {
+        return slot >= 0 && slot < SIZE && WorkstationAccess.isCurrent(this)
+                && (locked & (1 << slot)) == 0 && SeedBagItem.accepts(stack);
+    }
     @Override public int[] getSlotsForFace(Direction face) { return NO_AUTOMATION_SLOTS; }
     @Override public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction face) { return false; }
     @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction face) { return false; }
     @Override public boolean stillValid(Player player) {
-        return !isRemoved() && level != null && level.getBlockEntity(worldPosition) == this && super.stillValid(player);
+        return player != null && player.level() == level && WorkstationAccess.isCurrent(this) && super.stillValid(player);
     }
 
     int locks() { return locked; }
@@ -44,11 +47,13 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
     int minimum(int trait) { return minimum[trait]; }
 
     void setIntakeSpecies(CropSpecies species) {
+        if (!WorkstationAccess.isCurrent(this)) return;
         intakeSpecies = species;
         setChanged();
     }
 
     void cycleMinimum(int trait) {
+        if (trait < 0 || trait >= minimum.length || !WorkstationAccess.isCurrent(this)) return;
         minimum[trait] = (minimum[trait] + 10) % 110;
         setChanged();
     }
@@ -78,6 +83,7 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
         return true;
     }
     void toggleLock(int slot) {
+        if (slot < 0 || slot >= SIZE || !WorkstationAccess.isCurrent(this)) return;
         locked ^= 1 << slot;
         setChanged();
     }

@@ -19,6 +19,8 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
     private final Container seeds;
     private final SeedVaultBlockEntity vault;
     private final ContainerData data;
+    private final Inventory inventory;
+    private boolean closed;
 
     public SeedVaultMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(SIZE), null, new SimpleContainerData(DATA_COUNT));
@@ -40,19 +42,28 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
         this.seeds = seeds;
         this.vault = vault;
         this.data = data;
+        this.inventory = inventory;
         addDataSlots(data);
         for (int i = 0; i < SIZE; i++) {
             int slot = i;
             addSlot(new Slot(seeds, slot, FIRST_X + slot % 9 * PITCH, FIRST_Y + slot / 9 * PITCH) {
-                @Override public boolean mayPlace(ItemStack stack) { return !locked(slot) && SeedBagItem.accepts(stack); }
-                @Override public boolean mayPickup(Player player) { return !locked(slot); }
+                @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player) && !locked(slot) && SeedBagItem.accepts(stack); }
+                @Override public boolean mayPickup(Player player) { return stillValid(player) && !locked(slot); }
             });
         }
-        for (int i = 0; i < 27; i++) addSlot(new Slot(inventory, i + 9, FIRST_X + i % 9 * PITCH, 132 + i / 9 * PITCH));
-        for (int i = 0; i < 9; i++) addSlot(new Slot(inventory, i, FIRST_X + i * PITCH, 190));
+        for (int i = 0; i < 27; i++) addPlayerSlot(i + 9, FIRST_X + i % 9 * PITCH, 132 + i / 9 * PITCH);
+        for (int i = 0; i < 9; i++) addPlayerSlot(i, FIRST_X + i * PITCH, 190);
+    }
+
+    private void addPlayerSlot(int index, int x, int y) {
+        addSlot(new Slot(inventory, index, x, y) {
+            @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
+            @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        });
     }
 
     public boolean locked(int slot) {
+        if (slot < 0 || slot >= SIZE) return true;
         int half = slot / SeedVaultBlockEntity.MASK_HALF;
         return (data.get(half) & (1 << (slot % SeedVaultBlockEntity.MASK_HALF))) != 0;
     }
@@ -64,13 +75,23 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
 
     @Override public boolean canTakeItemForPickAll(ItemStack stack, Slot slot) {
         int index = slots.indexOf(slot);
-        return (index < 0 || index >= SIZE || !locked(index)) && super.canTakeItemForPickAll(stack, slot);
+        return stillValid(inventory.player) && (index < 0 || index >= SIZE || !locked(index))
+                && super.canTakeItemForPickAll(stack, slot);
     }
 
-    @Override public boolean stillValid(Player player) { return vault == null || seeds.stillValid(player); }
+    @Override public boolean stillValid(Player player) {
+        return !closed && player == inventory.player && (player == null ? vault == null
+                : player.isAlive() && !player.isSpectator() && (vault == null || seeds.stillValid(player)));
+    }
+
+    @Override public void removed(Player player) {
+        if (player != inventory.player) return;
+        closed = true;
+        super.removed(player);
+    }
 
     @Override public boolean clickMenuButton(Player player, int slot) {
-        if (vault == null || player.isSpectator() || !player.mayBuild()
+        if (vault == null || !stillValid(player) || !player.mayBuild()
                 || !player.level().mayInteract(player, vault.getBlockPos())
                 || slot < 0 || slot >= CYCLE_MINIMUM + 3 || !stillValid(player)) return false;
         if (slot < SIZE) {

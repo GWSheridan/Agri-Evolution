@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.16
+
+- Seed Vault screens check their owning viewer and reject spectator and dead-player transfers. A nearby player cannot use another viewer's inventory or lock controls.
+- Vault access checks the player's dimension while retaining the normal interaction reach. Matching coordinates in another dimension cannot keep a vault screen active.
+- Closing a vault permanently disables that screen's old pickup, shift-click, deposit and lock actions.
+- Vault and player-inventory slots apply the same access checks as the screen. Old direct slot references cannot withdraw or insert seeds after closing or removal.
+- Removed vaults reject placement queries and direct lock or intake-setting changes. Invalid slot and trait indices are ignored without wrapping into another lock or throwing an exception.
+- Normal Adventure inventory access, separate genetic lines, locked-slot protection and world-free GUI previews remain supported. Hoppers still cannot access vault contents.
+
 ## 1.3.15
 
 - Shared Garden Order rewards reserve each payment before handing over emeralds. Inventory callbacks cannot claim the same balance twice, and saves during delivery see the reduced balance.

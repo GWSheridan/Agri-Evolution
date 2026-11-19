@@ -91,6 +91,7 @@ public final class SeedSafetyGameTests {
         h.getLevel().setBlock(pos, AEBlocks.SEED_VAULT.get().defaultBlockState(), 2);
         var vault = (SeedVaultBlockEntity) h.getLevel().getBlockEntity(pos);
         var player = h.makeMockPlayer(GameType.SURVIVAL);
+        player.setPos(Vec3.atCenterOf(pos));
         var menu = new SeedVaultMenu(1, player.getInventory(), vault);
         for (var item : new net.minecraft.world.item.Item[]{Items.WHEAT_SEEDS, Items.CARROT, Items.POTATO,
                 Items.NETHER_WART, Items.COCOA_BEANS, Items.GLOW_BERRIES, Items.BAMBOO}) {
