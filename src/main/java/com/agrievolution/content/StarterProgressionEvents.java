@@ -33,9 +33,22 @@ public final class StarterProgressionEvents {
     }
     private static void giveOnce(Player player,net.minecraft.nbt.CompoundTag flags,String key,net.minecraft.world.item.Item item){
         if(flags.getBoolean(key))return;
-        flags.putBoolean(key,true);
-        for(int i=0;i<player.getInventory().getContainerSize();i++)if(player.getInventory().getItem(i).is(item))return;
-        var stack=new ItemStack(item);if(!player.getInventory().add(stack))player.drop(stack,false);
+        var inventory = player.getInventory();
+        for (int i = 0; i < inventory.getContainerSize(); i++) {
+            if (inventory.getItem(i).is(item)) {
+                flags.putBoolean(key, true);
+                return;
+            }
+        }
+        var stack = new ItemStack(item);
+        int slot = inventory.getFreeSlot();
+        if (slot >= 0) {
+            inventory.setItem(slot, stack);
+            inventory.setChanged();
+            flags.putBoolean(key, true);
+        } else if (player.drop(stack, false) != null) {
+            flags.putBoolean(key, true);
+        }
     }
     public static void onClone(PlayerEvent.Clone event){
         var old=event.getOriginal().getPersistentData();var next=event.getEntity().getPersistentData();

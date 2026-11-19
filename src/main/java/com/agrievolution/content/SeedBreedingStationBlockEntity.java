@@ -130,6 +130,11 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
         com.agrievolution.genetics.SeedVariety.inherit(offspring, parentA, parentB);
         if (kindA != kindB) HybridLineageStorage.putOnSeed(offspring,
                 new HybridLineageStorage.Lineage(kindA, kindB));
+        else {
+            var lineage = HybridLineageStorage.fromSeed(parentA);
+            if (lineage == null) lineage = HybridLineageStorage.fromSeed(parentB);
+            if (lineage != null) HybridLineageStorage.putOnSeed(offspring, lineage);
+        }
         GenomeStorage.putOnSeed(offspring, genes);
         RareTraitStorage.putOnSeed(offspring,
                 RareTrait.inherit(RareTraitStorage.fromSeed(parentA), RareTraitStorage.fromSeed(parentB),

@@ -77,6 +77,14 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
     boolean enabled() { return enabled; }
     int manual() { return manual; }
 
+    boolean zoneActive(BlockPos zone) { return active >= 0 && zone.equals(valves[active]); }
+
+    String reserveStatus(BlockPos zone) {
+        var network = IrrigationNetwork.controllerSupply(level, zone, worldPosition);
+        int total = IrrigationNetwork.supplyWater(level, network.supplies()).total();
+        return "Refill held in reserve (" + reserveWater() + " mB protected; " + total + " mB in sources)";
+    }
+
     void action(int slot, int action) {
         if (action == 4) {
             reserve = (reserve + 1) % RESERVES.length;
@@ -146,7 +154,8 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
     private boolean canRun(int slot, boolean override) {
         var valve = valve(slot);
         return valve != null && IrrigationValveBlock.hardwareOpen(level, valve.getBlockPos(), valve.getBlockState())
-                && availableWater(valve.getBlockPos(), override ? 1000 : 1000 + reserveWater());
+                && (availableWater(valve.getBlockPos(), override ? 1000 : 1000 + reserveWater())
+                    || IrrigationNetwork.controllerHasBufferedWater(level, valve.getBlockPos(), worldPosition));
     }
 
     void checkSchedules() {

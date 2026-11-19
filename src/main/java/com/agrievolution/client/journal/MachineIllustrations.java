@@ -80,10 +80,14 @@ public final class MachineIllustrations {
         var name=Component.literal(output.getHoverName().getString()).withStyle(Style.EMPTY.withFont(JournalFonts.BODY_FONT));
         int lineY=y;for(var line:f.split(name,150)){g.drawString(f,line,right,lineY,JournalTheme.GREEN,false);lineY+=12;}
         text(g,f,"Makes "+output.getCount(),right,lineY+12);
-        text(g,f,MachineRecipeCatalog.isFood(spec.id())?"Any order in crafting table.":"Use a crafting table.",right,lineY+29);
+        text(g,f,spec.shaped()?"Use the pattern shown.":"Any order in crafting table.",right,lineY+29);
         var food=output.get(net.minecraft.core.component.DataComponents.FOOD);
         text(g,f,food==null?"Hover ingredients for names.":"Restores "+food.nutrition()+" hunger points.",right,lineY+46);
         if(!hovered.isEmpty())g.renderTooltip(f,hovered.getHoverName(),mx,my);
+    }
+    private static ItemStack fallback(String[] alternatives) {
+        return alternatives.length == 0 ? ItemStack.EMPTY
+                : fallback(alternatives[(int) (System.currentTimeMillis() / 1500 % alternatives.length)]);
     }
     private MachineIllustrations(){}
 }

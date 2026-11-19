@@ -19,6 +19,7 @@ public final class JournalScreen extends Screen {
     private boolean compact;
     private int left;
     private int top;
+    private final com.agrievolution.client.NativeGuiViewport viewport = new com.agrievolution.client.NativeGuiViewport();
 
     public JournalScreen(ItemStack journal) {
         super(Component.literal(journal.is(com.agrievolution.content.AEItems.JOURNAL.get())?"Building & Machines Journal":"Grandmas Journal"));
@@ -35,8 +36,9 @@ public final class JournalScreen extends Screen {
         compact = width < JournalTheme.WIDTH + 12 || height < JournalTheme.HEIGHT + 12;
         int w = compact ? CompactJournalRenderer.WIDTH : JournalTheme.WIDTH;
         int h = compact ? CompactJournalRenderer.HEIGHT : JournalTheme.HEIGHT;
-        left = (width - w) / 2;
-        top = (height - h) / 2;
+        viewport.init(width, height, w, h);
+        left = viewport.x();
+        top = viewport.y();
     }
 
     private int localX(double screenX) { return (int) Math.floor(screenX - left); }
@@ -73,6 +75,11 @@ public final class JournalScreen extends Screen {
         com.agrievolution.client.GardenGuiTheme.panel(gui,compact?205:226,indexY,compact?160:178,16,0xFF275841);
         gui.drawString(font,"I: Contents / Search",compact?212:234,indexY+4,0xFFF0D0,false);
         gui.pose().popPose();
+
+        if (viewport.oversized()) {
+            gui.fill(0, height - 14, width, height, 0xEF281D17);
+            gui.drawCenteredString(font, "Ctrl+scroll or arrows  |  Shift: sideways", width / 2, height - 11, 0xFFF0DEB8);
+        }
 
         if (nav.section() == JournalNavigation.Section.SPECIES) {
             for (int row = 0; row < JournalNavigation.SPECIES_PER_PAGE; row++) {
@@ -295,7 +302,7 @@ public final class JournalScreen extends Screen {
             for (int i = 0; i < nav.sections().length; i++) {
                 boolean clicked = compact
                         ? CompactJournalRenderer.tabHit(mx, my, i,nav.building())
-                        : JournalRenderer.inside(mx, my, JournalRenderer.tabX(i), 50, nav.building()?64:60, 18);
+                        : JournalRenderer.inside(mx, my, JournalRenderer.tabX(i), 50, nav.building()?62:58, 16);
                 if (clicked) {
                     nav.section(nav.sections()[i]);
                     return true;
@@ -356,6 +363,11 @@ public final class JournalScreen extends Screen {
 
     @Override
     public boolean keyPressed(int key, int scanCode, int modifiers) {
+        if (viewport.keyPressed(key, modifiers)) {
+            left = viewport.x();
+            top = viewport.y();
+            return true;
+        }
         if(key==73){openIndex();return true;}
         if(nav.building()&&(key==82||key==66)) {
             var pages=MachineGuidePages.forBook(true);int target=0;
@@ -382,6 +394,12 @@ public final class JournalScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (hasControlDown() && viewport.oversized()) {
+            viewport.scroll(scrollX, scrollY, hasShiftDown());
+            left = viewport.x();
+            top = viewport.y();
+            return true;
+        }
         if (scrollY != 0) {
             if (nav.section() == JournalNavigation.Section.SPECIES) {
                 nav.cycleSpecies(scrollY > 0 ? -1 : 1);

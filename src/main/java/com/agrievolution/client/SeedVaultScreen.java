@@ -17,7 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-public final class SeedVaultScreen extends AbstractContainerScreen<SeedVaultMenu> {
+public final class SeedVaultScreen extends com.agrievolution.client.ScrollableGardenScreen<SeedVaultMenu> {
     private static final int PAPER = 0xFFF1DFB8, INK = 0xFF342519, GREEN = 0xFF285947, MUTED = 0xFF806849;
     private EditBox search;
     private String query = "";

@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.4
+
+- Reworked 23 seed icons and cleaned up String Seeds. All 265 seed textures have been checked at 64×64 and at inventory size.
+- Unnamed crops now return seeds with their original genes, rare traits and hybrid ancestry. Resource-crop loot no longer mixes in seeds with default genes.
+- Breeding Stations keep an existing hybrid's ancestry when crossing two seeds of the same species.
+- Seed Bags and Seed Vaults accept the same supported vanilla and modded planting items as breeding machines.
+- Seed planting checks permissions before changing a plot or using a seed. Greenhouse settings and vault locks also respect build permissions.
+- Starter journals are dropped safely when a Creative inventory is full. Joining again won't issue extra copies.
+- Scheduled sprinklers keep using stored water after the supply reaches its reserve. Refills still protect the reserve, and schedules and redstone still stop watering.
+- Reloading a controller cannot leave an old valve-open state active. The Spanner and machine screens explain when water is held in reserve.
+- Journal recipe pictures keep all ingredient alternatives when the catalogue is rebuilt. The guides explain accepted breeding batches and irrigation reserves.
+- Smaller journal tabs fit their controls. On small GUI resolutions, use Ctrl+scroll or Ctrl+arrow keys to reach the rest of a journal or machine panel; Shift+scroll moves sideways.
+- Long irrigation zone names have a full-name tooltip. Vertical Greenhouses no longer send unnecessary comparator updates.
+
 ## 1.3.3
 
 - A late delivery click can’t hand over supplies for a new Shared order round.

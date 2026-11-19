@@ -22,7 +22,7 @@ public final class JournalIndex {
         var result=new ArrayList<Entry>();var guides=MachineGuidePages.forBook(building);
         for(int i=0;i<guides.length;i++){
             var p=guides[i];String title=p.title(),body=p.subtitle()+" "+String.join(" ",p.left())+" "+String.join(" ",p.right());
-            if(title.startsWith("CRAFT ")){var recipe=MachineRecipeCatalog.ALL[Integer.parseInt(title.substring(6))];title="Craft: "+recipe.id().replace('_',' ');body+=" "+String.join(" ",recipe.ingredients());}
+            if(title.startsWith("CRAFT ")){var recipe=MachineRecipeCatalog.ALL[Integer.parseInt(title.substring(6))];title="Craft: "+recipe.id().replace('_',' ');body+=" "+java.util.Arrays.stream(recipe.ingredients()).flatMap(java.util.Arrays::stream).collect(java.util.stream.Collectors.joining(" "));}
             result.add(new Entry(JournalNavigation.Section.MACHINES,i,title,body));
         }
         if(!building){

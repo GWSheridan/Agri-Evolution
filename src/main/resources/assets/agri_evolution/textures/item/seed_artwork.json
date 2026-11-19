@@ -1,0 +1,104 @@
+{
+  "version": "1.3.4",
+  "origin": "Original Agri Evolution artwork",
+  "created_with": "Built-in image_gen, imagegen skill",
+  "export": "Nearest-neighbour 64x64 PNG; hard transparency; centred 54px framing",
+  "assets": [
+    {
+      "file": "big_dripleaf_seed.png",
+      "sha256": "3b317c62f4da70b187d89be02e30d1d1d2c0ae97f74d08b54a52b9efd9b5a1c7"
+    },
+    {
+      "file": "birch_sapling_seed.png",
+      "sha256": "1aa7101a9d1cff4684f66a5e6976912f1d014f9dcb200a10a92c77873ba103ec"
+    },
+    {
+      "file": "brain_coral_seed.png",
+      "sha256": "7955d69a59661ac409d0000ab0c98e28cca8fda13cecde74100b37c8688d54a6"
+    },
+    {
+      "file": "bubble_coral_seed.png",
+      "sha256": "21d62ca8d06754cb3c1e1e30f5c0e0b01109aaf289b0bad125a5797f9f914c88"
+    },
+    {
+      "file": "crimson_fungus_seed.png",
+      "sha256": "136922e0e408ad55fff125180700d12a3535f7f3c1fc38c832445a3a191512bc"
+    },
+    {
+      "file": "crimson_stem_seed.png",
+      "sha256": "44aa14bc4cd57f4fe6f7dd2c6d2653d9ad8d0157054598854de94e3be64b4fd4"
+    },
+    {
+      "file": "dark_oak_sapling_seed.png",
+      "sha256": "ab9dc59c902bf3db4ba055f096eeea433c113cf4d2180a86f924f96ffd65bd93"
+    },
+    {
+      "file": "fire_coral_seed.png",
+      "sha256": "f59754979d71cb033285df07a68d198e236855f2fcdb46cd70bb09a2b4505b95"
+    },
+    {
+      "file": "mossy_cobblestone_seed.png",
+      "sha256": "c2aef107bdc051968701d9f47841e387937d863e185de9e3d6bd6239add3979d"
+    },
+    {
+      "file": "mud_bricks_seed.png",
+      "sha256": "2dec01e74e03b98dd0f5bc111482b1faa3e34a87f22b3d0867fc5dac9d2e4f40"
+    },
+    {
+      "file": "oak_sapling_seed.png",
+      "sha256": "b9befb1fa662ca08f475507845e055290e7db54c2db3ba1efee1e360b2114f3f"
+    },
+    {
+      "file": "ochre_froglight_seed.png",
+      "sha256": "a9a1011c40373b3922c94f529996749f4b6a4b6eb84d270ae7596ac1ef00ffb8"
+    },
+    {
+      "file": "red_sandstone_seed.png",
+      "sha256": "c6db6d4a97b9882ea4e4151ccd9e657f078545fceb050b19edc184d85fcbf7c7"
+    },
+    {
+      "file": "respawn_anchor_seed.png",
+      "sha256": "17186475450d4e87df3fcb16bf198565cb3d21718d338e922a5a1e0b4a4865e6"
+    },
+    {
+      "file": "seagrass_seed.png",
+      "sha256": "a42b992ed600f3e02c7ba653c67d6c7004044e5790992c1666753757f762f1d5"
+    },
+    {
+      "file": "shroomlight_seed.png",
+      "sha256": "6c46350c542849c8a57e53cf5a42ffc87f91f125f337fdd45349f4f119aec8eb"
+    },
+    {
+      "file": "spore_blossom_seed.png",
+      "sha256": "27ce3fcff19152115f7803ec2e5cb2f3bb8a547baed142e35eee94e70b50ea64"
+    },
+    {
+      "file": "spruce_sapling_seed.png",
+      "sha256": "557d629592ec2ff433fef67004107dc4d63e4bd1405cc37782181bc6ed622625"
+    },
+    {
+      "file": "string_seed.png",
+      "sha256": "0c9a6cd8206d53c62deee847dbde652f63bb8d63318adea70083e4110e431345"
+    },
+    {
+      "file": "trial_key_seed.png",
+      "sha256": "738c009bc6dbcbb572c00ae7a03428edc08d68f10fb91ca3365db1151a7658c8"
+    },
+    {
+      "file": "tube_coral_seed.png",
+      "sha256": "58f73e2e6bb68579c30d430404249ef3d3eca751ba040e163a7a5ec4f51f84c1"
+    },
+    {
+      "file": "tuff_seed.png",
+      "sha256": "e3309852208f49a37a8a4a78ddc80d8becade43725be1f0d64dd5a36058a2d54"
+    },
+    {
+      "file": "vine_seed.png",
+      "sha256": "64f91b7d8328c276049568f80fbe60bfbbbaa9961134e72cd2bf5ef89faa44a6"
+    },
+    {
+      "file": "warped_fungus_seed.png",
+      "sha256": "3491d53ebd76e929ef43bb02e3ee36bb56ccef8df0a7da539d5f549a67af5890"
+    }
+  ]
+}

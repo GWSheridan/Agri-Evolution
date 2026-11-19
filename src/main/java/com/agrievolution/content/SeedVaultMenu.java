@@ -70,12 +70,13 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
     @Override public boolean stillValid(Player player) { return vault == null || seeds.stillValid(player); }
 
     @Override public boolean clickMenuButton(Player player, int slot) {
-        if (vault == null || player.isSpectator() || slot < 0 || slot >= CYCLE_MINIMUM + 3 || !stillValid(player)) return false;
+        if (vault == null || player.isSpectator() || !player.mayBuild()
+                || !player.level().mayInteract(player, vault.getBlockPos())
+                || slot < 0 || slot >= CYCLE_MINIMUM + 3 || !stillValid(player)) return false;
         if (slot < SIZE) {
             if (!locked(slot) && seeds.getItem(slot).isEmpty()) return false;
             vault.toggleLock(slot);
         } else {
-            if (!player.mayBuild() || !player.level().mayInteract(player, vault.getBlockPos())) return false;
             if (slot == SET_SPECIES) {
                 if (!(getCarried().getItem() instanceof SpeciesSeedItem seed)) return false;
                 vault.setIntakeSpecies(seed.species());

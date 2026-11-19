@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
-public final class IrrigationControllerScreen extends AbstractContainerScreen<IrrigationControllerMenu> {
+public final class IrrigationControllerScreen extends com.agrievolution.client.ScrollableGardenScreen<IrrigationControllerMenu> {
     private static final int GREEN = 0xff164534;
     private static final int PAPER = 0xfff0dfbb;
     private static final int INK = 0xff352716;
@@ -75,4 +75,13 @@ public final class IrrigationControllerScreen extends AbstractContainerScreen<Ir
     }
 
     @Override protected void renderLabels(GuiGraphics g, int x, int y) {}
+
+    @Override public void render(GuiGraphics gui, int mouseX, int mouseY, float delta) {
+        super.render(gui, mouseX, mouseY, delta);
+        int row = Math.floorDiv(mouseY - topPos - FIRST_ROW, ROW_PITCH);
+        if (row >= 0 && row < ZONES && mouseX >= leftPos + 14 && mouseX < leftPos + 109
+                && mouseY < topPos + FIRST_ROW + row * ROW_PITCH + 18) {
+            gui.renderTooltip(font, font.split(Component.literal(menu.label(row)), Math.min(240, width - 16)), mouseX, mouseY);
+        }
+    }
 }

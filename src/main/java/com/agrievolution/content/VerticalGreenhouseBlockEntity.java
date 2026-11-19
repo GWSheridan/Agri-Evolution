@@ -77,7 +77,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
 
     public enum WaterStatus {
         CHECKING, OFF, WAITING, READY, REFILLING, NO_SOURCE, EMPTY_SOURCE, BLOCKED_VALVE, NETWORK_LIMIT, INCOMPLETE,
-        BLOCKED_PORT, UNLOADED_SUPPLY, INCOMPLETE_RESERVOIR, UNLOADED_RESERVOIR
+        BLOCKED_PORT, UNLOADED_SUPPLY, INCOMPLETE_RESERVOIR, UNLOADED_RESERVOIR, RESERVE_HELD
     }
 
     private NonNullList<ItemStack> items = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
@@ -131,7 +131,6 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     @Override public void setChanged() {
         if (level == null || !level.hasChunkAt(worldPosition)) return;
         level.blockEntityChanged(worldPosition);
-        IrrigationNetwork.updateComparators(level, worldPosition, getBlockState().getBlock());
     }
 
     @Override public int getContainerSize() { return SLOTS; }
@@ -371,8 +370,9 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
             }
         }
         if (!network.supplies().isEmpty()) return WaterStatus.EMPTY_SOURCE;
-        if (network.blockedValve()) return WaterStatus.BLOCKED_VALVE;
         return switch (inspection.route(server).flow()) {
+            case RESERVE_HELD -> WaterStatus.RESERVE_HELD;
+            case CLOSED_VALVE -> WaterStatus.BLOCKED_VALVE;
             case DISABLED_PORT -> WaterStatus.BLOCKED_PORT;
             case UNLOADED_CONNECTION -> WaterStatus.UNLOADED_SUPPLY;
             case UNLOADED_RESERVOIR -> WaterStatus.UNLOADED_RESERVOIR;

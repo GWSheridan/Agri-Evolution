@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Compact eight-tab dashboard with native-pixel text and matching input coordinates. */
-public final class BotanicalGreenhouseScreen extends AbstractContainerScreen<BotanicalGreenhouseMenu> {
+public final class BotanicalGreenhouseScreen extends com.agrievolution.client.ScrollableGardenScreen<BotanicalGreenhouseMenu> {
     private static final int DARK = 0xFF281D17;
     private static final int GOLD = 0xFFC6A368;
     private static final int GREEN = 0xFF275841;

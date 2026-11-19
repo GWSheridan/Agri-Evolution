@@ -16,7 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
-public final class BatchCookingScreen extends AbstractContainerScreen<BatchCookingMenu> {
+public final class BatchCookingScreen extends com.agrievolution.client.ScrollableGardenScreen<BatchCookingMenu> {
     private static final int PAPER = 0xffeeddb5, DARK = 0xff39281d, INK = 0xff35251b, GREEN = 0xff22533c;
     private static final Tooltip FULL_QUEUE = Tooltip.create(Component.literal("The queue already has eight batches."));
     private static final Tooltip NO_RECIPE = Tooltip.create(Component.literal("This recipe is unavailable at the station."));

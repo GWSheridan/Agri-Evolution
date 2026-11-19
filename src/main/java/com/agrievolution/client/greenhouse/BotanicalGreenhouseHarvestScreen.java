@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Dedicated harvest settings; no inventory item slots overlap the controls. */
-public final class BotanicalGreenhouseHarvestScreen extends AbstractContainerScreen<BotanicalGreenhouseHarvestMenu> {
+public final class BotanicalGreenhouseHarvestScreen extends com.agrievolution.client.ScrollableGardenScreen<BotanicalGreenhouseHarvestMenu> {
     private static final int DARK = 0xFF281D17, GOLD = 0xFFC6A368,
             GREEN = 0xFF275841, PAPER = 0xFFF0DEB8, INK = 0xFF302518,
             MUTED = 0xFF947A57, RED = 0xFF9D463E;

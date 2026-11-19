@@ -38,7 +38,7 @@ public final class CropWeeds {
         if (seedBlocks == null) {
             Set<Block> blocks = new HashSet<>();
             for (var item : BuiltInRegistries.ITEM) {
-                if (item instanceof BlockItem blockItem && SeedBagItem.accepts(item.getDefaultInstance())) blocks.add(blockItem.getBlock());
+                if (item instanceof BlockItem blockItem && SeedBreedingParents.taggedSeed(item.getDefaultInstance())) blocks.add(blockItem.getBlock());
             }
             seedBlocks = Set.copyOf(blocks);
         }

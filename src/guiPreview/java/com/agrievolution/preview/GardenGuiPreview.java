@@ -37,6 +37,7 @@ public final class GardenGuiPreview {
     private static final String[] PROGRESSION_NAMES = {"expanded-orders", "garden-commissions", "seed-vault", "garden-progression-models"};
     private static final String[] NAMES={"analyzer","breeding","laboratory","greenhouse","harvest","seed_bank","storage","soil_research","soil_sampler","journal","journal_compact","seed_bag_layout","building_journal","building_journal_compact","greenhouse_0","greenhouse_1","greenhouse_2","greenhouse_3","greenhouse_4","greenhouse_5","greenhouse_6","greenhouse_7","breeding_planner","breeding_planner_compact"};
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
+        if(Boolean.getBoolean("agri.update134Preview")) return;
         if(Boolean.getBoolean("agri.cropPreview")) return;
         if(Boolean.getBoolean("agri.stickPreview")||Boolean.getBoolean("agri.lunchControlsPreview")||Boolean.getBoolean("agri.selectivePlantingPreview")||Boolean.getBoolean("agri.plannerPreview")||Boolean.getBoolean("agri.journalIndexPreview")||Boolean.getBoolean("agri.machinePreview")||Boolean.getBoolean("agri.irrigationPreview")||Boolean.getBoolean("agri.grandmasPreview")) return;
         boolean stickMapOnly = Boolean.getBoolean("agri.greenhouseStickPreview");

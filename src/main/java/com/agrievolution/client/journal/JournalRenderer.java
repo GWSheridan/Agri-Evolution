@@ -25,13 +25,13 @@ public final class JournalRenderer {
         JournalNavigation.Section[] tabs = nav.sections();
         for (int i = 0; i < tabs.length; i++) {
             int x = tabX(i);
-            int tabWidth=nav.building()?64:60;
+            int tabWidth=nav.building()?62:58;
             boolean selected = nav.section() == tabs[i];
-            boolean hovering = inside(mx, my, x, 50, tabWidth, 18);
-            sprite(gui, selected ? "tab_active" : "tab_inactive", x, 50, tabWidth, 18);
+            boolean hovering = inside(mx, my, x, 50, tabWidth, 16);
+            sprite(gui, selected ? "tab_active" : "tab_inactive", x, 50, tabWidth, 16);
             String label = nav.sectionTitle(tabs[i]);
             var tabText = JournalFonts.body(label);
-            gui.drawString(font, tabText, x + tabWidth/2 - font.width(tabText) / 2, 55,
+            gui.drawString(font, tabText, x + tabWidth/2 - font.width(tabText) / 2, 54,
                     selected ? JournalTheme.INK : (hovering ? 0xFFF0D0 : 0xDBC29B), false);
         }
         gui.drawString(font, JournalFonts.body(nav.building()?"BUILDING & MACHINE GUIDE":"DISCOVERED " + snapshot.discoveredCount() + "/" + snapshot.speciesCount()),

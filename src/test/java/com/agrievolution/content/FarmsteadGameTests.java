@@ -29,6 +29,71 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class FarmsteadGameTests {
     @GameTest(template = "empty")
+    public static void reserveProtectsRefillsWithoutStoppingBufferedSprays(GameTestHelper h) {
+        var world = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 220, 4));
+        world.setBlock(pos, AEBlocks.IRRIGATION_CONTROLLER.get().defaultBlockState(), 3);
+        var controller = (IrrigationControllerBlockEntity) world.getBlockEntity(pos);
+        var junction = pos.north(2);
+        var valve = namedValve(h, junction, "Buffered beds");
+        for (var side : new Direction[]{Direction.EAST, Direction.WEST})
+            world.setBlock(junction.relative(side), AEBlocks.IRRIGATION_SPRINKLER.get().defaultBlockState(), 3);
+        for (var side : new Direction[]{Direction.NORTH, Direction.SOUTH})
+            world.setBlock(junction.relative(side), AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
+                    .setValue(IrrigationBasinBlock.FILLED, true), 3);
+        var first = (IrrigationSprinklerBlockEntity) world.getBlockEntity(junction.east());
+        var second = (IrrigationSprinklerBlockEntity) world.getBlockEntity(junction.west());
+        long time = world.getDayTime();
+        try {
+            world.setDayTime(0);
+            controller.link(valve);
+            controller.action(0, 4);
+            first.irrigateCycle();
+            controller.checkSchedules();
+            h.assertTrue(first.water() == 975 && controller.active() == 0 && first.hasCurrentSpray(),
+                    "The schedule keeps watering with stored water after reaching the reserve");
+            second.irrigateCycle();
+            var route = IrrigationNetwork.trace(world, junction.west());
+            h.assertTrue(second.water() == 0 && route.flow() == IrrigationNetwork.Flow.RESERVE_HELD
+                    && SpannerItem.routeStatus(world, route).contains("1000 mB protected")
+                    && second.inspectionStatus().contains("reserve"), "The second head reports a protected reserve without drawing it");
+            world.setDayTime(500);
+            controller.checkSchedules();
+            h.assertTrue(controller.active() == -1 && !first.growthActive(), "The schedule still stops stored-water use at its end");
+        } finally { world.setDayTime(time); }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void controllerReloadRejectsStaleOpenValve(GameTestHelper h) {
+        var world = h.getLevel();
+        var pos = h.absolutePos(new BlockPos(4, 225, 4));
+        world.setBlock(pos, AEBlocks.IRRIGATION_CONTROLLER.get().defaultBlockState(), 3);
+        var controller = (IrrigationControllerBlockEntity) world.getBlockEntity(pos);
+        var valvePos = pos.north(2);
+        var valve = namedValve(h, valvePos, "Reloaded beds");
+        world.setBlock(valvePos.north(), AEBlocks.IRRIGATION_BASIN.get().defaultBlockState()
+                .setValue(IrrigationBasinBlock.FILLED, true), 3);
+        long time = world.getDayTime();
+        try {
+            world.setDayTime(0);
+            controller.link(valve);
+            h.assertTrue(IrrigationValveBlock.permitsFlow(world, valvePos, valve.getBlockState()), "Zone starts open");
+            var saved = new CompoundTag();
+            controller.saveAdditional(saved, world.registryAccess());
+            world.removeBlockEntity(pos);
+            var restored = new IrrigationControllerBlockEntity(pos, world.getBlockState(pos));
+            restored.loadAdditional(saved, world.registryAccess());
+            world.setBlockEntity(restored);
+            h.assertFalse(IrrigationValveBlock.permitsFlow(world, valvePos, valve.getBlockState()),
+                    "A valve's cached open state cannot bypass a restored controller before its first schedule check");
+            restored.checkSchedules();
+            h.assertTrue(IrrigationValveBlock.permitsFlow(world, valvePos, valve.getBlockState()), "A current schedule reopens the zone normally");
+        } finally { world.setDayTime(time); }
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
     public static void irrigationControllerReusesBrokenZoneSlotsAndEnforcesRange(GameTestHelper h) {
         var world = h.getLevel();
         var pos = h.absolutePos(new BlockPos(4, 200, 4));

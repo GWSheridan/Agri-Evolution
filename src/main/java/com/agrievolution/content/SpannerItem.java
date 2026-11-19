@@ -67,6 +67,8 @@ public final class SpannerItem extends Item {
             case READY -> "Water source ready" + sourceAmount(route);
             case EMPTY -> "Water source has less than a bucket" + sourceAmount(route);
             case CLOSED_VALVE -> IrrigationValveBlock.namedFlowStatus(level, end, "Valve");
+            case RESERVE_HELD -> level.getBlockEntity(end) instanceof IrrigationValveBlockEntity valve
+                    ? valve.reserveStatus() : "Refill held in reserve";
             case DISABLED_PORT -> "Disabled " + route.disabledSide().getName() + " pipe port";
             case DISCONNECTED -> "No connected water source";
             case TOO_LARGE -> "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";

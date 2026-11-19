@@ -14,6 +14,8 @@ Agri Evolution is built for **Minecraft 1.21.1**, **NeoForge 21.1.265**, and **J
 4. For your first cross, craft a Wild Seed with a dirt block to get a Dirt Seed. Grow it next to a Wild Wheat plant. Sneak-right-click one mature parent with Grandmas Journal, then right-click the other for a chance to get Lettuce Seeds. Replant both parents before trying again.
 5. Use Grandmas Journal to find more crosses. Keep parents within eight blocks of each other and check the growing instructions for any soil or catalyst a new crop needs.
 
+If a journal or machine panel is larger than your chosen GUI scale allows, hold **Ctrl** and scroll or press the arrow keys to move around it. **Ctrl+Shift+scroll** moves sideways. The text and item slots keep their normal size.
+
 ## What you can build and grow
 
 - **Breed and study crops.** Discover food, herbs, and resources through crosses. Improve traits such as growth and yield, compare seed stacks in the Seed Vault, and use the Soil Sampler to check growing conditions. The Breeding Station can also produce another seed from matching vanilla or supported modded seeds with Nutrient Compost.

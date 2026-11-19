@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Server-synchronized per-slot planting controls, using the established parchment palette. */
-public final class BotanicalGreenhouseSeedBankScreen extends AbstractContainerScreen<BotanicalGreenhouseSeedBankMenu> {
+public final class BotanicalGreenhouseSeedBankScreen extends com.agrievolution.client.ScrollableGardenScreen<BotanicalGreenhouseSeedBankMenu> {
     private boolean plantingRules;
     private static final int DARK = 0xFF281D17, GOLD = 0xFFC6A368;
     private static final int GREEN = 0xFF275841, PAPER = 0xFFF0DEB8;

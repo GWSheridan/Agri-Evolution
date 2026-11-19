@@ -37,7 +37,13 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
         if (level == null || !level.hasChunkAt(controller)) return false;
         return !(level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner)
                 || !owner.contains(worldPosition)
-                || (scheduledOpen && (!refill || owner.permitsRefill(worldPosition)));
+                || (scheduledOpen && owner.zoneActive(worldPosition) && (!refill || owner.permitsRefill(worldPosition)));
+    }
+
+    String reserveStatus() {
+        return controller != null && level != null && level.hasChunkAt(controller)
+                && level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner
+                ? owner.reserveStatus(worldPosition) : "Refill held in reserve";
     }
 
     void setController(BlockPos pos) {

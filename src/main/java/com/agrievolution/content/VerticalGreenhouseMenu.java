@@ -96,7 +96,9 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     @Override public boolean stillValid(Player player) { return stillValid(access, player, AEBlocks.VERTICAL_GREENHOUSE.get()); }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (greenhouse == null || !stillValid(player) || !greenhouse.complete()) return false;
+        if (greenhouse == null || player.isSpectator() || !player.mayBuild()
+                || !player.level().mayInteract(player, greenhouse.getBlockPos())
+                || !stillValid(player) || !greenhouse.complete()) return false;
         if (button == TOGGLE_GROW || button == TOGGLE_BREED) {
             greenhouse.toggle(button);
         } else if (button == TOGGLE_PAIRING) {

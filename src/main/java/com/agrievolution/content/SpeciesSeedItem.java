@@ -46,6 +46,12 @@ public class SpeciesSeedItem extends Item {
                 || !level.getBlockState(cropPos).isAir()) {
             return InteractionResult.PASS;
         }
+        var player = context.getPlayer();
+        if (player != null && (player.isSpectator()
+                || !level.mayInteract(player, soilPos) || !level.mayInteract(player, cropPos)
+                || !player.mayUseItemAt(cropPos, context.getClickedFace(), context.getItemInHand()))) {
+            return InteractionResult.FAIL;
+        }
         if (!level.isClientSide) {
             CropGenome genome = GenomeStorage.fromSeed(context.getItemInHand());
             if (level.setBlock(cropPos, cropBlock.get().defaultBlockState(), 3)) {
@@ -58,7 +64,7 @@ public class SpeciesSeedItem extends Item {
                 if (context.getPlayer() == null || !context.getPlayer().getAbilities().instabuild) {
                     context.getItemInHand().shrink(1);
                 }
-            }
+            } else return InteractionResult.FAIL;
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

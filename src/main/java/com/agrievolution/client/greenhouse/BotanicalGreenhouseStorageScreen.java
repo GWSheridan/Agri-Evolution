@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Crisp native-resolution storage screen; slots align with the server menu. */
-public final class BotanicalGreenhouseStorageScreen extends AbstractContainerScreen<BotanicalGreenhouseStorageMenu> {
+public final class BotanicalGreenhouseStorageScreen extends com.agrievolution.client.ScrollableGardenScreen<BotanicalGreenhouseStorageMenu> {
     private static final int DARK = 0xFF281D17, GOLD = 0xFFC6A368;
     private static final int GREEN = 0xFF275841, PAPER = 0xFFF0DEB8;
     public BotanicalGreenhouseStorageScreen(BotanicalGreenhouseStorageMenu menu, Inventory inv, Component name) {

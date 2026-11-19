@@ -135,7 +135,12 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     private static String flowState(Level level, BlockPos pos, BlockState state) {
         if (!state.getValue(OPEN)) return "closed";
         if (!hardwareOpen(level, pos, state)) return "paused by redstone";
-        return permitsFlow(level, pos, state) ? "open" : "waiting for schedule";
+        if (!permitsFlow(level, pos, state)) return "waiting for schedule";
+        if (!permitsFlow(level, pos, state, true, null)
+                && level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve) {
+            return "open; " + valve.reserveStatus();
+        }
+        return "open";
     }
 
     static void notifySprinklers(Level level, BlockPos pos) {

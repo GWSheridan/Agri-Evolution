@@ -124,7 +124,7 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
     protected java.util.List<ItemStack> getDrops(BlockState state, net.minecraft.world.level.storage.loot.LootParams.Builder params) {
         var drops=new java.util.ArrayList<>(super.getDrops(state,params));
         var entity=params.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);
-        if (entity instanceof AECropBlockEntity plant && !plant.variety().isEmpty()) {
+        if (entity instanceof AECropBlockEntity plant) {
             for (var drop : drops) {
                 if (!drop.is(AEItems.seedFor(species))) continue;
                 GenomeStorage.putOnSeed(drop, plant.genome());

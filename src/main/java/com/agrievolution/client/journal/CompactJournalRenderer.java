@@ -17,7 +17,7 @@ public final class CompactJournalRenderer {
     public static final int TAB_LEFT = 12;
     public static final int TAB_TOP = 35;
     public static final int TAB_STEP = 60;
-    public static final int TAB_WIDTH = 57;
+    public static final int TAB_WIDTH = 55;
     public static final int TAB_HEIGHT = 16;
     public static final int ROW_TOP = 83;
     public static final int ROW_STEP = 24;

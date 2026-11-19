@@ -9,7 +9,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
-public final class VerticalGreenhouseScreen extends AbstractContainerScreen<VerticalGreenhouseMenu> {
+public final class VerticalGreenhouseScreen extends com.agrievolution.client.ScrollableGardenScreen<VerticalGreenhouseMenu> {
     private static final int DARK = 0xFF302419, PAPER = 0xFFF1DFB8, INK = 0xFF342519;
     private static final int GREEN = 0xFF285947, MUTED = 0xFF806849, BLUE = 0xFF367F96;
     private static final int CONTROL_Y = 32, CONTROL_HEIGHT = 19, CONTROL_WIDTH = 54;
@@ -130,6 +130,7 @@ public final class VerticalGreenhouseScreen extends AbstractContainerScreen<Vert
             case UNLOADED_SUPPLY -> "Supply chunk unloaded";
             case UNLOADED_RESERVOIR -> "Reservoir shell partly unloaded";
             case INCOMPLETE_RESERVOIR -> "Reservoir incomplete";
+            case RESERVE_HELD -> "Supply held in reserve";
         };
         gui.drawString(font, status, leftPos + VerticalGreenhouseMenu.FIRST_OUTPUT_X, y + 3, INK, false);
     }

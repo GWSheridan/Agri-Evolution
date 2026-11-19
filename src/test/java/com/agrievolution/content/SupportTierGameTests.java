@@ -19,10 +19,18 @@ public final class SupportTierGameTests {
             h.assertTrue(ingredients.size()==spec.ingredients().length,"Illustrated ingredient count matches "+spec.id());
             h.assertTrue(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(result.getItem()).toString().equals(spec.result())&&result.getCount()==spec.count(),"Illustrated result matches "+spec.id());
             for(int i=0;i<spec.ingredients().length;i++) {
-                String id=spec.ingredients()[i];
-                if(id.isEmpty())h.assertTrue(ingredients.get(i).isEmpty(),"Blank crafting cells match");
-                else if(!id.startsWith("#"))h.assertTrue(ingredients.get(i).test(new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(id)))),"Illustrated ingredient accepted: "+spec.id());
+                var choices=spec.ingredients()[i];
+                if(choices.length==0)h.assertTrue(ingredients.get(i).isEmpty(),"Blank crafting cells match");
+                for(String id:choices) {
+                    if(id.startsWith("#")) {
+                        var tag=net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM,net.minecraft.resources.ResourceLocation.parse(id.substring(1)));
+                        var variants=net.minecraft.world.item.crafting.Ingredient.of(tag).getItems();
+                        h.assertTrue(variants.length>0,"Illustrated tag resolves: "+id);
+                        for(var variant:variants)h.assertTrue(ingredients.get(i).test(variant),"Every illustrated tag alternative is accepted: "+spec.id());
+                    } else h.assertTrue(ingredients.get(i).test(new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse(id)))),"Every illustrated alternative is accepted: "+spec.id());
+                }
             }
+            h.assertTrue(spec.shaped()==(recipe instanceof net.minecraft.world.item.crafting.ShapedRecipe),"Crafting order matches the illustration: "+spec.id());
         }h.succeed();
     }
     @GameTest(template="empty") public static void upgradePreservesCropAndReturnsOldSupport(GameTestHelper h) {

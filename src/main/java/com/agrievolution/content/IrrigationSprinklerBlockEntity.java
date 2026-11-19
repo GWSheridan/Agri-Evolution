@@ -45,6 +45,9 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         super(AEBlockEntities.IRRIGATION_SPRINKLER.get(), pos, state);
     }
     public int water() { return water; }
+    boolean hasUsableWater() {
+        return water >= WATER_PER_SPRAY || level instanceof ServerLevel server && hasPaidTime(server);
+    }
     int comparatorSignal() { return water == 0 ? 0 : 1 + 14 * water / CAPACITY; }
 
     @Override public void setChanged() {
@@ -151,9 +154,15 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (!(level instanceof ServerLevel server) || isRemoved()) return "Sprinkler unavailable";
         var stop = localShutoff();
         if (stop != null) return stop.message();
-        if (inspection == null) inspection = IrrigationNetwork.inspectSupply(level, worldPosition);
+        if (inspection == null || water < WATER_PER_SPRAY) inspection = IrrigationNetwork.inspectRefill(level, worldPosition);
         var network = inspection.network();
         if (network.overflow()) return "Pipe network exceeds " + IrrigationNetwork.MAX_NODES + " nodes";
+        var refillRoute = inspection.route(level);
+        if (refillRoute.flow() == Flow.RESERVE_HELD) {
+            var end = refillRoute.blocks().getLast();
+            return level.getBlockEntity(end) instanceof IrrigationValveBlockEntity valve
+                    ? valve.reserveStatus() : "Refill held in reserve";
+        }
         if (networkBlocked(network)) {
             return describeValveStop(inspection.route(level).blocks().getLast(), "Supply valve");
         }

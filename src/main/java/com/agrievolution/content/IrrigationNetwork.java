@@ -138,7 +138,7 @@ public final class IrrigationNetwork {
     public record Search(boolean attached,List<Supply> supplies,boolean overflow,boolean blockedValve) {}
     public enum Flow {
         READY, EMPTY, CLOSED_VALVE, DISABLED_PORT, DISCONNECTED, TOO_LARGE, UNLOADED_CONNECTION, INCOMPLETE_RESERVOIR,
-        PAUSED_BY_REDSTONE, WAITING_FOR_REDSTONE, INCOMPLETE_GREENHOUSE, UNLOADED_RESERVOIR
+        PAUSED_BY_REDSTONE, WAITING_FOR_REDSTONE, INCOMPLETE_GREENHOUSE, UNLOADED_RESERVOIR, RESERVE_HELD
     }
     public record Route(List<BlockPos> blocks, Flow flow, Direction disabledSide, Direction boundarySide, int sourceWater) {
         public Route(List<BlockPos> blocks, Flow flow, Direction disabledSide) {
@@ -167,6 +167,7 @@ public final class IrrigationNetwork {
         final List<Endpoint> endpoints = new ArrayList<>();
         final List<BlockPos> sprinklers = new ArrayList<>();
         BlockPos valve, lastFitting, incompleteReservoir;
+        boolean reserveHeld;
         UnloadedStop unloaded;
         final List<ClosedPort> closedPorts = new ArrayList<>();
 
@@ -191,7 +192,7 @@ public final class IrrigationNetwork {
             var stop = sprinkler.localShutoff();
             if (stop != null) return stop.route(head);
         }
-        return inspectSupply(level, head).route(level);
+        return inspectRefill(level, head).route(level);
     }
 
     static final class SupplyInspection {
@@ -233,7 +234,7 @@ public final class IrrigationNetwork {
             }
         }
         if (fullest != null) return new Route(path(trace, fullest.pos()), Flow.EMPTY, null, null, mostWater);
-        if (trace.valve != null) return route(trace, trace.valve, Flow.CLOSED_VALVE);
+        if (trace.valve != null) return route(trace, trace.valve, trace.reserveHeld ? Flow.RESERVE_HELD : Flow.CLOSED_VALVE);
         ClosedPort port = trace.blockingPort();
         if (port != null) {
             var blocks = new ArrayList<>(path(trace, port.from()));
@@ -260,6 +261,16 @@ public final class IrrigationNetwork {
     static Search controllerSupply(Level level, BlockPos valve, BlockPos controller) {
         // Ignore the selected valve's own gate and treat its siblings as already closed.
         return search(level, valve, null, true, false, controller);
+    }
+
+    static boolean controllerHasBufferedWater(Level level, BlockPos valve, BlockPos controller) {
+        var trace = new Trace();
+        var network = search(level, valve, trace, true, false, controller);
+        if (network.overflow()) return false;
+        for (var pos : trace.sprinklers) {
+            if (level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity head && head.hasUsableWater()) return true;
+        }
+        return false;
     }
 
     private static Route route(Trace trace, BlockPos end, Flow flow) {
@@ -291,7 +302,10 @@ public final class IrrigationNetwork {
         var initial=level.getBlockState(head);
         if (!inspectClosedOrigin && initial.getBlock() instanceof IrrigationValveBlock
                 && !IrrigationValveBlock.permitsFlow(level, head, initial, refill, closedController)) {
-            if (trace != null) trace.valve = head;
+            if (trace != null) {
+                trace.valve = head;
+                trace.reserveHeld = refill && IrrigationValveBlock.permitsFlow(level, head, initial, false, closedController);
+            }
             return new Search(true,List.of(),false,true);
         }
         Set<BlockPos> seen=new HashSet<>(),sources=new HashSet<>();
@@ -333,7 +347,13 @@ public final class IrrigationNetwork {
                 if(neighbor.getBlock() instanceof IrrigationPipeBlock) queue.add(next);
                 else if(neighbor.getBlock() instanceof IrrigationValveBlock) {
                     if(IrrigationValveBlock.permitsFlow(level,next,neighbor,refill,closedController))queue.add(next);
-                    else {blockedValve=true;if (trace != null && trace.valve == null) trace.valve = next;}
+                    else {
+                        blockedValve = true;
+                        if (trace != null && trace.valve == null) {
+                            trace.valve = next;
+                            trace.reserveHeld = refill && IrrigationValveBlock.permitsFlow(level, next, neighbor, false, closedController);
+                        }
+                    }
                 } else if(neighbor.getBlock() instanceof IrrigationBasinBlock) {
                     if(sources.add(next))addSupply(supplies, trace, next, new Supply(next,null));
                 } else if(neighbor.getBlock() instanceof WaterReservoirBlock) {

@@ -3,9 +3,6 @@ package com.agrievolution.content;
 import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.TagKey;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.InteractionHand;
@@ -18,15 +15,9 @@ import net.minecraft.world.level.Level;
 /** One persistent bag; empty/partial/full are visual states, never replacement items. */
 public final class SeedBagItem extends Item {
     public static final int SLOTS = 9;
-    private static final TagKey<Item> SEEDS = TagKey.create(Registries.ITEM,
-            ResourceLocation.fromNamespaceAndPath("c", "seeds"));
     public SeedBagItem(Properties properties) { super(properties); }
     public static boolean accepts(ItemStack stack) {
-        return !stack.isEmpty() && !(stack.getItem() instanceof SeedBagItem)
-                && (stack.getItem() instanceof SpeciesSeedItem || stack.getItem() instanceof WildSeedItem
-                || stack.is(SEEDS) || stack.is(Items.WHEAT_SEEDS) || stack.is(Items.BEETROOT_SEEDS)
-                || stack.is(Items.MELON_SEEDS) || stack.is(Items.PUMPKIN_SEEDS)
-                || stack.is(Items.TORCHFLOWER_SEEDS) || stack.is(Items.PITCHER_POD));
+        return SeedBreedingParents.accepts(stack);
     }
     public static int occupied(ItemStack bag) {
         return (int) bag.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY)
