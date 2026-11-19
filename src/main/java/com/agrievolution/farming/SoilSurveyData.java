@@ -41,6 +41,10 @@ public final class SoilSurveyData {
 
     /** @param middle farmland coordinate; area=false: only this plot, area=true: 5x5. */
     public static CompoundTag survey(Level level, BlockPos middle, boolean area) {
+        return survey(level, middle, area, pos -> true);
+    }
+    public static CompoundTag survey(Level level, BlockPos middle, boolean area,
+                                      java.util.function.Predicate<BlockPos> available) {
         CompoundTag out = new CompoundTag();
         int radius = area ? 2 : 0;
         out.putInt("Version", 1);
@@ -59,7 +63,7 @@ public final class SoilSurveyData {
             for (int dx = -radius; dx <= radius; dx++) {
                 BlockPos soil = middle.offset(dx, 0, dz);
                 CompoundTag plot = new CompoundTag();
-                if (!level.hasChunkAt(soil) || !(level.getBlockState(soil).getBlock() instanceof FarmBlock)) {
+                if (!level.hasChunkAt(soil) || !available.test(soil) || !(level.getBlockState(soil).getBlock() instanceof FarmBlock)) {
                     plot.putBoolean("Valid", false);
                     plots.add(plot);
                     continue;
@@ -103,8 +107,8 @@ public final class SoilSurveyData {
                             int roll = FarmEnvironment.growthChance(
                                     plant.genome().growth(), plant.soilNutrition(), moisture,
                                     com.agrievolution.content.CropSupportItem.tier(state), irrigated);
-                            roll = Math.min(195, roll + SoilResearch.soilTier(level.getBlockState(soil)) * 20);
                             if (plant.rareTrait() == RareTrait.VIGOROUS) roll += 18;
+                            roll = Math.min(195, roll + SoilResearch.soilTier(level.getBlockState(soil)) * 20);
                             out.putInt("GrowthRoll", roll);
                         }
                     }

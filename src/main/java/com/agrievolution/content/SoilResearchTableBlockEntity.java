@@ -65,6 +65,7 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
 
     /** Mk II/Mk III research up to 2/4 collected specimens in a single click. */
     public void analyze(Player player) {
+        if (player == null || !WorkstationAccess.mayConfigure(this, player) || !WorkstationAccess.isCurrent(this)) return;
         ItemStack tool = getItem(SAMPLER), specimen = getItem(SPECIMEN);
         if (!tool.is(AEItems.SOIL_SAMPLE.get()) || !specimen.is(AEItems.SOIL_SPECIMEN.get())) {
             setStatus(!tool.is(AEItems.SOIL_SAMPLE.get()) ? 1 : 2);
@@ -97,6 +98,7 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
     }
 
     public void refine(Player player) {
+        if (player == null || !WorkstationAccess.mayConfigure(this, player) || !WorkstationAccess.isCurrent(this)) return;
         ItemStack tool = getItem(SAMPLER), source = getItem(SOIL), feed = getItem(CATALYST);
         if (!tool.is(AEItems.SOIL_SAMPLE.get())) {
             setStatus(1);

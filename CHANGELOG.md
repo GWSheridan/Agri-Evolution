@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.14
+
+- Soil sampling checks build and item-use permissions at the soil and its planted Agri crop. Spectators and denied players receive no specimen, survey or collection credit.
+- A replaced soil block or changed held sampler cancels the old sampling action before it changes the tool or issues an item.
+- Area surveys check each plot and skip denied plots in both the saved report and discovery count. If a neighboring permission check changes the held tool, the survey is cancelled without saving into the old sampler.
+- Soil Sampler advice describes accessible farmland. Vigorous crops' displayed growth rolls now use the same final cap as actual crop growth.
+- Direct Soil Research Table analysis and refinement reject removed tables and players without access. Rejected calls keep the sampler, specimens, soil and catalysts unchanged.
+
 ## 1.3.13
 
 - Crop stick ticks check the live crop state and block entity before changing anything. Old expiry calls cannot restore removed crops, expire a replacement plant or rewind crop growth.

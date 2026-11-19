@@ -131,6 +131,10 @@ public final class SoilResearch {
         return state;
     }
     public static int gather(ItemStack sampler, Level level, BlockPos center, boolean area) {
+        return gather(sampler, level, center, area, pos -> true);
+    }
+    public static int gather(ItemStack sampler, Level level, BlockPos center, boolean area,
+                             java.util.function.Predicate<BlockPos> available) {
         if (level.isClientSide) return 0;
         CompoundTag all = stored(sampler);
         ListTag found = discovered(all);
@@ -138,7 +142,7 @@ public final class SoilResearch {
         int radius = area ? 2 : 0;
         for (int dz = -radius; dz <= radius; dz++) for (int dx = -radius; dx <= radius; dx++) {
             BlockPos plot = center.offset(dx, 0, dz);
-            if (!level.hasChunkAt(plot) || !isSoil(level.getBlockState(plot))) continue;
+            if (!level.hasChunkAt(plot) || !available.test(plot) || !isSoil(level.getBlockState(plot))) continue;
             String key = level.dimension().location() + ":" + plot.asLong();
             boolean known = false;
             for (int i = 0; i < found.size(); i++) if (found.getString(i).equals(key)) { known = true; break; }

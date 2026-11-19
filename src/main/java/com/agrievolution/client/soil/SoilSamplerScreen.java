@@ -187,7 +187,7 @@ public final class SoilSamplerScreen extends Screen {
         gui.fill(23, 106, 379, 107, BORDER);
         List<String> notes = new ArrayList<>();
         if (sample.getInt("Valid") == 0) {
-            notes.add("No farmland detected in the selected area.");
+            notes.add("No accessible farmland in the selected area.");
         } else {
             int moisture = SoilSurveyData.average(sample, "MoistureSum", "Valid");
             if (moisture <= 3 && sample.getInt("Irrigated") < sample.getInt("Valid"))
@@ -206,7 +206,7 @@ public final class SoilSamplerScreen extends Screen {
                     && SoilSurveyData.average(sample, "NutritionSum", "NutritionCount") < 35)
                 notes.add("Survey crops average low nutrition: use compost.");
             if (sample.getBoolean("Area") && sample.getInt("Valid") < 25)
-                notes.add("Only " + sample.getInt("Valid") + "/25 cells are farmland.");
+                notes.add("Only " + sample.getInt("Valid") + "/25 cells have accessible farmland.");
         }
         if (notes.isEmpty()) notes.add("No obvious issues in the sampled crop/soil.");
         for (int i = 0; i < Math.min(5, notes.size()); i++) {
