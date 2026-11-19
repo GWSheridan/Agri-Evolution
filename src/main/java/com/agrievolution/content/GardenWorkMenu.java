@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
@@ -19,6 +20,7 @@ public final class GardenWorkMenu extends AbstractContainerMenu {
     private final boolean serverPreserving;
     private final List<GardenWork.Job> customOrders;
     private int page;
+    private boolean closed;
     public static final int SEED_PAGE = GardenWork.ROWS + 1, SHARED_PAGE = SEED_PAGE + 1, CUSTOM_PAGE = SHARED_PAGE + 1;
     private static final int PAGE_BUTTON = 64;
     private static final int SHARED_CLAIM = 48;
@@ -131,7 +133,21 @@ public final class GardenWorkMenu extends AbstractContainerMenu {
     public int pageAction(int selected) { return PAGE_BUTTON + selected; }
 
     @Override public boolean stillValid(Player player) {
-        return stillValid(access, player, serverPreserving ? AEBlocks.PRESERVING_STATION.get() : AEBlocks.GARDEN_ORDER_BOARD.get());
+        if (closed || player != inventory.player) return false;
+        if (player == null) return access == ContainerLevelAccess.NULL; // World-free GUI preview.
+        return player.isAlive() && !player.isSpectator()
+                && access.evaluate((level, pos) -> player.level() == level && level.hasChunkAt(pos), true)
+                && stillValid(access, player, serverPreserving ? AEBlocks.PRESERVING_STATION.get() : AEBlocks.GARDEN_ORDER_BOARD.get());
+    }
+
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
+    }
+
+    @Override public void removed(Player player) {
+        if (player != inventory.player) return;
+        closed = true;
+        super.removed(player);
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
@@ -166,7 +182,7 @@ public final class GardenWorkMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = getSlot(index);
         ItemStack stack = slot.getItem();
         if (stack.isEmpty()) return ItemStack.EMPTY;

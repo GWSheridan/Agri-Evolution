@@ -2,8 +2,10 @@ package com.agrievolution.content;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -30,6 +32,8 @@ final class SharedMarketOrders extends SavedData {
     );
 
     private final List<Progress> progress = List.of(new Progress(0), new Progress(1), new Progress(2));
+    private record Claim(UUID player, int row) {}
+    private final Set<Claim> claiming = new HashSet<>();
 
     private static GardenWork.Job order(String title, GardenWork.Ingredient... ingredients) {
         return new GardenWork.Job(title, List.of(ingredients), GardenWork.use(() -> Items.EMERALD, 1));
@@ -67,6 +71,7 @@ final class SharedMarketOrders extends SavedData {
     }
 
     boolean contribute(int row, int expectedRound, Player player) {
+        if (row < 0 || row >= progress.size() || !activePlayer(player)) return false;
         var order = ORDERS.get(row);
         var round = progress.get(row);
         if (round.sequence != expectedRound) return false;
@@ -103,31 +108,54 @@ final class SharedMarketOrders extends SavedData {
     }
 
     boolean claim(int row, Player player) {
+        if (row < 0 || row >= progress.size() || !activePlayer(player)) return false;
+        var key = new Claim(player.getUUID(), row);
+        if (!claiming.add(key)) return false;
+        try { return payReward(row, player); }
+        finally { claiming.remove(key); }
+    }
+
+    private static boolean activePlayer(Player player) {
+        return player != null && player.level() instanceof ServerLevel && player.isAlive() && !player.isSpectator();
+    }
+
+    private boolean payReward(int row, Player player) {
         var rewards = progress.get(row).rewards;
         var inventory = player.getInventory();
-        int due = reward(row, player.getUUID());
-        int remaining = Math.min(due, EMERALD.getMaxStackSize());
+        UUID id = player.getUUID();
+        int remaining = Math.min(reward(row, id), EMERALD.getMaxStackSize());
         int claimed = 0;
         // Inventory.add can discard overflow in creative. Hand it only what fits in a specific slot.
-        while (remaining > 0) {
+        while (remaining > 0 && activePlayer(player)) {
             int slot = inventory.getSlotWithRemainingSpace(EMERALD);
             if (slot < 0) slot = inventory.getFreeSlot();
             if (slot < 0) break;
             int amount = Math.min(remaining, inventory.getMaxStackSize(EMERALD) - inventory.getItem(slot).getCount());
+            if (amount <= 0) break;
             var payment = EMERALD.copyWithCount(amount);
-            if (!inventory.add(slot, payment)) break;
-            int inserted = amount - payment.getCount();
-            if (inserted <= 0) break;
+            // Reserve before delivery: callbacks and saves must see this payment as committed.
+            int left = reward(row, id) - amount;
+            if (left == 0) rewards.remove(id);
+            else rewards.put(id, left);
+            setDirty();
+            try {
+                // An inventory can return false after accepting part of the payment.
+                inventory.add(slot, payment);
+            } finally {
+                int returned = Math.clamp(payment.getCount(), 0, amount);
+                if (returned > 0) {
+                    // Keep rewards earned by another delivery callback instead of restoring an old total.
+                    rewards.merge(id, returned, (a, b) -> Math.min(32767, a + b));
+                    setDirty();
+                }
+                inventory.setChanged();
+            }
+            int inserted = amount - Math.clamp(payment.getCount(), 0, amount);
             remaining -= inserted;
             claimed += inserted;
+            if (!payment.isEmpty()) break;
         }
-        if (claimed == 0) return false;
-        int left = due - claimed;
-        if (left == 0) rewards.remove(player.getUUID());
-        else rewards.put(player.getUUID(), left);
-        setDirty();
-        inventory.setChanged();
-        return true;
+        return claimed > 0;
     }
 
     @Override public CompoundTag save(CompoundTag data, HolderLookup.Provider registries) {

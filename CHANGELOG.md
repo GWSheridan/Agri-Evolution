@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.15
+
+- Shared Garden Order rewards reserve each payment before handing over emeralds. Inventory callbacks cannot claim the same balance twice, and saves during delivery see the reduced balance.
+- Rewards earned during an existing claim remain available. Unpaid emeralds merge back into the current balance without overwriting new earnings.
+- Reward claims charge only what the inventory actually accepts, including partial insertions that return false. Rejected payments and failed insertions keep their unpaid balance available for a retry.
+- Direct shared-order claims and contributions reject spectators and dead players. Other contributors can still claim independently while a payment is in progress.
+- Closing the Garden Order Board or Preserving Station permanently disables its old screen. Late page, delivery, pickup and shift-click actions leave the inventory alone.
+- Board and Preserving Station screens check the owning player and dimension as well as the placed block and distance. Matching coordinates in another dimension cannot keep an old board screen active.
+
 ## 1.3.14
 
 - Soil sampling checks build and item-use permissions at the soil and its planted Agri crop. Spectators and denied players receive no specimen, survey or collection credit.
