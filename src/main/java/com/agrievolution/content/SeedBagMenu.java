@@ -15,19 +15,21 @@ public final class SeedBagMenu extends AbstractContainerMenu {
     private final Inventory inventory;
     private final int bagSlot;
     private final ItemStack bag;
+    private final PortableStorageAccess access;
     private final SimpleContainer seeds = new SimpleContainer(SeedBagItem.SLOTS);
     public SeedBagMenu(int id, Inventory inventory, int bagSlot) {
         super(AEMenus.SEED_BAG.get(), id);
         this.inventory = inventory;
         this.bagSlot = bagSlot;
-        this.bag = bagSlot >= 0 && bagSlot < inventory.getContainerSize()
-                ? inventory.getItem(bagSlot) : ItemStack.EMPTY;
+        access = new PortableStorageAccess(inventory, bagSlot, SeedBagItem.class);
+        this.bag = access.stack();
         if (!inventory.player.level().isClientSide) {
             bag.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(seeds.getItems());
             seeds.addListener(ignored -> save());
         }
         for (int c = 0; c < 9; c++) addSlot(new Slot(seeds, c, 8 + c * 18, 28) {
-            @Override public boolean mayPlace(ItemStack stack) { return SeedBagItem.accepts(stack); }
+            @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player) && SeedBagItem.accepts(stack); }
+            @Override public boolean mayPickup(Player player) { return stillValid(player); }
         });
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++)
             addPlayerSlot(col + row * 9 + 9, 8 + col * 18, 68 + row * 18);
@@ -35,21 +37,15 @@ public final class SeedBagMenu extends AbstractContainerMenu {
     }
     private void addPlayerSlot(int index, int x, int y) {
         addSlot(new Slot(inventory, index, x, y) {
-            @Override public boolean mayPickup(Player player) { return index != bagSlot; }
-            @Override public boolean mayPlace(ItemStack stack) { return index != bagSlot; }
+            @Override public boolean mayPickup(Player player) { return index != bagSlot && stillValid(player); }
+            @Override public boolean mayPlace(ItemStack stack) { return index != bagSlot && stillValid(inventory.player); }
         });
     }
     private void save() {
-        if (!inventory.player.level().isClientSide && stillValid(inventory.player)) {
-            // fromItems copies stacks, keeping immutable components separate from live menu slots.
-            bag.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(seeds.getItems()));
-            inventory.setChanged();
-        }
+        access.save(seeds.getItems());
     }
     @Override public boolean stillValid(Player player) {
-        return player.level().isClientSide || (bag.getItem() instanceof SeedBagItem
-                && bagSlot >= 0 && bagSlot < inventory.getContainerSize()
-                && inventory.getItem(bagSlot) == bag);
+        return access.current(player);
     }
     @Override public void clicked(int slot, int button, ClickType type, Player player) {
         if (!stillValid(player)) return;
@@ -72,7 +68,12 @@ public final class SeedBagMenu extends AbstractContainerMenu {
         save();
         return original;
     }
-    @Override public void removed(Player player) { save(); super.removed(player); }
+    @Override public void removed(Player player) {
+        if (!access.ownedBy(player)) return;
+        save();
+        access.close();
+        super.removed(player);
+    }
     @Override public boolean clickMenuButton(Player player,int action){
         if(player.level().isClientSide||!stillValid(player)||action<0||action>1)return false;
         if(action==0){for(int index=9;index<slots.size();index++)quickMoveStack(player,index);}

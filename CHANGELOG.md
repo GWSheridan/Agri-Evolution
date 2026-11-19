@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.12
+
+- Closing a Seed Bag or Lunch Box permanently disables that screen's old controls. Late deposits and withdrawals leave both inventories alone.
+- Portable storage screens check that their saved contents still match the item. An older screen cannot restore supplies withdrawn through a newer screen or overwrite contents changed by another system.
+- Seed Bag and Lunch Box pickup, shift-click and buttons reject spectators, dead players and players who do not own the inventory.
+- Portable slots check the same access rules as the buttons. Offhand containers remain locked in place while normal Adventure inventory use still works.
+- Lunch Box food callbacks cannot trigger another serving for the same player. The guard clears after a callback fails and does not block other players from eating.
+- Food containers return through the inventory's normal overflow handling. Switching to Creative during a food callback cannot silently discard a bowl or bottle when the inventory is full.
+
 ## 1.3.11
 
 - Greenhouse exports reserve items before handing them to another block. An insertion callback cannot export the same seed twice or duplicate it in the greenhouse's break drops.

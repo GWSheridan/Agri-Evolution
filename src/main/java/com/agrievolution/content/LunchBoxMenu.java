@@ -15,14 +15,15 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
     private final Inventory inventory;
     private final int bagSlot;
     private final ItemStack bag;
+    private final PortableStorageAccess access;
     private final SimpleContainer foods = new SimpleContainer(LunchBoxItem.SLOTS);
     private final net.minecraft.world.inventory.ContainerData controls;
     public LunchBoxMenu(int id, Inventory inventory, int bagSlot) {
         super(AEMenus.LUNCH_BOX.get(), id);
         this.inventory = inventory;
         this.bagSlot = bagSlot;
-        this.bag = bagSlot >= 0 && bagSlot < inventory.getContainerSize()
-                ? inventory.getItem(bagSlot) : ItemStack.EMPTY;
+        access = new PortableStorageAccess(inventory, bagSlot, LunchBoxItem.class);
+        this.bag = access.stack();
         controls=(inventory.player==null||inventory.player.level().isClientSide)?new net.minecraft.world.inventory.SimpleContainerData(20):new net.minecraft.world.inventory.ContainerData(){
             public int get(int i){
                 if(i>=0&&i<9)return LunchBoxItem.priority(bag,i);
@@ -39,7 +40,8 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
             foods.addListener(ignored -> save());
         }
         for (int c = 0; c < 9; c++) addSlot(new Slot(foods, c, 8 + c * 18, 28) {
-            @Override public boolean mayPlace(ItemStack stack) { return LunchBoxItem.accepts(stack); }
+            @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player) && LunchBoxItem.accepts(stack); }
+            @Override public boolean mayPickup(Player player) { return stillValid(player); }
         });
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++)
             addPlayerSlot(col + row * 9 + 9, 8 + col * 18, 92 + row * 18);
@@ -51,21 +53,15 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
     public String feedingStatus(){return LunchBoxItem.statusLabel(controls.get(19));}
     private void addPlayerSlot(int inventoryIndex, int x, int y) {
         addSlot(new Slot(inventory, inventoryIndex, x, y) {
-            @Override public boolean mayPickup(Player player) { return inventoryIndex != bagSlot; }
-            @Override public boolean mayPlace(ItemStack stack) { return inventoryIndex != bagSlot; }
+            @Override public boolean mayPickup(Player player) { return inventoryIndex != bagSlot && stillValid(player); }
+            @Override public boolean mayPlace(ItemStack stack) { return inventoryIndex != bagSlot && stillValid(inventory.player); }
         });
     }
     private void save() {
-        if (inventory.player!=null && !inventory.player.level().isClientSide && stillValid(inventory.player)) {
-            // fromItems copies stacks, keeping immutable components separate from live menu slots.
-            bag.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(foods.getItems()));
-            inventory.setChanged();
-        }
+        access.save(foods.getItems());
     }
     @Override public boolean stillValid(Player player) {
-        return player.level().isClientSide || (bag.getItem() instanceof LunchBoxItem
-                && bagSlot >= 0 && bagSlot < inventory.getContainerSize()
-                && inventory.getItem(bagSlot) == bag);
+        return access.current(player);
     }
     @Override public void clicked(int slot, int button, ClickType type, Player player) {
         if (!stillValid(player)) return;
@@ -88,7 +84,12 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
         save();
         return original;
     }
-    @Override public void removed(Player player) { save(); super.removed(player); }
+    @Override public void removed(Player player) {
+        if (!access.ownedBy(player)) return;
+        save();
+        access.close();
+        super.removed(player);
+    }
     @Override public boolean clickMenuButton(Player player,int action){
         if(player.level().isClientSide||!stillValid(player)||action<0||action>20)return false;
         if(action==2)LunchBoxItem.toggle(bag);

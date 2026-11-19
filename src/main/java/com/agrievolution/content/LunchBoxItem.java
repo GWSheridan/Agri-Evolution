@@ -24,6 +24,7 @@ public final class LunchBoxItem extends Item {
     public static final int SLOTS=9;
     private static final String PAUSED="LunchBoxPaused";
     private static final String PRIORITIES="LunchBoxPriorities", PROTECTED="LunchBoxProtected";
+    private static final java.util.Set<Player> FEEDING = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
     public static int priority(ItemStack box,int slot){
         int[] values=box.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag().getIntArray(PRIORITIES);
         return slot>=0&&slot<values.length?Math.clamp(values[slot],0,2):1;
@@ -101,7 +102,11 @@ public final class LunchBoxItem extends Item {
     public static boolean feedOne(Player player){
         if(player.level().isClientSide || !player.isAlive() || player.isCreative() || player.isSpectator()
                 || !player.getFoodData().needsFood() || player.isUsingItem()
-                || player.containerMenu!=player.inventoryMenu)return false;
+                || player.containerMenu!=player.inventoryMenu || !FEEDING.add(player))return false;
+        try { return feedFromInventory(player); }
+        finally { FEEDING.remove(player); }
+    }
+    private static boolean feedFromInventory(Player player){
         for(int slot=0;slot<player.getInventory().getContainerSize();slot++){
             if(slot>=36 && slot!=40)continue;
             ItemStack box=player.getInventory().getItem(slot);
@@ -118,7 +123,7 @@ public final class LunchBoxItem extends Item {
                 foods.set(i,stored.copyWithCount(stored.getCount()-1));
                 box.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(foods));
                 ItemStack remainder=serving.finishUsingItem(player.level(),player);
-                if(!remainder.isEmpty() && !player.getInventory().add(remainder))player.drop(remainder,false);
+                if(!remainder.isEmpty())player.getInventory().placeItemBackInInventory(remainder);
                 player.getInventory().setChanged();
                 return true;
             }
