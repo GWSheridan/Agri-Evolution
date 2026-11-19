@@ -11,6 +11,7 @@ logs/
 # Local backups, artwork and archives
 /backups/
 /artwork/
+/tools/audit_asset_usage.cjs
 /javac.*.args
 *.zip
 *.jar

@@ -38,7 +38,7 @@ Use a Java 21 JDK and the included Gradle wrapper. The built JAR is in `build/li
 .\gradlew.bat --no-daemon build
 ```
 
-The `tools` folder contains the model generators, journal recipe catalogue generator, and asset reference audit. Run `node tools/build_machine_recipe_catalog.cjs --check` to check the catalogue or `node tools/audit_asset_usage.cjs` to write an asset inventory to `build/audits/asset-usage.json`.
+The `tools` folder contains the model generators and journal recipe catalogue generator. Run `node tools/build_machine_recipe_catalog.cjs --check` to check the catalogue.
 
 Old update scripts, screenshots, and verification reports are kept in local backups. Backups, artwork masters, and generated build reports stay out of the repository.
 

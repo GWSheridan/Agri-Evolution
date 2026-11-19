@@ -2,6 +2,7 @@
 
 ## 1.3.6
 
+- Moved the optional asset-inventory script into local backups and removed its README command. It is not needed to build or run the mod.
 - Nutrient Compost checks build and interaction permissions before growing a crop or using an item. Calls without a player leave the crop alone instead of crashing after growth.
 - Compost growth rejects stale crop states and reports success only when the growth change succeeds. It cannot replace a newer crop or restore one that was removed.
 - Genetic Clippers check permissions before taking a crop's one sample. A denied use leaves the sample available for an authorized player.
