@@ -20,6 +20,9 @@ logs/
 /*_0.[0-9]*.md
 /*_0.[0-9]*.txt
 /docs/history/
+/docs/qa/
+/docs/*-verification.json
+/docs/asset-usage.json
 /INSTALL_TEXTURE_PATCH.txt
 /TEST_THIS_TEXTURE_UPDATE_FIRST.txt
 /FROM_0.29.5_TO_0.30.0.patch

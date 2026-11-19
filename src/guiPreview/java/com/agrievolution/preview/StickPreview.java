@@ -24,7 +24,7 @@ public final class StickPreview {
         if(!Boolean.getBoolean("agri.stickPreview"))return;
         var mc=Minecraft.getInstance();if(mc.screen==null||mc.getOverlay()!=null||++ticks<50)return;ticks=0;
         if(stage++==0){mc.options.guiScale().set(2);mc.resizeDisplay();mc.setScreen(new Preview());}
-        else{Screenshot.grab(mc.gameDirectory,"crop-stick-art-0751.png",mc.getMainRenderTarget(),m->System.out.println(m.getString()));mc.stop();}
+        else{Screenshot.grab(mc.gameDirectory,"crop-stick-art.png",mc.getMainRenderTarget(),m->System.out.println(m.getString()));mc.stop();}
     }
     static class Preview extends Screen{
         Preview(){super(Component.literal("Crop sticks"));}

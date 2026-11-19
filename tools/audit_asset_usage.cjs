@@ -28,8 +28,9 @@ const rows=files.map(file=>{
   return {path:name,sha256:crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),usage,
     status:legacy?'legacy-import-excluded': 'retained-review-or-approved'};
 });
-fs.mkdirSync('docs',{recursive:true});
-fs.writeFileSync('docs/asset-usage.json',JSON.stringify(rows,null,2)+'\n');
+const reportDirectory = 'build/audits';
+fs.mkdirSync(reportDirectory,{recursive:true});
+fs.writeFileSync(reportDirectory+'/asset-usage.json',JSON.stringify(rows,null,2)+'\n');
 const totals={pngs:rows.length,excludedLegacy:rows.filter(r=>r.status==='legacy-import-excluded').length};
 for(const r of rows) totals[r.usage]=(totals[r.usage]||0)+1;
 console.log(JSON.stringify(totals));

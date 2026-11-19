@@ -2,6 +2,7 @@
 
 ## 1.3.4
 
+- Moved old update scripts, screenshots and verification reports into local backups. Kept the current build tools and changed the asset audit to write reports under `build/`.
 - Reworked 23 seed icons and cleaned up String Seeds. All 265 seed textures have been checked at 64×64 and at inventory size.
 - Unnamed crops now return seeds with their original genes, rare traits and hybrid ancestry. Resource-crop loot no longer mixes in seeds with default genes.
 - Breeding Stations keep an existing hybrid's ancestry when crossing two seeds of the same species.
