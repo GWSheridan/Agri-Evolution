@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.9
+
+- Old Compost Bin collection calls cannot collect a second batch after fresh material has been deposited. This also prevents duplicate rewards during item-delivery callbacks.
+- Late compost deposits leave newer fill levels and replacement blocks alone, without consuming material. Fermentation checks the current bin state before finishing.
+- Compost deposits and collection respect item-use permissions, and spectators cannot change a bin.
+- An empty main hand lets compost material in the offhand reach the bin instead of stopping at its status message.
+- Rakes check item-use permission at the soil as well as the crop. Area weeding skips denied plots and charges durability only for weeds it clears.
+- Trowels leave blocks replaced during a tool event intact. Failed tilling costs no durability or cooldown.
+
 ## 1.3.8
 
 - Botanical Greenhouse upgrades, heater refills and bucket transfers now check build and interaction permissions. Spectators cannot change them through a direct right-click.

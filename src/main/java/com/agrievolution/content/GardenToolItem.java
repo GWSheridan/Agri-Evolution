@@ -80,7 +80,8 @@ public final class GardenToolItem extends Item {
         Player player = context.getPlayer();
         Level level = context.getLevel();
         BlockPos clicked = context.getClickedPos();
-        if (player == null || !player.mayBuild() || !level.mayInteract(player, clicked)) return InteractionResult.FAIL;
+        if (player == null || player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, clicked)
+                || !player.mayUseItemAt(clicked, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
         if (player.getCooldowns().isOnCooldown(this)) return InteractionResult.FAIL;
         if (areaWeeding(context)) return weedPatch(context, player, level, clicked);
         BlockState hit = level.getBlockState(clicked);
@@ -91,7 +92,8 @@ public final class GardenToolItem extends Item {
         if (trowel && player.isShiftKeyDown() && level.isEmptyBlock(clicked.above())) {
             BlockState tilled = hit.getToolModifiedState(context, net.neoforged.neoforge.common.ItemAbilities.HOE_TILL, false);
             if (tilled != null && !tilled.equals(hit) && player.mayUseItemAt(clicked, context.getClickedFace(), context.getItemInHand())) {
-                if (!level.isClientSide) level.setBlock(clicked, tilled, 3);
+                if (!level.isClientSide && (level.getBlockState(clicked) != hit || !level.setBlock(clicked, tilled, 3)))
+                    return InteractionResult.FAIL;
                 finishUse(context, clicked.above(), false);
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
@@ -118,6 +120,7 @@ public final class GardenToolItem extends Item {
         BlockPos plantPos = soil.above();
         BlockState state = level.getBlockState(plantPos);
         if (!level.mayInteract(player, soil) || !level.mayInteract(player, plantPos)
+                || !player.mayUseItemAt(soil, context.getClickedFace(), context.getItemInHand())
                 || !player.mayUseItemAt(plantPos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
         AECropBlockEntity plant = level.getBlockEntity(plantPos) instanceof AECropBlockEntity p ? p : null;
         if (trowel) {
@@ -217,7 +220,8 @@ public final class GardenToolItem extends Item {
         for (BlockPos plot : BlockPos.withinManhattan(center, 1, 0, 1)) {
             if (rake.isEmpty()) break;
             if (!server.hasChunkAt(plot) || !server.mayInteract(player, plot) || !server.mayInteract(player, plot.below())
-                    || !player.mayUseItemAt(plot, context.getClickedFace(), rake)) continue;
+                    || !player.mayUseItemAt(plot, context.getClickedFace(), rake)
+                    || !player.mayUseItemAt(plot.below(), context.getClickedFace(), rake)) continue;
             if (!CropWeeds.isHost(server.getBlockState(plot)) || !CropWeeds.hasWeeds(server, plot)) continue;
             CropWeeds.clear(server, plot);
             cleared++;

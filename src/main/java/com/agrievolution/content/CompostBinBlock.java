@@ -42,21 +42,37 @@ public final class CompostBinBlock extends Block {
         return stack.is(ItemTags.LEAVES) || stack.is(MATERIAL) ? 1 : 0;
     }
 
+    private boolean currentState(Level level, BlockPos pos, BlockState state) {
+        return state.is(this) && level.hasChunkAt(pos) && level.getBlockState(pos) == state;
+    }
+
+    private static boolean mayEdit(Level level, BlockPos pos, Player player, ItemStack stack, BlockHitResult hit) {
+        return player != null && !player.isSpectator() && player.mayBuild()
+                && level.mayInteract(player, pos) && player.mayUseItemAt(pos, hit.getDirection(), stack);
+    }
+
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                         Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!currentState(level, pos, state)) return ItemInteractionResult.FAIL;
+        if (hand == InteractionHand.MAIN_HAND && stack.isEmpty() && state.getValue(FILL) < READY
+                && player != null && value(player.getOffhandItem()) > 0) {
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+        }
         int amount = value(stack);
         if (amount == 0 || state.getValue(FILL) == READY) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        if (!level.isClientSide && player.mayBuild() && level.mayInteract(player, pos)) {
+        if (!mayEdit(level, pos, player, stack, hit)) return ItemInteractionResult.FAIL;
+        if (!level.isClientSide) {
             int used = deposit((ServerLevel) level, pos, state, stack, amount);
             stack.consume(used, player);
-            showFill(player, level.getBlockState(pos).getValue(FILL));
+            var current = level.getBlockState(pos);
+            if (current.is(this)) showFill(player, current.getValue(FILL));
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
     private static int deposit(ServerLevel level, BlockPos pos, BlockState state, ItemStack stack, int amount) {
         int fill = state.getValue(FILL);
-        if (fill >= FULL || stack.isEmpty() || amount <= 0) return 0;
+        if (fill >= FULL || stack.isEmpty() || amount <= 0 || level.getBlockState(pos) != state) return 0;
         int next = Math.min(FULL, fill + amount);
         if (!level.setBlock(pos, state.setValue(FILL, next), UPDATE_ALL)) return 0;
         if (next == FULL) level.scheduleTick(pos, state.getBlock(), FERMENT_TICKS);
@@ -64,13 +80,16 @@ public final class CompostBinBlock extends Block {
     }
 
     @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (state.getValue(FILL) == FULL) level.setBlock(pos, state.setValue(FILL, READY), UPDATE_ALL);
+        if (currentState(level, pos, state) && state.getValue(FILL) == FULL)
+            level.setBlock(pos, state.setValue(FILL, READY), UPDATE_ALL);
     }
 
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+        if (!currentState(level, pos, state) || player == null) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             int fill = state.getValue(FILL);
-            if (fill == READY && player.mayBuild() && level.mayInteract(player, pos)
+            if (fill == READY && mayEdit(level, pos, player, player.getMainHandItem(), hit)
+                    && level.getBlockState(pos) == state
                     && level.setBlock(pos, state.setValue(FILL, 0), UPDATE_ALL)) {
                 player.getInventory().placeItemBackInInventory(new ItemStack(AEItems.NUTRIENT_COMPOST.get(), 2));
                 player.displayClientMessage(Component.literal("Collected 2 Nutrient Compost"), true);
