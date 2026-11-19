@@ -144,7 +144,10 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
             }
         }
         boolean filling = stack.is(Items.WATER_BUCKET);
-        if ((filling || stack.is(Items.BUCKET)) && level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler) {
+        if (filling || stack.is(Items.BUCKET)) {
+            if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
+                    || !state.is(this) || !level.getBlockState(pos).is(this)
+                    || !(level.getBlockEntity(pos) instanceof IrrigationSprinklerBlockEntity sprinkler)) return ItemInteractionResult.FAIL;
             if (!level.isClientSide) {
                 boolean transferred = filling ? sprinkler.fillBucket() : sprinkler.takeBucket();
                 if (transferred) {

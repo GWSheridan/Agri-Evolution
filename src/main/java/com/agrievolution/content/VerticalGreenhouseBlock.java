@@ -107,9 +107,15 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
 
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                         Player player, InteractionHand hand, BlockHitResult hit) {
+        if (hand == InteractionHand.MAIN_HAND && stack.isEmpty() && player.getOffhandItem().is(Items.WATER_BUCKET))
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         if (!stack.is(Items.WATER_BUCKET)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
+                || !state.is(this) || level.getBlockState(pos) != state) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
             var greenhouse = controller(level, pos, state);
+            if (greenhouse != null && !WorkstationAccess.mayUse(level, greenhouse.getBlockPos(), player, hit.getDirection(), stack))
+                return ItemInteractionResult.FAIL;
             if (greenhouse != null && greenhouse.addBucket()) {
                 player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(Items.BUCKET)));
             } else player.displayClientMessage(Component.literal("The greenhouse needs a complete column and room for 1000 mB."), true);

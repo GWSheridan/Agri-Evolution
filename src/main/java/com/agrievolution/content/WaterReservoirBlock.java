@@ -120,14 +120,25 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
+        if (hand == InteractionHand.MAIN_HAND && stack.isEmpty()) {
+            var offhand = player.getOffhandItem();
+            if (offhand.is(Items.CONDUIT) || offhand.is(Items.WATER_BUCKET) || offhand.is(Items.BUCKET))
+                return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+        }
         boolean upgrading = stack.is(Items.CONDUIT);
         boolean filling = stack.is(Items.WATER_BUCKET);
         if (!upgrading && !filling && !stack.is(Items.BUCKET)) {
             return stack.getItem() instanceof BlockItem ? ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION
                     : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+        if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
+                || !state.is(this) || !level.getBlockState(pos).is(this)) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
-            var tank = tank(level, pos, state);
+            // Water gauges can change between reads; resolve the live panel's authoritative core.
+            var current = level.getBlockState(pos);
+            var tank = tank(level, pos, current);
+            if (tank != null && !WorkstationAccess.mayUse(level, tank.getBlockPos(), player, hit.getDirection(), stack))
+                return ItemInteractionResult.FAIL;
             boolean transferred = tank != null && (upgrading ? tank.upgrade() : filling ? tank.addBucket() : tank.takeBucket());
             if (transferred) {
                 if (upgrading) {
@@ -138,7 +149,7 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
                     player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, result));
                 }
             } else {
-                var status = ReservoirStructure.status(level, core(pos, state));
+                var status = ReservoirStructure.status(level, core(pos, current));
                 String message;
                 if (status != ReservoirStructure.Status.COMPLETE) message = status.message;
                 else if (upgrading) message = "The reservoir is already Mk II.";

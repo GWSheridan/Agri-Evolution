@@ -43,6 +43,8 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
     }
 
     static boolean setFilled(Level level, BlockPos pos, BlockState state, boolean filled) {
+        if (!(state.getBlock() instanceof IrrigationBasinBlock) || !level.hasChunkAt(pos)
+                || level.getBlockState(pos) != state) return false;
         return level.setBlock(pos, state.setValue(FILLED, filled),
                 IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
     }
@@ -103,10 +105,16 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
     protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
                                               BlockPos pos, Player player, InteractionHand hand,
                                               BlockHitResult hit) {
+        if (hand == InteractionHand.MAIN_HAND && stack.isEmpty()
+                && (player.getOffhandItem().is(Items.WATER_BUCKET) || player.getOffhandItem().is(Items.BUCKET))) {
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+        }
         boolean filling = stack.is(Items.WATER_BUCKET);
         if (!filling && !stack.is(Items.BUCKET)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+        if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
+                || !state.is(this) || level.getBlockState(pos) != state) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
             if (filling == state.getValue(FILLED)) {
                 player.displayClientMessage(Component.literal(filling ? "The basin is already full." : "The basin is empty."), true);

@@ -180,9 +180,16 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
 
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                          Player player, BlockHitResult hit) {
+        return toggle(state, level, pos, player, player.getMainHandItem(), hit);
+    }
+
+    private InteractionResult toggle(BlockState state, Level level, BlockPos pos, Player player, ItemStack stack, BlockHitResult hit) {
+        if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
+                || !state.is(this) || level.getBlockState(pos) != state) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             BlockState next = connectedState(level, pos, state.cycle(OPEN));
-            level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
+            if (!level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL)))
+                return InteractionResult.FAIL;
             player.displayClientMessage(Component.literal(!next.getValue(OPEN) ? "Valve closed - flow through this valve stopped"
                     : flowStatus(level, pos, next)), true);
             notifySprinklers(level, pos);
@@ -193,8 +200,8 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                         Player player, InteractionHand hand, BlockHitResult hit) {
         if (player.isShiftKeyDown()) return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
-        useWithoutItem(state,level,pos,player,hit);
-        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        return toggle(state, level, pos, player, stack, hit) == InteractionResult.FAIL
+                ? ItemInteractionResult.FAIL : ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {

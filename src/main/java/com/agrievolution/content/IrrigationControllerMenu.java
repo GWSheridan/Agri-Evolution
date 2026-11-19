@@ -7,7 +7,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -81,13 +80,12 @@ public final class IrrigationControllerMenu extends AbstractContainerMenu {
 
     @Override public boolean stillValid(Player player) {
         if (controller == null) return true;
-        return !controller.isRemoved() && stillValid(ContainerLevelAccess.create(controller.getLevel(), controller.getBlockPos()),
-                player, AEBlocks.IRRIGATION_CONTROLLER.get());
+        return WorkstationAccess.stillValid(controller, player);
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (controller == null || !stillValid(player) || !player.mayBuild()
-                || !controller.getLevel().mayInteract(player, controller.getBlockPos()) || button < 0 || button >= 7 * ZONES) return false;
+        if (controller == null || !WorkstationAccess.mayConfigure(controller, player)
+                || button < 0 || button >= 7 * ZONES) return false;
         controller.action(button % ZONES, button / ZONES);
         return true;
     }

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.10
+
+- Manual bucket transfers on sprinklers, basins, reservoirs and Vertical Greenhouses respect build and item-use permissions. Denied transfers keep the water and held bucket unchanged.
+- Reservoir upgrades check permissions before using a Conduit. Reservoir panels and upper greenhouse sections also check access to their core tank.
+- Valve toggles check permissions with the item in the hand being used. Late clicks cannot restore a valve that has been replaced.
+- An empty main hand lets offhand buckets reach basins, reservoirs and Vertical Greenhouses. Reservoir Conduits work from the offhand too.
+- Crouch-use basin upgrades work from either hand. Spectators cannot upgrade a basin or move stored water.
+- Old basin fill and drain calls cannot undo a newer upgrade or restore a removed basin.
+- Irrigation Controller screens reject spectators and players who have left the controller's dimension. Old screens also check that they still refer to the placed controller.
+
 ## 1.3.9
 
 - Old Compost Bin collection calls cannot collect a second batch after fresh material has been deposited. This also prevents duplicate rewards during item-delivery callbacks.

@@ -1,7 +1,6 @@
 package com.agrievolution.content;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -15,7 +14,7 @@ public final class IrrigationBasinUpgradeHandler {
 
     public static void onRightClick(PlayerInteractEvent.RightClickBlock event) {
         Player player = event.getEntity();
-        if (!player.isShiftKeyDown() || event.getHand() != InteractionHand.MAIN_HAND) return;
+        if (!player.isShiftKeyDown()) return;
         Level world = event.getLevel();
         if (!world.hasChunkAt(event.getPos())) return;
         if (!(world.getBlockState(event.getPos()).getBlock() instanceof IrrigationBasinBlock)) return;
@@ -26,8 +25,7 @@ public final class IrrigationBasinUpgradeHandler {
         event.setCancellationResult(InteractionResult.sidedSuccess(world.isClientSide));
         event.setCanceled(true);
         if (world.isClientSide) return;
-        if (!player.mayBuild() || !world.mayInteract(player, event.getPos())
-                || !player.mayUseItemAt(event.getPos(), event.getHitVec().getDirection(), held)) return;
+        if (!WorkstationAccess.mayUse(world, event.getPos(), player, event.getHitVec().getDirection(), held)) return;
         if (!(world.getBlockEntity(event.getPos()) instanceof IrrigationBasinBlockEntity basin)) return;
         int current = basin.upgradeTier();
         boolean correct = (current == 0 && held.is(Items.COPPER_BLOCK))
