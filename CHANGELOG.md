@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.5
+
+- Greenhouse heating, ventilation, planting presets and harvest export settings now respect build permissions.
+- Removed or replaced greenhouses, Breeding Stations, Soil Research Tables and Genetics Laboratories reject late inventory clicks. Putting the same block back cannot reopen the old inventory.
+- Research controls reject spectators, players without build permission and clicks sent after walking away. Locked laboratory modes also reject the selection on the server.
+- Soil Research Table and laboratory upgrades check permissions before changing the machine or using a module. A table only consumes its module after the upgrade succeeds.
+- Breaking a Mk II or Mk III Soil Research Table returns its installed upgrade modules along with the inventory.
+- Hoppers use the research machines' input slot rules. They cannot insert unrelated items or fill result slots; donor seeds require unlocked hybrid mode.
+- Grafting waits when neither genes nor rare traits can improve. Seeds, compost, samples and supports stay in place, and the laboratory explains why. Useful gene improvements and unlocked rare-trait transfers still work.
+
 ## 1.3.4
 
 - Moved old update scripts, screenshots and verification reports into local backups. Kept the current build tools and changed the asset audit to write reports under `build/`.

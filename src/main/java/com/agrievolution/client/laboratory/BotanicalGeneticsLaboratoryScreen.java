@@ -131,7 +131,8 @@ public final class BotanicalGeneticsLaboratoryScreen extends AbstractContainerSc
             case 1 -> "Improve yield";
             case 2 -> "Improve resilience";
             case 3 -> "Extract donor genes";
-            case 4 -> "Transfer donor traits";
+            case 4 -> menu.inputSeed().getItem() instanceof SpeciesSeedItem && GeneticSampleItem.isValid(menu.sample())
+                    && !menu.graftWouldImprove() ? "No gain: inputs kept" : "Transfer donor traits";
             case 5 -> "Rare trait research";
             default -> "Cross species";
         };

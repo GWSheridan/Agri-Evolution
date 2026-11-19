@@ -5,6 +5,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
@@ -77,7 +78,8 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (greenhouse == null || !greenhouse.isSmartFarmingUpgraded() || !stillValid(player)) return false;
+        if (greenhouse == null || !greenhouse.isSmartFarmingUpgraded()
+                || !WorkstationAccess.mayConfigure(greenhouse, player)) return false;
         if (button >= 0 && button < INPUTS) greenhouse.toggleSeedSlot(button);
         else if (button >= INPUTS && button < INPUTS * 2) greenhouse.cycleSeedPriority(button - INPUTS);
         else if (button == 18) greenhouse.cycleSeedReserve();
@@ -97,15 +99,19 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
 
     @Override public boolean stillValid(Player player) { return seeds.stillValid(player); }
 
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
+    }
+
     @Override public void removed(Player player) {
         super.removed(player);
         seeds.stopOpen(player);
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        if (!slot.hasItem()) return ItemStack.EMPTY;
+        if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
         if (index < INPUTS) {

@@ -48,6 +48,21 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
         return new SoilResearchTableMenu(id, inventory, this);
     }
 
+    @Override public boolean stillValid(Player player) { return WorkstationAccess.stillValid(this, player); }
+
+    @Override public boolean canPlaceItem(int slot, ItemStack stack) {
+        return switch (slot) {
+            case SAMPLER -> stack.is(AEItems.SOIL_SAMPLE.get());
+            case SPECIMEN -> stack.is(AEItems.SOIL_SPECIMEN.get());
+            case SOIL -> stack.is(Items.DIRT) || stack.is(AEItems.CULTIVATED_FARMLAND.get())
+                    || stack.is(AEItems.NUTRIENT_FARMLAND.get()) || stack.is(AEItems.MYTHIC_FARMLAND.get())
+                    || stack.is(AEItems.ARCANE_FARMLAND.get());
+            case CATALYST -> stack.is(AEItems.NUTRIENT_COMPOST.get()) || stack.is(Items.COPPER_INGOT)
+                    || stack.is(Items.AMETHYST_SHARD) || stack.is(Items.GOLD_INGOT) || stack.is(Items.ECHO_SHARD);
+            default -> false;
+        };
+    }
+
     /** Mk II/Mk III research up to 2/4 collected specimens in a single click. */
     public void analyze(Player player) {
         ItemStack tool = getItem(SAMPLER), specimen = getItem(SPECIMEN);

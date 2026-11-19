@@ -49,6 +49,7 @@ public final class BotanicalGreenhouseHarvestMenu extends AbstractContainerMenu 
     @Override public boolean clickMenuButton(Player player, int button) {
         if (greenhouse == null || !greenhouse.isAutomationUpgraded() || !greenhouse.stillValid(player))
             return false;
+        if (player.level().isClientSide || button != 4 && !WorkstationAccess.mayConfigure(greenhouse, player)) return false;
         if (button == 0) greenhouse.toggleExport();
         else if (button == 1) greenhouse.toggleExportMode();
         else if (button == 2) greenhouse.cycleExportReserve();

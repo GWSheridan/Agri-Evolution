@@ -69,14 +69,14 @@ public final class SoilResearchTableBlock extends BaseEntityBlock {
         boolean upgradeThree = stack.is(AEItems.SOIL_RESEARCH_MASTERY_UPGRADE.get());
         if (upgradeTwo || upgradeThree) {
             if (!level.isClientSide && level.getBlockEntity(pos) instanceof SoilResearchTableBlockEntity lab) {
+                if (!WorkstationAccess.mayConfigure(lab, player)) return ItemInteractionResult.FAIL;
                 int next = state.getValue(TIER) + 1;
                 int samples = SoilResearch.analyzed(lab.getItem(SoilResearchTableBlockEntity.SAMPLER));
                 int expected = upgradeTwo ? 2 : 3;
                 if (next > 3) lab.setStatus(14);
                 else if (next != expected) lab.setStatus(15);
                 else if (samples < (expected == 2 ? 48 : 72)) lab.setStatus(16);
-                else {
-                    level.setBlock(pos, state.setValue(TIER, expected), 3);
+                else if (level.setBlock(pos, state.setValue(TIER, expected), 3)) {
                     lab.setStatus(13);
                     if (!player.getAbilities().instabuild) stack.shrink(1);
                 }
@@ -93,6 +93,10 @@ public final class SoilResearchTableBlock extends BaseEntityBlock {
         if (!state.is(newer.getBlock()) && !level.isClientSide
                 && level.getBlockEntity(pos) instanceof SoilResearchTableBlockEntity work) {
             Containers.dropContents(level, pos, work);
+            if (state.getValue(TIER) >= 2) Block.popResource(level, pos,
+                    new ItemStack(AEItems.SOIL_RESEARCH_REFINEMENT_UPGRADE.get()));
+            if (state.getValue(TIER) >= 3) Block.popResource(level, pos,
+                    new ItemStack(AEItems.SOIL_RESEARCH_MASTERY_UPGRADE.get()));
             level.updateNeighbourForOutputSignal(pos, this);
         }
         super.onRemove(state, level, pos, newer, moving);

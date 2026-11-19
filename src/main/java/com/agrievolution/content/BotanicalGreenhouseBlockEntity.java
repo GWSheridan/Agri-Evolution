@@ -1787,9 +1787,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
         setChanged();
     }
     @Override public boolean stillValid(Player player) {
-        return level != null && level.getBlockEntity(worldPosition) == this &&
-                player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
-                        worldPosition.getZ() + 0.5) <= 64.0;
+        return WorkstationAccess.stillValid(this, player);
     }
     @Override public boolean canPlaceItem(int slot, ItemStack stack) { return false; }
     @Override public void clearContent() {

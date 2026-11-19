@@ -5,6 +5,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
@@ -72,17 +73,19 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     public ItemStack sampler() { return station.getItem(0); }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (button < 0 || button > 1) return false;
-        if (backend != null && !player.level().isClientSide && stillValid(player)) {
-            if (button == 0) backend.analyze(player);
-            else backend.refine(player);
-            broadcastChanges();
-        }
+        if (button < 0 || button > 1 || backend == null || !WorkstationAccess.mayConfigure(backend, player)) return false;
+        if (button == 0) backend.analyze(player);
+        else backend.refine(player);
+        broadcastChanges();
         return true;
     }
 
     @Override public boolean stillValid(Player player) {
-        return stillValid(access, player, AEBlocks.SOIL_RESEARCH_TABLE.get());
+        return station.stillValid(player) && stillValid(access, player, AEBlocks.SOIL_RESEARCH_TABLE.get());
+    }
+
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
@@ -91,9 +94,9 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        if (!slot.hasItem()) return ItemStack.EMPTY;
+        if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack held = slot.getItem();
         ItemStack copy = held.copy();
         if (index < MACHINE) {

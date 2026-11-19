@@ -5,6 +5,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
@@ -66,23 +67,33 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
     public ItemStack sample() { return lab.getItem(2); }
     public ItemStack support() { return lab.getItem(3); }
     public ItemStack compost() { return lab.getItem(1); }
+    public boolean graftWouldImprove() {
+        return BotanicalGeneticsLaboratoryBlockEntity.graftWouldImprove(inputSeed(), sample(), support(), tier() >= 2);
+    }
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (button < 0 || button > BotanicalGeneticsLaboratoryBlockEntity.HYBRID) return false;
-        if (!player.level().isClientSide && lab instanceof BotanicalGeneticsLaboratoryBlockEntity entity)
-            entity.selectMode(button);
+        if (button < 0 || button > BotanicalGeneticsLaboratoryBlockEntity.HYBRID
+                || !(lab instanceof BotanicalGeneticsLaboratoryBlockEntity entity)
+                || !WorkstationAccess.mayConfigure(entity, player)) return false;
+        if (button == BotanicalGeneticsLaboratoryBlockEntity.EVOLVE && !entity.isUpgraded()
+                || button == BotanicalGeneticsLaboratoryBlockEntity.HYBRID && !entity.isHybridUpgraded()) return false;
+        entity.selectMode(button);
+        broadcastChanges();
         return true;
     }
     @Override public boolean stillValid(Player player) {
-        return stillValid(access, player, AEBlocks.BOTANICAL_GENETICS_LABORATORY.get());
+        return lab.stillValid(player) && stillValid(access, player, AEBlocks.BOTANICAL_GENETICS_LABORATORY.get());
+    }
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
     }
     @Override public void removed(Player player) {
         super.removed(player);
         lab.stopOpen(player);
     }
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        if (!slot.hasItem()) return ItemStack.EMPTY;
+        if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack current = slot.getItem();
         ItemStack original = current.copy();
         if (index < MACHINE) {

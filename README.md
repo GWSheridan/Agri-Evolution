@@ -26,6 +26,8 @@ If a journal or machine panel is larger than your chosen GUI scale allows, hold 
 - **Keep your best seed lines.** Give seeds a name at an anvil, then use Grandmas Journal on the plant to record the variety. Search for it by name in the Seed Vault. Open the Garden Order Board’s **Seeds** tab to see which traits earn rewards. [Writing datapack orders](docs/GARDEN_ORDERS.md)
 - **Plant crops that help each other.** Grow Basil next to Tomato for fewer weeds, or harvest Beans next to Corn to give it a boost. The Soil Sampler shows which bonus a plot has.
 
+The Genetics Laboratory keeps your materials when a graft cannot improve the seed. Its screen explains when it is waiting for a better donor. Breaking an upgraded Soil Research Table returns the installed modules so you can fit them again after moving it.
+
 ## Build from source
 
 Use a Java 21 JDK and the included Gradle wrapper. The built JAR is in `build/libs`.

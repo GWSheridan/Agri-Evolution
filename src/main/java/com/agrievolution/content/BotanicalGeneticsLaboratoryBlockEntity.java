@@ -17,6 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
@@ -70,6 +71,19 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
     @Override protected AbstractContainerMenu createMenu(int id, Inventory inventory) {
         return new BotanicalGeneticsLaboratoryMenu(id, inventory, this);
     }
+
+    @Override public boolean stillValid(Player player) { return WorkstationAccess.stillValid(this, player); }
+
+    @Override public boolean canPlaceItem(int slot, ItemStack stack) {
+        return switch (slot) {
+            case SEED -> stack.getItem() instanceof SpeciesSeedItem;
+            case COMPOST -> stack.is(AEItems.NUTRIENT_COMPOST.get());
+            case SAMPLE -> GeneticSampleItem.isValid(stack)
+                    || hybridUpgraded && mode == HYBRID && stack.getItem() instanceof SpeciesSeedItem;
+            case SUPPORT -> stack.getItem() instanceof CropSupportItem;
+            default -> false;
+        };
+    }
     public int mode() { return mode; }
     public boolean isUpgraded() { return upgraded; }
     public boolean isHybridUpgraded() { return hybridUpgraded; }
@@ -107,6 +121,14 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
         return upgraded ? ticks * 9 / 10 : ticks;
     }
 
+    public static boolean graftWouldImprove(ItemStack seed, ItemStack sample, ItemStack support, boolean upgraded) {
+        if (!(seed.getItem() instanceof SpeciesSeedItem) || !GeneticSampleItem.isValid(sample)) return false;
+        var original = GenomeStorage.fromSeed(seed);
+        var grafted = GeneticResearch.graft(original, GeneticSampleItem.genome(sample), CropSupportItem.tier(support) > 0);
+        return !original.equals(grafted) || upgraded && RareTraitStorage.fromSeed(seed) == RareTrait.NONE
+                && GeneticSampleItem.rareTrait(sample) != RareTrait.NONE;
+    }
+
     private boolean canWork() {
         if (!(getItem(SEED).getItem() instanceof SpeciesSeedItem)
                 || !getItem(COMPOST).is(AEItems.NUTRIENT_COMPOST.get())
@@ -116,7 +138,7 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
             CropSpecies a = ((SpeciesSeedItem) getItem(SEED).getItem()).species();
             return a != donor.species();
         }
-        if (mode == GRAFT) return GeneticSampleItem.isValid(getItem(SAMPLE));
+        if (mode == GRAFT) return graftWouldImprove(getItem(SEED), getItem(SAMPLE), getItem(SUPPORT), upgraded);
         if (mode == EVOLVE) return upgraded && GeneticSampleItem.isValid(getItem(SAMPLE))
                 && RareTraitStorage.fromSeed(getItem(SEED)) == RareTrait.NONE;
         // Prevent consuming compost to produce a seed that cannot improve any further.

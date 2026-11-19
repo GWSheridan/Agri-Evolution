@@ -5,6 +5,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
@@ -73,7 +74,11 @@ public final class SeedBreedingStationMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return stillValid(access, player, AEBlocks.SEED_BREEDING_STATION.get());
+        return station.stillValid(player) && stillValid(access, player, AEBlocks.SEED_BREEDING_STATION.get());
+    }
+
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override
@@ -84,9 +89,9 @@ public final class SeedBreedingStationMenu extends AbstractContainerMenu {
 
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot clicked = slots.get(index);
-        if (!clicked.hasItem()) return ItemStack.EMPTY;
+        if (!clicked.hasItem() || !clicked.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack current = clicked.getItem();
         ItemStack original = current.copy();
         if (index < MACHINE_SLOTS) {

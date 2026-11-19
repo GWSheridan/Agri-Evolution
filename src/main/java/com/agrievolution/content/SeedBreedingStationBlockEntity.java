@@ -15,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
@@ -57,6 +58,8 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
     @Override protected AbstractContainerMenu createMenu(int id, Inventory inventory) {
         return new SeedBreedingStationMenu(id, inventory, this);
     }
+
+    @Override public boolean stillValid(Player player) { return WorkstationAccess.stillValid(this, player); }
 
     public int requiredTicks() {
         int base = getItem(COMPOST).is(AEItems.NUTRIENT_COMPOST.get()) ? COMPOST_TICKS : BASE_TICKS;

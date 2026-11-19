@@ -65,6 +65,9 @@ public final class BotanicalGeneticsLaboratoryBlock extends BaseEntityBlock {
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                        Player player, InteractionHand hand, BlockHitResult hit) {
+        boolean upgrade = stack.is(AEItems.LABORATORY_RESEARCH_UPGRADE.get()) || stack.is(AEItems.LABORATORY_HYBRIDIZATION_UPGRADE.get());
+        if (upgrade && !level.isClientSide && (!(level.getBlockEntity(pos) instanceof BotanicalGeneticsLaboratoryBlockEntity target)
+                || !WorkstationAccess.mayConfigure(target, player))) return ItemInteractionResult.FAIL;
         if (stack.is(AEItems.LABORATORY_HYBRIDIZATION_UPGRADE.get())
                 && level.getBlockEntity(pos) instanceof BotanicalGeneticsLaboratoryBlockEntity lab) {
             if (!level.isClientSide) {
