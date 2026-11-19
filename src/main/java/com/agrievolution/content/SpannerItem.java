@@ -96,7 +96,12 @@ public final class SpannerItem extends Item {
         if (level.isClientSide) return;
         boolean valve = state.getBlock() instanceof IrrigationValveBlock;
         var side = event.getHitVec().getDirection();
-        if ((!valve || player.isShiftKeyDown()) && !canEdit(player, level, pos, side, player.getMainHandItem())) return;
+        var tool = player.getMainHandItem();
+        var beforeTool = tool.copy();
+        var entity = level.getBlockEntity(pos);
+        if ((!valve || player.isShiftKeyDown()) && (!canEdit(player, level, pos, side, tool)
+                || !sameTool(player, level, event.getHand(), tool, beforeTool)
+                || !sameTarget(level, pos, state, entity))) return;
         if (valve) {
             if (player.isShiftKeyDown() && linkController(player, level, pos, side)) return;
             inspectValve(player, level, pos, state);
@@ -113,20 +118,29 @@ public final class SpannerItem extends Item {
 
     private static boolean linkController(Player player, Level level, BlockPos valvePos, Direction side) {
         ItemStack tool = player.getMainHandItem();
+        var beforeTool = tool.copy();
         var selected = tool.getOrDefault(DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.EMPTY).copyTag();
         if (!selected.contains(CONTROLLER_POS)) return false;
-        net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA, tool, tag -> {
-            tag.remove(CONTROLLER_POS);
-            tag.remove(CONTROLLER_DIMENSION);
-        });
         BlockPos controllerPos = BlockPos.of(selected.getLong(CONTROLLER_POS));
+        var valveState = level.getBlockState(valvePos);
+        var valveEntity = level.getBlockEntity(valvePos);
         String dimension = level.dimension().location().toString();
         String result = "The selected Irrigation Controller is unavailable.";
         if (dimension.equals(selected.getString(CONTROLLER_DIMENSION)) && level.hasChunkAt(controllerPos)
                 && level.getBlockEntity(controllerPos) instanceof IrrigationControllerBlockEntity controller
-                && level.getBlockEntity(valvePos) instanceof IrrigationValveBlockEntity valve) {
-            result = canEdit(player, level, controllerPos, side, tool) ? controller.link(valve)
-                    : "You need permission to edit the Irrigation Controller.";
+                && valveEntity instanceof IrrigationValveBlockEntity valve) {
+            var controllerState = level.getBlockState(controllerPos);
+            if (!canEdit(player, level, controllerPos, side, tool)) {
+                result = "You need permission to edit the Irrigation Controller.";
+            } else if (sameTool(player, level, net.minecraft.world.InteractionHand.MAIN_HAND, tool, beforeTool)
+                    && sameTarget(level, controllerPos, controllerState, controller)
+                    && sameTarget(level, valvePos, valveState, valve)) {
+                result = controller.link(valve);
+                net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA, tool, tag -> {
+                    tag.remove(CONTROLLER_POS);
+                    tag.remove(CONTROLLER_DIMENSION);
+                });
+            }
         }
         player.displayClientMessage(Component.literal(result), true);
         return true;
@@ -203,7 +217,19 @@ public final class SpannerItem extends Item {
     public SpannerItem(Properties properties){super(properties);}
 
     private static boolean canEdit(Player player, Level level, BlockPos pos, Direction side, ItemStack tool) {
-        return player.mayBuild() && level.mayInteract(player, pos) && player.mayUseItemAt(pos, side, tool);
+        return player.level() == level && player.isAlive() && !player.isSpectator() && player.mayBuild()
+                && level.hasChunkAt(pos) && level.mayInteract(player, pos) && player.mayUseItemAt(pos, side, tool);
+    }
+
+    private static boolean sameTool(Player player, Level level, net.minecraft.world.InteractionHand hand,
+                                    ItemStack tool, ItemStack before) {
+        return player.level() == level && player.isAlive() && !player.isSpectator()
+                && tool.getItem() instanceof SpannerItem && player.getItemInHand(hand) == tool && ItemStack.matches(before, tool);
+    }
+
+    private static boolean sameTarget(Level level, BlockPos pos, net.minecraft.world.level.block.state.BlockState state,
+                                      net.minecraft.world.level.block.entity.BlockEntity entity) {
+        return level.hasChunkAt(pos) && level.getBlockState(pos) == state && level.getBlockEntity(pos) == entity;
     }
 
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, java.util.List<Component> lines, TooltipFlag flag) {
@@ -216,11 +242,17 @@ public final class SpannerItem extends Item {
     @Override public InteractionResult useOn(UseOnContext context){
         var level=context.getLevel();var pos=context.getClickedPos();var player=context.getPlayer();
         if (player == null) return InteractionResult.PASS;
+        var tool = context.getItemInHand();
+        var beforeTool = tool.copy();
+        if (!sameTool(player, level, context.getHand(), tool, beforeTool) || !level.hasChunkAt(pos)) return InteractionResult.FAIL;
         var state = level.getBlockState(pos);
+        var target = level.getBlockEntity(pos);
         if (player.isShiftKeyDown() && state.is(AEBlocks.IRRIGATION_CONTROLLER.get())) {
-            if (!canEdit(player, level, pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
+            if (!canEdit(player, level, pos, context.getClickedFace(), tool)
+                    || !sameTool(player, level, context.getHand(), tool, beforeTool)
+                    || !sameTarget(level, pos, state, target)) return InteractionResult.FAIL;
             if (!level.isClientSide) {
-                net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA, context.getItemInHand(), tag -> {
+                net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA, tool, tag -> {
                     tag.putLong(CONTROLLER_POS, pos.asLong());
                     tag.putString(CONTROLLER_DIMENSION, level.dimension().location().toString());
                 });
@@ -251,7 +283,10 @@ public final class SpannerItem extends Item {
         if(!state.is(Blocks.COPPER_BLOCK))return InteractionResult.PASS;
         if (!level.isClientSide) {
             var result = ReservoirStructure.tryForm(level, pos,
-                    part -> canEdit(player, level, part, context.getClickedFace(), context.getItemInHand()));
+                    part -> sameTool(player, level, context.getHand(), tool, beforeTool)
+                            && canEdit(player, level, part, context.getClickedFace(), tool)
+                            && sameTool(player, level, context.getHand(), tool, beforeTool)
+                            && sameTarget(level, pos, state, target));
             if (result == ReservoirStructure.Formation.FORMED) FarmingMilestones.RESERVOIR.award(player);
             String message = switch (result) {
                 case FORMED -> "Copper Reservoir formed with 1000 mB. Connect pipes to its face-centre ports.";

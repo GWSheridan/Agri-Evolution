@@ -19,12 +19,22 @@ public final class ReservoirStructure {
     enum Formation { FORMED, PROTECTED, UNLOADED, INVALID }
 
     private static boolean changing;
+    private static boolean forming;
     public static boolean tryForm(Level level,BlockPos clicked) {
         return tryForm(level, clicked, pos -> true) == Formation.FORMED;
     }
 
     static Formation tryForm(Level level, BlockPos clicked, Predicate<BlockPos> canEdit) {
-        if (level.isClientSide) return Formation.INVALID;
+        if (level.isClientSide || forming) return Formation.INVALID;
+        forming = true;
+        try {
+            return formBlueprint(level, clicked, canEdit);
+        } finally {
+            forming = false;
+        }
+    }
+
+    private static Formation formBlueprint(Level level, BlockPos clicked, Predicate<BlockPos> canEdit) {
         boolean protectedShell = false;
         boolean unloadedShell = false;
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++) {
@@ -36,6 +46,10 @@ public final class ReservoirStructure {
                 protectedShell = true;
                 continue;
             }
+            // Permission hooks may change any part of the shell or its source water.
+            blueprint = blueprintStatus(level, core);
+            if (blueprint == Status.UNLOADED) unloadedShell = true;
+            if (blueprint != Status.COMPLETE) continue;
             changing=true;
             try {
                 for (int dx = -1; dx <= 1; dx++) for (int dy = -1; dy <= 1; dy++) for (int dz = -1; dz <= 1; dz++) {

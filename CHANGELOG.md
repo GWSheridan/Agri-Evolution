@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.18
+
+- Spanner edits to pipes, sprinklers, valve names and controller selections reject spectators and dead players. Valve inspection remains available without changing its settings.
+- Spanner actions recheck the held tool after permission callbacks, including changes to its name or other saved data. A replaced tool is left alone.
+- Replacing a sprinkler, valve or controller during a permission check cancels the old edit. Valve links recheck both machines before reserving a controller slot.
+- Denied or interrupted valve links keep the selected controller for a retry. Permission denial, an unavailable controller or a replaced target no longer clears that selection. A normal link attempt still clears it, so an unnamed valve can be named on the next click.
+- Reservoir formation rechecks all 26 copper blocks and the centre water source after permissions are checked. Changed blocks are preserved, and a changed held Spanner cancels assembly.
+- Permission callbacks cannot start another reservoir formation inside the current one. Ordinary assembly still starts with 1000 mB and works with a Spanner in either hand.
+
 ## 1.3.17
 
 - Seed Breeding Stations reject old ticks after removal or replacement. A late completion cannot spend parents, compost or supports, or create another offspring.
