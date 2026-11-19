@@ -13,7 +13,6 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import java.util.List;
 
@@ -39,6 +38,8 @@ public final class GeneticClippersItem extends Item {
         if (player == null) return InteractionResult.PASS;
         BlockState state = level.getBlockState(pos);
         if (!(state.getBlock() instanceof AgriCropBlock crop)) return InteractionResult.PASS;
+        if (player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, pos)
+                || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
         if (state.getValue(CropBlock.AGE) < crop.getMaxAge()) {
             if (!level.isClientSide) player.displayClientMessage(Component.literal("Wait for the crop to mature before clipping."), true);
             return InteractionResult.sidedSuccess(level.isClientSide);
@@ -56,7 +57,7 @@ public final class GeneticClippersItem extends Item {
             com.agrievolution.genetics.SeedVariety.apply(sourceSeed, plant.variety());
             ItemStack geneticSample = GeneticSampleItem.capture(sourceSeed);
             plant.setClipped(true); // Persist before giving the sample, so re-use cannot duplicate it.
-            if (!player.addItem(geneticSample)) Block.popResource(level, pos, geneticSample);
+            player.getInventory().placeItemBackInInventory(geneticSample);
             player.displayClientMessage(Component.literal("Genetic clipping collected. The crop remains planted."), true);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

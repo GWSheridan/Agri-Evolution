@@ -122,6 +122,15 @@ public final class BreedingJournalItem extends Item {
             return InteractionResult.CONSUME;
         }
 
+        if (player.isSpectator() || !player.mayBuild()
+                || !level.mayInteract(player, pos) || !level.mayInteract(player, parentPos)
+                || !player.mayUseItemAt(pos, context.getClickedFace(), journal)
+                || !player.mayUseItemAt(parentPos, context.getClickedFace(), journal)) {
+            save(journal, root);
+            status(player, "You need permission to breed both parent crops.");
+            return InteractionResult.FAIL;
+        }
+
         // Both parents need a support. The weaker tier sets the mutation bonus.
         int bonus = CropSupportItem.fieldBonus(Math.min(CropSupportItem.tier(parentState),CropSupportItem.tier(state)));
         int pollination = parent.pollinated(level.getGameTime()) || target.pollinated(level.getGameTime()) ? CropPollination.BONUS : 0;
@@ -131,11 +140,10 @@ public final class BreedingJournalItem extends Item {
         ItemStack seed = new ItemStack(AEItems.seedFor(offspringSpecies));
         if (first.species() != crop.species()) HybridLineageStorage.putOnSeed(seed,
                 new HybridLineageStorage.Lineage(first.species(), crop.species()));
-        else if (offspringSpecies == crop.species() && parent.variety().equals(target.variety())) {
-            SeedVariety.apply(seed, target.variety());
-            if (target.lineage() != null && target.lineage().equals(parent.lineage())) {
-                HybridLineageStorage.putOnSeed(seed, target.lineage());
-            }
+        else if (offspringSpecies == crop.species()) {
+            if (parent.variety().equals(target.variety())) SeedVariety.apply(seed, target.variety());
+            var lineage = parent.lineage() != null ? parent.lineage() : target.lineage();
+            if (lineage != null) HybridLineageStorage.putOnSeed(seed, lineage);
         }
         GenomeStorage.putOnSeed(seed, offspringGenome);
         RareTrait inherited = RareTrait.inherit(parent.rareTrait(), target.rareTrait(),
@@ -143,13 +151,14 @@ public final class BreedingJournalItem extends Item {
         RareTraitStorage.putOnSeed(seed, inherited);
         recordTrait(root, inherited);
         SeedVariety.record(root, SeedVariety.name(seed), offspringSpecies, offspringGenome, HybridLineageStorage.fromSeed(seed));
-        if (!player.getInventory().add(seed)) player.drop(seed, false);
+        // Commit the cross before inventory or item-spawn callbacks can observe it.
         parent.setCrossed(true);
         target.setCrossed(true);
         root.remove(SELECTED);
         boolean newSpecies = discover(root, offspringSpecies);
         recordBestGenetics(root, offspringSpecies, offspringGenome);
         save(journal, root);
+        player.getInventory().placeItemBackInInventory(seed);
         FarmingMilestones.CROSS.award(player);
 
         status(player, "Crossed: " + offspringSpecies.displayName()

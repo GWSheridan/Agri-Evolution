@@ -20,7 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import java.util.List;
 
-/** Soil research is bound to this sampler stack. Research unlocks 3 in-place farmland tiers. */
+/** Soil research is bound to this sampler stack and unlocks five farmland tiers. */
 public final class SoilSampleItem extends Item {
     public SoilSampleItem(Properties properties) { super(properties); }
 
@@ -53,7 +53,7 @@ public final class SoilSampleItem extends Item {
                         : "Use normally on dirt to collect a soil specimen."), true);
             } else if (SoilResearch.collect(sampler, level, soil)) {
                 ItemStack specimen = SoilSpecimenItem.from(level, soil);
-                if (!player.getInventory().add(specimen)) player.drop(specimen, false);
+                player.getInventory().placeItemBackInInventory(specimen);
                 player.displayClientMessage(Component.literal("Soil specimen collected! Analyze it at a Soil Research Table."), true);
             } else {
                 player.displayClientMessage(Component.literal("Already collected this plot (or sampler full). Find fresh soil."), true);

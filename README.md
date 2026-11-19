@@ -28,6 +28,8 @@ If a journal or machine panel is larger than your chosen GUI scale allows, hold 
 
 The Genetics Laboratory keeps your materials when a graft cannot improve the seed. Its screen explains when it is waiting for a better donor. Breaking an upgraded Soil Research Table returns the installed modules so you can fit them again after moving it.
 
+Collected samples and field-bred seeds drop beside you when your inventory is full, including in Creative. Breeding and clipping require permission to work on the parent crops.
+
 ## Build from source
 
 Use a Java 21 JDK and the included Gradle wrapper. The built JAR is in `build/libs`.

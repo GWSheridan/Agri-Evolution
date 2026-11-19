@@ -68,11 +68,10 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
     }
 
     public boolean boostGrowth(Level level, BlockPos pos, BlockState state) {
-        if (level.isClientSide || !state.hasProperty(AGE)) return false;
+        if (level.isClientSide || !state.is(this) || level.getBlockState(pos) != state) return false;
         int age = state.getValue(AGE);
         if (age >= getMaxAge()) return false;
-        level.setBlock(pos, state.setValue(AGE, Math.min(getMaxAge(), age + 2)), 2);
-        return true;
+        return level.setBlock(pos, state.setValue(AGE, Math.min(getMaxAge(), age + 2)), 2);
     }
 
     @Override

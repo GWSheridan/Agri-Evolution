@@ -17,10 +17,14 @@ public final class NutrientCompostItem extends Item {
         BlockPos pos = context.getClickedPos();
         BlockState state = level.getBlockState(pos);
         if (!(state.getBlock() instanceof AgriCropBlock crop)) return InteractionResult.PASS;
+        var player = context.getPlayer();
+        if (player == null) return InteractionResult.PASS;
+        if (player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, pos)
+                || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             if (!crop.boostGrowth(level, pos, state)) return InteractionResult.PASS;
             if (level.getBlockEntity(pos) instanceof AECropBlockEntity planted) planted.addNutrition(25);
-            if (!context.getPlayer().getAbilities().instabuild) context.getItemInHand().shrink(1);
+            if (!player.getAbilities().instabuild) context.getItemInHand().shrink(1);
             level.levelEvent(2005, pos, 0);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

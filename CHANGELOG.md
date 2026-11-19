@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.6
+
+- Nutrient Compost checks build and interaction permissions before growing a crop or using an item. Calls without a player leave the crop alone instead of crashing after growth.
+- Compost growth rejects stale crop states and reports success only when the growth change succeeds. It cannot replace a newer crop or restore one that was removed.
+- Genetic Clippers check permissions before taking a crop's one sample. A denied use leaves the sample available for an authorized player.
+- Genetic samples, soil specimens and field-bred seeds drop beside the player when their inventory is full, including in Creative. Repeated clicks cannot claim them twice.
+- Grandmas Journal checks permission at both parent crops before breeding. A rejected cross keeps the selected parent for a later retry.
+- Field crosses mark both parents as used and save the journal before handing over the seed, so item-delivery callbacks see the completed cross.
+- Same-species field crosses keep existing hybrid ancestry even when only one parent has it or the parents have different variety names. Names still pass on only when both parents share one.
+
 ## 1.3.5
 
 - Greenhouse heating, ventilation, planting presets and harvest export settings now respect build permissions.
