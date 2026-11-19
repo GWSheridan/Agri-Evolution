@@ -5,6 +5,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -36,15 +37,19 @@ public final class BotanicalGreenhouseStorageMenu extends AbstractContainerMenu 
 
     @Override public boolean stillValid(Player player) { return storage.stillValid(player); }
 
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
+    }
+
     @Override public void removed(Player player) {
         super.removed(player);
         storage.stopOpen(player);
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        if (!slot.hasItem()) return ItemStack.EMPTY;
+        if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
         if (index < 27) {

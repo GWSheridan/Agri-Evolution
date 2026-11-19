@@ -99,12 +99,12 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
             return;
         }
         var ingredients = shaped.getIngredients();
-        int[] matches = matchIngredients(ingredients, true);
+        int[] matches = matchIngredients(ingredients);
         if (matches == null) { status = Status.MISSING_INGREDIENTS; return; }
         status = tryCook(server, shaped, dish, matches);
         if (status == Status.CONTAINERS_FULL) {
-            // Try fresh ingredients when a preserve would produce a bottle we cannot store.
-            var fresh = matchIngredients(ingredients, false);
+            // Prefer fewer container returns without excluding required milk buckets or similar inputs.
+            var fresh = matchFreshIngredients(ingredients);
             if (fresh != null && tryCook(server, shaped, dish, fresh) == Status.COOKING) status = Status.COOKING;
         }
         if (status != Status.COOKING) return;
@@ -140,11 +140,11 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
         return recipe;
     }
 
-    private int[] matchIngredients(List<Ingredient> ingredients, boolean useContainers) {
+    private int[] matchIngredients(List<Ingredient> ingredients) {
         int[] matches = new int[ingredients.size()];
         Arrays.fill(matches, -1);
         for (int i = 0; i < matches.length; i++) {
-            if (!findSlot(ingredients, i, matches, new boolean[FOOD], useContainers)) return null;
+            if (!findSlot(ingredients, i, matches, new boolean[FOOD])) return null;
         }
         return matches;
     }
@@ -163,12 +163,10 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     }
 
     /** Reassign earlier flexible ingredients when a later one needs their stack. */
-    private boolean findSlot(List<Ingredient> ingredients, int ingredient, int[] matches, boolean[] visited,
-                             boolean useContainers) {
+    private boolean findSlot(List<Ingredient> ingredients, int ingredient, int[] matches, boolean[] visited) {
         for (int slot = 0; slot < FOOD; slot++) {
             var stack = items.get(slot);
-            if (visited[slot] || stack.isEmpty() || !ingredients.get(ingredient).test(stack)
-                    || (!useContainers && stack.copyWithCount(1).hasCraftingRemainingItem())) continue;
+            if (visited[slot] || stack.isEmpty() || !ingredients.get(ingredient).test(stack)) continue;
             visited[slot] = true;
             int used = 0;
             for (int taken : matches) if (taken == slot) used++;
@@ -177,12 +175,90 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
                 return true;
             }
             for (int i = 0; i < matches.length; i++) {
-                if (matches[i] != slot || !findSlot(ingredients, i, matches, visited, useContainers)) continue;
+                if (matches[i] != slot || !findSlot(ingredients, i, matches, visited)) continue;
                 matches[ingredient] = slot;
                 return true;
             }
         }
         return false;
+    }
+
+    private static final class MatchEdge {
+        final int to, reverse, cost;
+        int capacity;
+        MatchEdge(int to, int reverse, int capacity, int cost) {
+            this.to = to;
+            this.reverse = reverse;
+            this.capacity = capacity;
+            this.cost = cost;
+        }
+    }
+
+    private static void addMatchEdge(List<List<MatchEdge>> graph, int from, int to, int capacity, int cost) {
+        var forward = new MatchEdge(to, graph.get(to).size(), capacity, cost);
+        var reverse = new MatchEdge(from, graph.get(from).size(), 0, -cost);
+        graph.get(from).add(forward);
+        graph.get(to).add(reverse);
+    }
+
+    /** Bounded minimum-cost matching: up to nine ingredients and eighteen input stacks. */
+    private int[] matchFreshIngredients(List<Ingredient> ingredients) {
+        int count = ingredients.size(), source = count + FOOD, sink = source + 1, nodes = sink + 1;
+        var graph = new ArrayList<List<MatchEdge>>(nodes);
+        for (int i = 0; i < nodes; i++) graph.add(new ArrayList<>());
+        for (int i = 0; i < count; i++) {
+            addMatchEdge(graph, source, i, 1, 0);
+            for (int slot = 0; slot < FOOD; slot++) {
+                var stack = items.get(slot);
+                if (!stack.isEmpty() && ingredients.get(i).test(stack)) addMatchEdge(graph, i, count + slot, 1, 0);
+            }
+        }
+        for (int slot = 0; slot < FOOD; slot++) {
+            var stack = items.get(slot);
+            int cost = !stack.isEmpty() && stack.copyWithCount(1).hasCraftingRemainingItem() ? 1 : 0;
+            addMatchEdge(graph, count + slot, sink, Math.min(count, stack.getCount()), cost);
+        }
+        // Reverse edges let an earlier flexible ingredient move to another stack.
+        // Choosing the cheapest augmenting path avoids an unnecessary preserve in that reassignment.
+        for (int flow = 0; flow < count; flow++) {
+            var distance = new int[nodes];
+            Arrays.fill(distance, Integer.MAX_VALUE);
+            distance[source] = 0;
+            var previousNode = new int[nodes];
+            var previousEdge = new MatchEdge[nodes];
+            for (int pass = 0; pass < nodes - 1; pass++) {
+                boolean changed = false;
+                for (int from = 0; from < nodes; from++) {
+                    if (distance[from] == Integer.MAX_VALUE) continue;
+                    for (var edge : graph.get(from)) {
+                        if (edge.capacity == 0 || distance[edge.to] <= distance[from] + edge.cost) continue;
+                        distance[edge.to] = distance[from] + edge.cost;
+                        previousNode[edge.to] = from;
+                        previousEdge[edge.to] = edge;
+                        changed = true;
+                    }
+                }
+                if (!changed) break;
+            }
+            if (previousEdge[sink] == null) return null;
+            for (int to = sink; to != source; to = previousNode[to]) {
+                var edge = previousEdge[to];
+                edge.capacity--;
+                graph.get(to).get(edge.reverse).capacity++;
+            }
+        }
+        var matches = new int[count];
+        Arrays.fill(matches, -1);
+        for (int i = 0; i < count; i++) {
+            for (var edge : graph.get(i)) {
+                if (edge.to >= count && edge.to < source && edge.capacity == 0) {
+                    matches[i] = edge.to - count;
+                    break;
+                }
+            }
+            if (matches[i] < 0) return null;
+        }
+        return matches;
     }
 
     private static boolean insert(NonNullList<ItemStack> into, ItemStack addition, int first, int end) {

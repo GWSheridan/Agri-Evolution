@@ -153,10 +153,14 @@ public final class GardenWorkMenu extends AbstractContainerMenu {
         }
         if (button < 0 || button >= GardenWork.ROWS * pageCount || custom() && customOrders != GardenOrderReload.current()) return false;
         int row = button % GardenWork.ROWS;
-        if (button != action(row) || !ready(row) || !job(row).complete(player)) return false;
-        if (serverPreserving) FarmingMilestones.PRESERVE.award(player);
-        else if (commissions()) GardenWork.recordCommission(player, row, seedCommissions());
-        else if (!custom()) GardenWork.recordOrder(player, page());
+        if (button != action(row) || !ready(row)) return false;
+        int completedPage = page();
+        boolean commission = commissions(), seedCommission = seedCommissions(), customOrder = custom();
+        if (!job(row).complete(player, () -> {
+            if (commission) GardenWork.recordCommission(player, row, seedCommission);
+            else if (!serverPreserving && !customOrder) GardenWork.recordOrder(player, completedPage);
+            if (serverPreserving) FarmingMilestones.PRESERVE.award(player);
+        })) return false;
         broadcastChanges();
         return true;
     }

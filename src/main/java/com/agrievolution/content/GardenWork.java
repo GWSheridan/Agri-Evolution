@@ -69,6 +69,10 @@ public final class GardenWork {
         }
 
         boolean complete(Player player) {
+            return complete(player, () -> {});
+        }
+
+        boolean complete(Player player, Runnable recordCompletion) {
             var inventory = player.getInventory();
             var consumed = plan(inventory);
             if (consumed == null) return false;
@@ -78,9 +82,9 @@ public final class GardenWork {
                 stack.shrink(consumed[slot]);
                 if (stack.isEmpty()) inventory.items.set(slot, ItemStack.EMPTY);
             }
-            var result = reward.stack();
-            inventory.add(result);
-            if (!result.isEmpty()) player.drop(result, false);
+            // Progress and one-time claims must be committed before item-delivery callbacks.
+            recordCompletion.run();
+            inventory.placeItemBackInInventory(reward.stack());
             inventory.setChanged();
             return true;
         }

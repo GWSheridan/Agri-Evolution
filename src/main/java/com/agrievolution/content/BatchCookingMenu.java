@@ -5,8 +5,8 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -82,8 +82,11 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
 
     @Override public boolean stillValid(Player player) {
         if (kitchen == null) return true;
-        return !kitchen.isRemoved() && stillValid(ContainerLevelAccess.create(kitchen.getLevel(), kitchen.getBlockPos()),
-                player, AEBlocks.BATCH_COOKING_STATION.get());
+        return WorkstationAccess.stillValid(kitchen, player);
+    }
+
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public boolean clickMenuButton(Player player, int action) {
@@ -100,10 +103,10 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int slotIndex) {
-        if (slotIndex < 0 || slotIndex >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || slotIndex < 0 || slotIndex >= slots.size()) return ItemStack.EMPTY;
         var slot = getSlot(slotIndex);
         var stack = slot.getItem();
-        if (stack.isEmpty()) return ItemStack.EMPTY;
+        if (stack.isEmpty() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         var original = stack.copy();
         if (!(slotIndex < BatchCookingBlockEntity.SLOTS ? moveItemStackTo(stack, BatchCookingBlockEntity.SLOTS, slots.size(), true)
                 : moveItemStackTo(stack, 0, BatchCookingBlockEntity.FOOD, false))) return ItemStack.EMPTY;

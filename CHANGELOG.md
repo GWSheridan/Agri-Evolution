@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.3.7
+
+- The Batch Cooking Station can choose fresh alternatives while keeping required container ingredients, such as milk buckets. This also works when several ingredients share alternatives in a datapack recipe.
+- Cooking still waits without consuming anything when the required containers cannot fit in the return slots.
+- Garden Order Board and Preserving Station rewards drop beside players with full Creative inventories instead of disappearing.
+- One-time commissions are marked claimed before their reward is delivered. An item-delivery callback cannot claim the same commission again.
+- Regular market progression is saved before the emerald reward is handed over, so callbacks see the completed delivery.
+- Removed cooking stations and greenhouse storage reject late pickup and shift-clicks. Vertical Greenhouses also invalidate their old screens.
+- Removed or incomplete Vertical Greenhouses reject sided item transfers through stale automation references.
+
 ## 1.3.6
 
 - Moved the optional asset-inventory script into local backups and removed its README command. It is not needed to build or run the mod.

@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
@@ -138,7 +139,8 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     @Override protected void setItems(NonNullList<ItemStack> items) { this.items = items; }
     @Override protected Component getDefaultName() { return Component.translatable("block.agri_evolution.vertical_greenhouse"); }
     @Override protected AbstractContainerMenu createMenu(int id, Inventory inventory) { return new VerticalGreenhouseMenu(id, inventory, this); }
-    @Override public boolean canPlaceItem(int slot, ItemStack stack) { return slot < TRAYS && acceptsSeed(stack); }
+    @Override public boolean stillValid(Player player) { return WorkstationAccess.stillValid(this, player); }
+    @Override public boolean canPlaceItem(int slot, ItemStack stack) { return slot >= 0 && slot < TRAYS && acceptsSeed(stack) && complete(); }
     @Override public int[] getSlotsForFace(Direction side) {
         for (int face = 0; face < ROUTE_COUNT; face++) {
             if (side != OUTPUT_FACES[face]) continue;
@@ -154,6 +156,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     }
     @Override public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction side) { return false; }
     @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction side) {
+        if (!complete()) return false;
         for (int output : getSlotsForFace(side)) if (slot == output) return true;
         return false;
     }

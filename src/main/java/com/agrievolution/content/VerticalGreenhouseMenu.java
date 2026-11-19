@@ -5,6 +5,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.SimpleContainerData;
@@ -93,7 +94,14 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     public int targetSeed() { return data.get(VerticalGreenhouseBlockEntity.TARGET_SEED); }
     public int minimumGene(int gene) { return data.get(VerticalGreenhouseBlockEntity.MIN_GROWTH + gene) * 10; }
 
-    @Override public boolean stillValid(Player player) { return stillValid(access, player, AEBlocks.VERTICAL_GREENHOUSE.get()); }
+    @Override public boolean stillValid(Player player) {
+        return (greenhouse == null || greenhouse.stillValid(player))
+                && stillValid(access, player, AEBlocks.VERTICAL_GREENHOUSE.get());
+    }
+
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (stillValid(player)) super.clicked(index, button, type, player);
+    }
 
     @Override public boolean clickMenuButton(Player player, int button) {
         if (greenhouse == null || player.isSpectator() || !player.mayBuild()
@@ -128,10 +136,10 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = getSlot(index);
         ItemStack source = slot.getItem();
-        if (source.isEmpty()) return ItemStack.EMPTY;
+        if (source.isEmpty() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack original = source.copy();
         int firstPlayerSlot = VerticalGreenhouseBlockEntity.SLOTS;
         if (index < firstPlayerSlot) {
