@@ -19,6 +19,7 @@ import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -98,6 +99,25 @@ public final class BotanicalGreenhouseBlock extends BaseEntityBlock {
                 com.agrievolution.client.greenhouse.GreenhouseHologramClient.toggle(pos);
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
+        if (hand == InteractionHand.MAIN_HAND && held.isEmpty()
+                && (player.getOffhandItem().is(Items.WATER_BUCKET) || player.getOffhandItem().is(Items.BUCKET))) {
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+        }
+        boolean door = held.getItem() instanceof BlockItem doorItem
+                && (doorItem.getBlock() instanceof net.minecraft.world.level.block.DoorBlock
+                    || doorItem.getBlock().defaultBlockState().is(BlockTags.DOORS)
+                    || held.is(ItemTags.DOORS));
+        boolean changesController = door || held.is(AEItems.GREENHOUSE_AUTOMATION_UPGRADE.get())
+                || held.is(AEItems.GREENHOUSE_SMART_FARMING_UPGRADE.get())
+                || held.is(Items.COAL) || held.is(Items.CHARCOAL)
+                || held.is(Items.WATER_BUCKET) || held.is(Items.BUCKET);
+        if (changesController && (player.isSpectator() || !player.mayBuild()
+                || !level.mayInteract(player, pos) || !player.mayUseItemAt(pos, hit.getDirection(), held))) {
+            return ItemInteractionResult.FAIL;
+        }
+        if (changesController && !level.isClientSide
+                && (!(level.getBlockEntity(pos) instanceof BotanicalGreenhouseBlockEntity greenhouse)
+                    || !WorkstationAccess.mayConfigure(greenhouse, player))) return ItemInteractionResult.FAIL;
         // The existing basic controller must be upgraded before automated farming is available.
         if (held.is(AEItems.GREENHOUSE_AUTOMATION_UPGRADE.get())) {
             if (!level.isClientSide && level.getBlockEntity(pos) instanceof BotanicalGreenhouseBlockEntity gh) {
@@ -129,10 +149,7 @@ public final class BotanicalGreenhouseBlock extends BaseEntityBlock {
         // Holding any vanilla or tagged modded door and using it on the controller
         // fits an actual two-block door into the front wall, even after the glass
         // enclosure is complete. Shift + use still toggles the hologram.
-        if (held.getItem() instanceof BlockItem doorItem
-                && (doorItem.getBlock() instanceof net.minecraft.world.level.block.DoorBlock
-                    || doorItem.getBlock().defaultBlockState().is(BlockTags.DOORS)
-                    || held.is(ItemTags.DOORS))) {
+        if (door) {
             return installDoor(held, state, level, pos, player, hand);
         }
         // Coal/charcoal refills the optional climate heater. One item is ten minutes.
@@ -150,14 +167,16 @@ public final class BotanicalGreenhouseBlock extends BaseEntityBlock {
         if (held.is(Items.WATER_BUCKET)) {
             if (!level.isClientSide && level.getBlockEntity(pos) instanceof BotanicalGreenhouseBlockEntity greenhouse) {
                 if (!greenhouse.addWater(1000)) return ItemInteractionResult.FAIL;
-                if (!player.getAbilities().instabuild) player.setItemInHand(hand, new ItemStack(Items.BUCKET));
+                if (!player.getAbilities().instabuild)
+                    player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, new ItemStack(Items.BUCKET)));
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
         if (held.is(Items.BUCKET)) {
             if (!level.isClientSide && level.getBlockEntity(pos) instanceof BotanicalGreenhouseBlockEntity greenhouse) {
                 if (!greenhouse.removeWater(1000)) return ItemInteractionResult.FAIL;
-                if (!player.getAbilities().instabuild) player.setItemInHand(hand, new ItemStack(Items.WATER_BUCKET));
+                if (!player.getAbilities().instabuild)
+                    player.setItemInHand(hand, ItemUtils.createFilledResult(held, player, new ItemStack(Items.WATER_BUCKET)));
             }
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
@@ -180,7 +199,8 @@ public final class BotanicalGreenhouseBlock extends BaseEntityBlock {
         BlockPos upper = lower.above();
         if (!level.hasChunkAt(lower) || !level.hasChunkAt(upper)
                 || !level.mayInteract(player, lower) || !level.mayInteract(player, upper)
-                || !player.mayUseItemAt(lower, Direction.UP, held)) return ItemInteractionResult.FAIL;
+                || !player.mayUseItemAt(lower, Direction.UP, held)
+                || !player.mayUseItemAt(upper, Direction.UP, held)) return ItemInteractionResult.FAIL;
         BlockState oldLower = level.getBlockState(lower);
         BlockState oldUpper = level.getBlockState(upper);
         if (!BotanicalGreenhouseLayout.canReplaceWithDoor(oldLower)
@@ -211,8 +231,8 @@ public final class BotanicalGreenhouseBlock extends BaseEntityBlock {
                     "That door could not be placed here. Check the floor beneath the entrance."), true);
             return ItemInteractionResult.FAIL;
         }
-        giveBackGlass(player, level, lower, oldLower);
-        giveBackGlass(player, level, upper, oldUpper);
+        giveBackGlass(player, oldLower);
+        giveBackGlass(player, oldUpper);
         player.displayClientMessage(Component.literal("Greenhouse entrance installed!"), true);
         if (level.getBlockEntity(controller) instanceof BotanicalGreenhouseBlockEntity greenhouse)
             greenhouse.refresh();
@@ -234,11 +254,11 @@ public final class BotanicalGreenhouseBlock extends BaseEntityBlock {
         super.onRemove(old, level, pos, replacement, moved);
     }
 
-    private static void giveBackGlass(Player player, Level level, BlockPos pos, BlockState old) {
+    private static void giveBackGlass(Player player, BlockState old) {
         if (old.isAir()) return;
         ItemStack returned = new ItemStack(old.getBlock().asItem());
         if (returned.isEmpty()) return;
-        if (!player.getInventory().add(returned)) Block.popResource(level, pos, returned);
+        player.getInventory().placeItemBackInInventory(returned);
     }
 
 }

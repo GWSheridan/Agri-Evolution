@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.8
+
+- Botanical Greenhouse upgrades, heater refills and bucket transfers now check build and interaction permissions. Spectators cannot change them through a direct right-click.
+- Collecting water consumes one empty bucket from the held stack and keeps the rest. If the inventory is full, the filled bucket drops beside the player.
+- An empty main hand lets an offhand bucket reach the controller instead of opening its screen first.
+- Door installation checks item-use permission at both halves of the entrance before removing glass.
+- Retrofitting a door returns both glass blocks even when a Creative inventory is full.
+- Removed or replaced controllers reject direct water, fuel and upgrade calls through old references.
+
 ## 1.3.7
 
 - The Batch Cooking Station can choose fresh alternatives while keeping required container ingredients, such as milk buckets. This also works when several ingredients share alternatives in a datapack recipe.

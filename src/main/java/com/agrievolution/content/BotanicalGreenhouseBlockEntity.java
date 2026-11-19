@@ -437,8 +437,13 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
         return new BotanicalGreenhouseMenu(id, inventory, this);
     }
 
+    private boolean acceptsResources() {
+        return !isRemoved() && level instanceof ServerLevel && level.hasChunkAt(worldPosition)
+                && level.getBlockEntity(worldPosition) == this;
+    }
+
     public boolean addWater(int amount) {
-        if (amount <= 0 || water > CAPACITY - amount) return false;
+        if (!acceptsResources() || amount <= 0 || water > CAPACITY - amount) return false;
         water += amount;
         refresh();
         setChanged();
@@ -446,7 +451,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
     }
 
     public boolean removeWater(int amount) {
-        if (amount <= 0 || water < amount) return false;
+        if (!acceptsResources() || amount <= 0 || water < amount) return false;
         water -= amount;
         refresh();
         setChanged();
@@ -454,7 +459,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
     }
 
     public boolean addHeaterFuel() {
-        if (heaterFuelSeconds > GreenhouseClimate.MAX_FUEL_SECONDS - GreenhouseClimate.COAL_SECONDS)
+        if (!acceptsResources() || heaterFuelSeconds > GreenhouseClimate.MAX_FUEL_SECONDS - GreenhouseClimate.COAL_SECONDS)
             return false;
         heaterFuelSeconds += GreenhouseClimate.COAL_SECONDS;
         setChanged();
@@ -476,7 +481,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
 
     /** The upgrade is applied to the EXISTING block entity and kept across world saves. */
     public boolean installAutomationUpgrade() {
-        if (automationUpgraded) return false;
+        if (!acceptsResources() || automationUpgraded) return false;
         automationUpgraded = true;
         autoHarvest = true;
         autoReplant = true;
@@ -488,7 +493,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
     public boolean isAutomationUpgraded() { return automationUpgraded; }
 
     public boolean installSmartFarmingUpgrade() {
-        if (!automationUpgraded || smartFarmingUpgraded) return false;
+        if (!acceptsResources() || !automationUpgraded || smartFarmingUpgraded) return false;
         smartFarmingUpgraded = true;
         autoPlant = true;
         setChanged();
