@@ -11,6 +11,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 final class WorkstationAccess {
     private WorkstationAccess() {}
 
+    static boolean isCurrent(BlockEntity workstation) {
+        var level = workstation.getLevel();
+        var pos = workstation.getBlockPos();
+        return !workstation.isRemoved() && level != null && level.hasChunkAt(pos) && level.getBlockEntity(pos) == workstation;
+    }
+
     static boolean mayUse(Level level, BlockPos pos, Player player, Direction side, ItemStack stack) {
         return player != null && player.level() == level && !player.isSpectator() && player.mayBuild()
                 && level.hasChunkAt(pos) && level.mayInteract(player, pos) && player.mayUseItemAt(pos, side, stack);

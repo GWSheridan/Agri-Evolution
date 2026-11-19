@@ -222,6 +222,7 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
     // 0.24: opt-in inventory transfer; no extra upgrade item is necessary at Tier 2.
     // Old worlds default to export OFF. No item is removed unless a neighbor accepts it.
     private boolean autoExport;
+    private boolean exportingItems;
     private boolean exportNearFullOnly;
     private boolean exportResourceItems = true;
     private boolean exportBotanicalItems = true;
@@ -1693,6 +1694,13 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
      * Item components (genetics/traits) remain unmodified. The destination can reject
      * items, including via a modded sided handler; unaccepted items remain in storage. */
     private void exportToNeighbor(ServerLevel server) {
+        if (exportingItems || level != server || !WorkstationAccess.isCurrent(this)) return;
+        exportingItems = true;
+        try { exportItems(server); }
+        finally { exportingItems = false; }
+    }
+
+    private void exportItems(ServerLevel server) {
         // Consolidate only exact-matching item components; unlike item-only stacking,
         // this never mixes distinct genetics, rare traits or other mod data.
         if (compactStorage()) setChanged();
@@ -1725,24 +1733,26 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
         ItemStack inSlot = storage.get(selection.slot());
         if (inSlot.isEmpty()) return;
         ItemStack remaining = inSlot.copyWithCount(selection.amount());
-        // Handle partial insertion safely: the source shrinks by exactly the amount
-        // the target really accepted. Simulation never changes the source.
+        // Validate the live source after simulation, then reserve each offer before real insertion.
         for (int slot = 0; slot < handler.getSlots() && !remaining.isEmpty(); slot++) {
-            ItemStack simulated = handler.insertItem(slot, remaining, true);
+            ItemStack beforeSimulation = storage.get(selection.slot()).copy();
+            if (!ItemStack.isSameItemSameComponents(remaining, beforeSimulation)
+                    || remaining.getCount() > beforeSimulation.getCount()) break;
+            ItemStack simulated = handler.insertItem(slot, remaining.copy(), true);
+            if (!WorkstationAccess.isCurrent(this) || !ItemStack.matches(beforeSimulation, storage.get(selection.slot()))) break;
             if (simulated.getCount() < remaining.getCount()) {
                 int accepted = remaining.getCount() - simulated.getCount();
-                ItemStack actualRemainder = handler.insertItem(slot, remaining.copyWithCount(accepted), false);
-                int moved = accepted - actualRemainder.getCount();
+                int destinationSlot = slot;
+                int moved = GreenhouseItemTransfer.insert(server, this, this, selection.slot(), accepted,
+                        0, STORAGE_SIZE, offered -> handler.insertItem(destinationSlot, offered, false));
                 if (moved > 0) {
-                    inSlot.shrink(moved);
-                    if (inSlot.isEmpty()) storage.set(selection.slot(), ItemStack.EMPTY);
                     exportedItems = Math.min(30000, exportedItems + moved);
                     setChanged();
                     remaining.shrink(moved);
                 }
                 // If a handler's real insertion differs from simulation, never remove
                 // more items; retry any unaccepted portion in a subsequent cycle.
-                if (moved < accepted) break;
+                if (!WorkstationAccess.isCurrent(this) || moved < accepted) break;
             }
         }
         if (remaining.getCount() == selection.amount()) exportTargetRejected = true;

@@ -546,6 +546,7 @@ public final class VerticalGreenhouseGameTests {
         var crop = com.agrievolution.genetics.CropSpecies.WILD;
         var seed = new ItemStack(AEItems.seedFor(crop), 3);
         var wrong = new ItemStack(AEItems.seedFor(com.agrievolution.genetics.CropSpecies.LETTUCE));
+        var rejected = wrong.copy();
         var vaultMenu = new SeedVaultMenu(2, player.getInventory(), vault);
         vaultMenu.setCarried(seed.copyWithCount(1));
         helper.assertTrue(vaultMenu.clickMenuButton(player, SeedVaultMenu.SET_SPECIES), "Filter can be set from the seed on the cursor");
@@ -558,14 +559,18 @@ public final class VerticalGreenhouseGameTests {
         greenhouse.setItem(VerticalGreenhouseBlockEntity.OFFSPRING, wrong);
         greenhouse.setItem(VerticalGreenhouseBlockEntity.OFFSPRING + 1, seed);
         seconds(helper, greenhouse, 1);
-        helper.assertTrue(vault.isEmpty() && seed.getCount() == 3, "Low genetics and wrong species remain in the greenhouse");
+        helper.assertTrue(vault.isEmpty() && greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING + 1).getCount() == 3
+                        && ItemStack.matches(greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING), rejected),
+                "Low genetics and wrong species remain in the greenhouse");
+        seed = greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING + 1);
         com.agrievolution.genetics.GenomeStorage.putOnSeed(seed, com.agrievolution.genetics.CropGenome.elite());
         vault.setItem(0, seed.copyWithCount(1));
         vault.toggleLock(0);
         seconds(helper, greenhouse, 2);
         helper.assertTrue(vault.getItem(0).getCount() == 1 && vault.getItem(1).getCount() == 2
                         && greenhouse.getItem(VerticalGreenhouseBlockEntity.HARVEST).is(Items.WHEAT)
-                        && greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING) == wrong && seed.getCount() == 1,
+                        && ItemStack.matches(greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING), rejected)
+                        && greenhouse.getItem(VerticalGreenhouseBlockEntity.OFFSPRING + 1).getCount() == 1,
                 "Vault merges matching seeds in unlocked slots and leaves produce and rejected seeds untouched");
         helper.succeed();
     }

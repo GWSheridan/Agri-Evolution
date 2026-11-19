@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.11
+
+- Greenhouse exports reserve items before handing them to another block. An insertion callback cannot export the same seed twice or duplicate it in the greenhouse's break drops.
+- Both greenhouse types block recursive export calls and stop exports from removed source blocks.
+- The Botanical Greenhouse rechecks its offered stack after destination simulation. A callback that replaces the stack cannot export the old item or delete its replacement.
+- Rejected items return to their original output buffer without overwriting newly stored items. If that buffer has filled, the rejected items drop beside the greenhouse with their names and genetics intact.
+- Partial insertion still removes only the amount the destination accepted. A callback that breaks the source cannot lose the unaccepted portion.
+- Removed Seed Vaults reject direct offspring intake through stale references.
+
 ## 1.3.10
 
 - Manual bucket transfers on sprinklers, basins, reservoirs and Vertical Greenhouses respect build and item-use permissions. Denied transfers keep the water and held bucket unchanged.

@@ -93,6 +93,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     private int parentA = -1, parentB = -1;
     private int selectedA = -1, selectedB = -1;
     private ItemStack pendingChild = ItemStack.EMPTY;
+    private boolean exportingItems;
     private boolean growEnabled = true, breedEnabled = true;
     private boolean fixedPair;
     private Status growStatus = Status.NO_SEEDS, breedStatus = Status.NO_PAIR;
@@ -322,6 +323,13 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     }
 
     private void exportSideOutputs(ServerLevel server) {
+        if (exportingItems || level != server || !complete()) return;
+        exportingItems = true;
+        try { exportItems(server); }
+        finally { exportingItems = false; }
+    }
+
+    private void exportItems(ServerLevel server) {
         for (int face = 1; face < ROUTE_COUNT; face++) {
             if (routes[face] == OutputRoute.OFF) continue;
             Direction side = OUTPUT_FACES[face];
@@ -333,14 +341,14 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
             for (int slot : getSlotsForFace(side)) {
                 ItemStack stack = items.get(slot);
                 if (stack.isEmpty()) continue;
-                boolean exported = vault != null
-                        ? slot >= OFFSPRING && slot < REJECTS && vault.receiveOffspring(stack)
-                        : ItemHandlerHelper.insertItemStacked(handler, stack.copyWithCount(1), false).isEmpty();
-                if (exported) {
-                    stack.shrink(1);
-                    if (stack.isEmpty()) items.set(slot, ItemStack.EMPTY);
-                    break;
-                }
+                if (vault != null && (slot < OFFSPRING || slot >= REJECTS)) continue;
+                int first = slot < OFFSPRING ? HARVEST : slot < REJECTS ? OFFSPRING : REJECTS;
+                int end = slot < OFFSPRING ? OFFSPRING : slot < REJECTS ? REJECTS : SLOTS;
+                int moved = GreenhouseItemTransfer.insert(server, this, this, slot, 1, first, end, offered ->
+                        vault != null ? vault.receiveOffspring(offered) ? ItemStack.EMPTY : offered
+                                : ItemHandlerHelper.insertItemStacked(handler, offered, false));
+                if (!complete()) return;
+                if (moved > 0) break;
             }
         }
     }

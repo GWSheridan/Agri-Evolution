@@ -54,7 +54,7 @@ public final class SeedVaultBlockEntity extends BaseContainerBlockEntity impleme
     }
 
     boolean receiveOffspring(ItemStack stack) {
-        if (!SeedBagItem.accepts(stack)) return false;
+        if (!WorkstationAccess.isCurrent(this) || !SeedBagItem.accepts(stack)) return false;
         if (intakeSpecies != null || minimum[0] != 0 || minimum[1] != 0 || minimum[2] != 0) {
             if (!(stack.getItem() instanceof SpeciesSeedItem seed)) return false;
             if (intakeSpecies != null && seed.species() != intakeSpecies) return false;
