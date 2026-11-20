@@ -45,7 +45,8 @@ public final class IrrigationBasinBlockEntity extends BlockEntity {
 
     /** On Mk III, a nearby still-water source automatically refills an empty basin. */
     public static void serverTick(Level world, BlockPos pos, BlockState state, IrrigationBasinBlockEntity basin) {
-        if (!(world instanceof ServerLevel server) || basin.isRemoved() || basin.upgradeTier < 2
+        if (!(world instanceof ServerLevel server) || basin.getLevel() != world || !basin.getBlockPos().equals(pos)
+                || !WorkstationAccess.isCurrent(basin) || server.getBlockState(pos) != state || basin.upgradeTier < 2
                 || state.getValue(IrrigationBasinBlock.FILLED) || server.getGameTime() % 40 != 0) return;
         if (basin.hasRefillSource()) IrrigationBasinBlock.setFilled(server, pos, state, true);
     }
@@ -95,6 +96,7 @@ public final class IrrigationBasinBlockEntity extends BlockEntity {
     @Override
     public void onLoad() {
         super.onLoad();
+        if (!WorkstationAccess.isCurrent(this)) return;
         // Save migration: existing upgraded basins were stored in block entity NBT only.
         if (level instanceof ServerLevel server && getBlockState().getBlock() instanceof IrrigationBasinBlock
                 && getBlockState().getValue(IrrigationBasinBlock.UPGRADE) != upgradeTier)
@@ -105,7 +107,7 @@ public final class IrrigationBasinBlockEntity extends BlockEntity {
 
     /** Called immediately after bucket interaction and when a state is loaded/updated. */
     public void refreshWatering() {
-        if (!(level instanceof ServerLevel server) || isRemoved()) return;
+        if (!(level instanceof ServerLevel server) || !WorkstationAccess.isCurrent(this)) return;
 
         BlockState state = getBlockState();
         if (!(state.getBlock() instanceof IrrigationBasinBlock) ||

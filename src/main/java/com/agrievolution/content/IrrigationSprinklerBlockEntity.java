@@ -33,6 +33,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     public int redstoneMode(){return redstoneMode;}
     public String controls(){return (smartWatering?"Dry-soil only":"Continuous")+" | "+switch(redstoneMode){case 1->"Requires redstone";case 2->"Ignores redstone";default->"Redstone pauses";};}
     public void configure(boolean redstone) {
+        if (!isCurrentServer()) return;
         if (redstone) redstoneMode = (redstoneMode + 1) % 3;
         else smartWatering = !smartWatering;
         setChanged();
@@ -70,7 +71,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     private boolean hasPaidTime(ServerLevel server) {
-        return !isRemoved() && server.getGameTime() < growthUntil;
+        return server == level && isCurrentServer() && server.getGameTime() < growthUntil;
     }
 
     boolean watersPlot(BlockPos soil) {
@@ -85,22 +86,21 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         return soils;
     }
     public boolean fillBucket() {
-        if (!canTransferWater() || water > CAPACITY - 1000) return false;
+        if (!isCurrentServer() || water > CAPACITY - 1000) return false;
         water += 1000;
         waterChanged();
         return true;
     }
 
     boolean takeBucket() {
-        if (!canTransferWater() || water < 1000) return false;
+        if (!isCurrentServer() || water < 1000) return false;
         water -= 1000;
         waterChanged();
         return true;
     }
 
-    private boolean canTransferWater() {
-        return level instanceof ServerLevel && !isRemoved() && level.hasChunkAt(worldPosition)
-                && level.getBlockEntity(worldPosition) == this;
+    private boolean isCurrentServer() {
+        return level instanceof ServerLevel && WorkstationAccess.isCurrent(this);
     }
 
     private boolean flowAllowed() {
@@ -218,7 +218,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     void serverTick() {
-        if (!(level instanceof ServerLevel server)) return;
+        if (!(level instanceof ServerLevel server) || !isCurrentServer()) return;
         long now = server.getGameTime();
         if (now % WATERING_INTERVAL == 0) refreshFittings(server);
         if (now < growthUntil) {
@@ -233,6 +233,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     void startAfterFill() {
+        if (!isCurrentServer()) return;
         if (!getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE) && level.getGameTime() >= growthUntil) {
             irrigateCycle();
         }
@@ -247,7 +248,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
     /** One 25 mB watering interval, called every 40 ticks. Public for real-server tests. */
     public void irrigateCycle() {
-        if (!(level instanceof ServerLevel server) || isRemoved()) return;
+        if (!(level instanceof ServerLevel server) || !isCurrentServer()) return;
         if (localShutoff() != null) { stopWatering(); return; }
         var network = water < WATER_PER_SPRAY ? IrrigationNetwork.searchForRefill(server, worldPosition)
                 : IrrigationNetwork.search(server, worldPosition);
@@ -293,7 +294,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         setActive(true);
     }
     private void setActive(boolean active) {
-        if (level instanceof ServerLevel && !isRemoved() && getBlockState().getBlock() instanceof IrrigationSprinklerBlock
+        if (isCurrentServer() && getBlockState().getBlock() instanceof IrrigationSprinklerBlock
                 && getBlockState().getValue(IrrigationSprinklerBlock.ACTIVE) != active)
             level.setBlock(worldPosition, getBlockState().setValue(IrrigationSprinklerBlock.ACTIVE, active),
                     IrrigationNetwork.loadedUpdateFlags(level, worldPosition, Block.UPDATE_ALL));
@@ -316,7 +317,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     @Override public void onLoad() {
         super.onLoad();
         // A fresh placement can already have started a spray before its first load callback.
-        if (level instanceof ServerLevel server) {
+        if (level instanceof ServerLevel server && isCurrentServer()) {
             if (growthUntil == 0) setActive(false);
             refreshFittings(server);
         }
@@ -338,7 +339,10 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     }
 
     private void resetSpray() {
-        if (level instanceof ServerLevel server) SprinklerGrowth.deactivate(server, worldPosition);
+        // Cleanup may arrive after a new head has already registered at this position.
+        if (level instanceof ServerLevel server && (!server.hasChunkAt(worldPosition)
+                || !(server.getBlockEntity(worldPosition) instanceof IrrigationSprinklerBlockEntity current)
+                || current == this)) SprinklerGrowth.deactivate(server, worldPosition);
         clearWaterTicket();
         growthUntil = 0;
         paidSoils = Set.of();

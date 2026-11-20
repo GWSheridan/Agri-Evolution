@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.26
+
+- Mk III basin refill ticks check the current basin, world, position and block state. An old tick cannot use one basin's water source to fill a different basin or its replacement.
+- Late basin load callbacks cannot restore stored water or apply an old upgrade tier to a replacement. Legacy upgrades still migrate normally on the current basin.
+- Detached basins cannot register hydration tickets or water farmland beside an empty replacement. Current filled basins retain their normal range and hydration.
+- Sprinkler controls, watering cycles, load callbacks and bucket-start callbacks check that the head is still placed. Old heads cannot spend buffered water, drain connected basins, change replacement fittings or start a free spray. Starting a head without a world also returns safely.
+- Sprinkler ticks reject the wrong world, position and old block state before updating fittings or charging for another spray. Current heads still use exactly 25 mB per interval.
+- Delayed removal or unload cleanup from an old sprinkler leaves a replacement's growth bonus registered. Removing the current sprinkler still clears its own bonus and hydration ticket, and load callbacks preserve an already-paid spray.
+
 ## 1.3.25
 
 - Closing the Botanical Greenhouse dashboard, Seed Bank, Harvest Manager or storage disables its old controls and transfers. Each screen checks its owning viewer and rejects dead players and spectators.

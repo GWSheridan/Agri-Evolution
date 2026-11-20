@@ -125,7 +125,9 @@ public final class IrrigationSprinklerBlock extends Block implements EntityBlock
             }
         };
         return (world, pos, current, entity) -> {
-            if (entity instanceof IrrigationSprinklerBlockEntity sprinkler) sprinkler.serverTick();
+            if (entity instanceof IrrigationSprinklerBlockEntity sprinkler && sprinkler.getLevel() == world
+                    && sprinkler.getBlockPos().equals(pos) && world.hasChunkAt(pos)
+                    && world.getBlockState(pos) == current) sprinkler.serverTick();
         };
     }
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
