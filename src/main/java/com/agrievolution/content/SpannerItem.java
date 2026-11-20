@@ -240,7 +240,7 @@ public final class SpannerItem extends Item {
     }
 
     @Override public InteractionResult useOn(UseOnContext context){
-        var level=context.getLevel();var pos=context.getClickedPos();var player=context.getPlayer();
+        var level=context.getLevel();var pos=context.getClickedPos().immutable();var player=context.getPlayer();
         if (player == null) return InteractionResult.PASS;
         var tool = context.getItemInHand();
         var beforeTool = tool.copy();
@@ -265,9 +265,12 @@ public final class SpannerItem extends Item {
             var beforeHeld = held.copy();
             var entity = level.getBlockEntity(pos);
             if (held.getItem() != this || !(entity instanceof AECropBlockEntity plant)
-                    || !WorkstationAccess.mayUse(level, pos, player, context.getClickedFace(), held)) return InteractionResult.FAIL;
-            if (level.getBlockState(pos) != state || level.getBlockEntity(pos) != plant
-                    || player.getItemInHand(context.getHand()) != held || !ItemStack.matches(beforeHeld, held)) return InteractionResult.FAIL;
+                    || !CropSupportItem.currentPlant(level, pos, state, plant, null)) return InteractionResult.FAIL;
+            var beforePlant = CropSupportItem.snapshot(level, plant);
+            if (!WorkstationAccess.mayUse(level, pos, player, context.getClickedFace(), held)
+                    || !WorkstationAccess.mayCompleteItemUse(level, player, context.getHand(), held, beforeHeld)
+                    || !player.isShiftKeyDown()
+                    || !CropSupportItem.currentPlant(level, pos, state, plant, beforePlant)) return InteractionResult.FAIL;
             if (!level.isClientSide) {
                 var recovered = plant.recoverSupport();
                 var unsupported = state.setValue(AgriCropBlock.SUPPORTED, false).setValue(AgriCropBlock.SUPPORT_TIER, 0);

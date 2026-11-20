@@ -2,10 +2,12 @@ package com.agrievolution.content;
 
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -35,6 +37,17 @@ public final class CropSupportItem extends Item {
     public static int fieldBonus(int tier) { return switch(tier){case 1->5;case 2->8;case 3->12;default->0;}; }
     public static int labBonus(int tier) { return tier==0?0:4+4*tier; }
     public static Item itemFor(int tier) { return tier==3?AEItems.OBSIDIAN_CROP_SUPPORT.get():tier==2?AEItems.IRON_CROP_SUPPORT.get():AEItems.CROP_SUPPORT.get(); }
+
+    static CompoundTag snapshot(Level level, AECropBlockEntity plant) {
+        var tag = new CompoundTag();
+        plant.saveAdditional(tag, level.registryAccess());
+        return tag;
+    }
+
+    static boolean currentPlant(Level level, BlockPos pos, BlockState state, AECropBlockEntity plant, CompoundTag before) {
+        return plant.getLevel() == level && plant.getBlockPos().equals(pos) && WorkstationAccess.isCurrent(plant)
+                && level.getBlockState(pos) == state && (before == null || before.equals(snapshot(level, plant)));
+    }
     @Override public void appendHoverText(ItemStack stack,TooltipContext context,List<Component> lines,TooltipFlag flag) {
         lines.add(Component.literal("Use on an Agri crop to install or upgrade its trellis."));
         lines.add(Component.literal("Two parents: +"+fieldBonus(tier)+" mutation points (weaker tier applies)."));
@@ -43,16 +56,20 @@ public final class CropSupportItem extends Item {
         lines.add(Component.literal(tier==3?"Permanent. Prevents all weeds.":"Installed life: "+remainingTime(remaining(stack))+". "+(tier==2?"90% fewer weed attempts.":"Normal weed chance.")));
     }
     @Override public InteractionResult useOn(UseOnContext context) {
-        var level=context.getLevel();BlockPos pos=context.getClickedPos();var state=level.getBlockState(pos);
+        var level=context.getLevel();BlockPos pos=context.getClickedPos().immutable();
         var player=context.getPlayer();
-        if(!(state.getBlock() instanceof AgriCropBlock)||tier(state)>=tier)return InteractionResult.PASS;
         var held=context.getItemInHand();var beforeHeld=held.copy();
+        if(held.getItem()!=this || !WorkstationAccess.mayCompleteItemUse(level,player,context.getHand(),held,beforeHeld)
+                || !level.hasChunkAt(pos))return InteractionResult.FAIL;
+        var state=level.getBlockState(pos);
+        if(!(state.getBlock() instanceof AgriCropBlock)||tier(state)>=tier)return InteractionResult.PASS;
         var entity=level.getBlockEntity(pos);
-        if(held.getItem()!=this || !(entity instanceof AECropBlockEntity plant)
-                || !WorkstationAccess.mayUse(level,pos,player,context.getClickedFace(),held))return InteractionResult.FAIL;
-        // Permission hooks can replace the plant or the held stack before they return.
-        if(level.getBlockState(pos)!=state || level.getBlockEntity(pos)!=plant
-                || player.getItemInHand(context.getHand())!=held || !ItemStack.matches(beforeHeld,held))return InteractionResult.FAIL;
+        if(!(entity instanceof AECropBlockEntity plant) || !currentPlant(level,pos,state,plant,null))return InteractionResult.FAIL;
+        var beforePlant=snapshot(level,plant);
+        // Permission hooks may change access, wear or crop records without replacing the block.
+        if(!WorkstationAccess.mayUse(level,pos,player,context.getClickedFace(),held)
+                || !WorkstationAccess.mayCompleteItemUse(level,player,context.getHand(),held,beforeHeld)
+                || !currentPlant(level,pos,state,plant,beforePlant))return InteractionResult.FAIL;
         int previous=tier(state);
         int remaining=remaining(held);
         if(remaining==0)return InteractionResult.FAIL;

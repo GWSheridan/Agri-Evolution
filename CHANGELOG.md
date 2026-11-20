@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.38
+
+- Installing crop sticks and recovering them with a Spanner recheck the player after permissions. Death, Spectator mode, dimension changes and revoked build access cancel the old action without spending or returning sticks.
+- Spanner recovery stops if the player releases crouch during the permission check. The support remains installed with its existing wear.
+- Support actions capture the crop's saved data before checking access. Changes to genes, rare traits, ancestry, variety names, nutrition, tending, clipping, crossing or pollination cancel the pending action and preserve the newer records.
+- Changes to installed support wear also cancel an older upgrade or recovery attempt. The newer countdown stays in place rather than being removed or returned through an old click.
+- Dead players, detached held-stack contexts and crop entities attached to another world are rejected before support permission callbacks. Clicks in unloaded chunks no longer load distant terrain just to look for a crop.
+- Ordinary upgrades and recovery retain crop data and return exactly one old support with its remaining life. Creative use, denied permissions, offhand use and full-inventory overflow keep their existing behavior.
+
 ## 1.3.37
 
 - Trowel planting keeps track of the original offhand seeds through soil and placement permissions. Replaced stacks and changes to their count, name or genetics cancel the older attempt.
