@@ -17,19 +17,21 @@ public final class SeedBagMenu extends AbstractContainerMenu {
     private final ItemStack bag;
     private final PortableStorageAccess access;
     private final SimpleContainer seeds = new SimpleContainer(SeedBagItem.SLOTS);
+    private boolean checkingSeed;
+    private ItemStack approvedSeed;
     public SeedBagMenu(int id, Inventory inventory, int bagSlot) {
         super(AEMenus.SEED_BAG.get(), id);
         this.inventory = inventory;
         this.bagSlot = bagSlot;
         access = new PortableStorageAccess(inventory, bagSlot, SeedBagItem.class);
         this.bag = access.stack();
-        if (!inventory.player.level().isClientSide) {
+        if (inventory.player != null && !inventory.player.level().isClientSide) {
             bag.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(seeds.getItems());
             seeds.addListener(ignored -> save());
         }
         for (int c = 0; c < 9; c++) addSlot(new Slot(seeds, c, 8 + c * 18, 28) {
-            @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player) && SeedBagItem.accepts(stack); }
-            @Override public boolean mayPickup(Player player) { return stillValid(player); }
+            @Override public boolean mayPlace(ItemStack stack) { return acceptsSeed(stack); }
+            @Override public boolean mayPickup(Player player) { return !checkingSeed && approvedSeed == null && stillValid(player); }
         });
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++)
             addPlayerSlot(col + row * 9 + 9, 8 + col * 18, 68 + row * 18);
@@ -37,9 +39,21 @@ public final class SeedBagMenu extends AbstractContainerMenu {
     }
     private void addPlayerSlot(int index, int x, int y) {
         addSlot(new Slot(inventory, index, x, y) {
-            @Override public boolean mayPickup(Player player) { return index != bagSlot && stillValid(player); }
-            @Override public boolean mayPlace(ItemStack stack) { return index != bagSlot && stillValid(inventory.player); }
+            @Override public boolean mayPickup(Player player) { return index != bagSlot && !checkingSeed && approvedSeed == null && stillValid(player); }
+            @Override public boolean mayPlace(ItemStack stack) { return index != bagSlot && !checkingSeed && approvedSeed == null && stillValid(inventory.player); }
         });
+    }
+    private boolean acceptsSeed(ItemStack stack) {
+        if (!stillValid(inventory.player)) return false;
+        // Shift-click validates the source before moving any seeds. Slot insertion
+        // must not ask modded planting items to classify themselves a second time.
+        if (approvedSeed != null) return stack == approvedSeed;
+        if (checkingSeed) return false;
+        var before = stack.copy();
+        checkingSeed = true;
+        try {
+            return SeedBagItem.accepts(stack) && stillValid(inventory.player) && ItemStack.matches(before, stack);
+        } finally { checkingSeed = false; }
     }
     private void save() {
         access.save(seeds.getItems());
@@ -48,21 +62,27 @@ public final class SeedBagMenu extends AbstractContainerMenu {
         return access.current(player);
     }
     @Override public void clicked(int slot, int button, ClickType type, Player player) {
-        if (!stillValid(player)) return;
+        if (player == null || checkingSeed || approvedSeed != null || !stillValid(player)) return;
         if (type == ClickType.SWAP && button == bagSlot) return;
         if (slot >= 9 && slot < slots.size() && slots.get(slot).getContainerSlot() == bagSlot) return;
         super.clicked(slot, button, type, player);
         save();
     }
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || checkingSeed || approvedSeed != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
         if (index < 9) {
             if (!moveItemStackTo(stack, 9, 45, true)) return ItemStack.EMPTY;
-        } else if (!SeedBagItem.accepts(stack) || !moveItemStackTo(stack, 0, 9, false)) return ItemStack.EMPTY;
+        } else {
+            if (!acceptsSeed(stack) || slot.getItem() != stack || !ItemStack.matches(original, stack)) return ItemStack.EMPTY;
+            approvedSeed = stack;
+            try {
+                if (!moveItemStackTo(stack, 0, 9, false)) return ItemStack.EMPTY;
+            } finally { approvedSeed = null; }
+        }
         if (stack.isEmpty()) slot.set(ItemStack.EMPTY); else slot.setChanged();
         slot.onTake(player, stack);
         save();
@@ -75,7 +95,7 @@ public final class SeedBagMenu extends AbstractContainerMenu {
         super.removed(player);
     }
     @Override public boolean clickMenuButton(Player player,int action){
-        if(player.level().isClientSide||!stillValid(player)||action<0||action>1)return false;
+        if(player==null||player.level().isClientSide||checkingSeed||approvedSeed!=null||!stillValid(player)||action<0||action>1)return false;
         if(action==0){for(int index=9;index<slots.size();index++)quickMoveStack(player,index);}
         else {
             var sorted=new java.util.ArrayList<ItemStack>();

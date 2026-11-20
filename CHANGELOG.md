@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.40
+
+- Seed Bag deposits recheck the bag and input after modded seed inspection. Replaced or moved bags, newer contents and closed menus cancel the old transfer without losing the inventory stack.
+- A seed stack replaced in its inventory slot cannot be overwritten by an older deposit. Changes to its count, name or genetic data also cancel the transfer and preserve the newer stack.
+- Death, Spectator mode and dimension changes during seed inspection stop the pending deposit. No seeds are moved into an invalid bag snapshot.
+- Modded seed checks cannot recursively withdraw, pick up, sort or run Deposit All through the same menu. An approved shift-click classifies its seed once, before moving it, and direct slot insertion rechecks changed inputs too.
+- The Seed Bag preview can now open and display supplies without a player. Playerless clicks, transfers and buttons return safely, including missing button senders in a normal menu.
+- Normal deposits, withdrawals and sorting preserve named seed lines and genetics. Native and compatible modded seeds, offhand bags, Adventure inventory use, full-bag overflow and non-seed filtering retain their existing behavior.
+
 ## 1.3.39
 
 - Soil sampling keeps the original soil, crop state and crop entity through access checks. New plants, removed crops, replacement entities and newer growth cancel the old center click without changing its report or issuing a specimen.
