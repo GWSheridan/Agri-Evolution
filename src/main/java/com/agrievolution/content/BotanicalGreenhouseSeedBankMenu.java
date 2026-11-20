@@ -20,6 +20,8 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
     private final Container seeds;
     private final ContainerData settings;
     private final BotanicalGreenhouseBlockEntity greenhouse;
+    private final Inventory inventory;
+    private boolean closed;
 
     public BotanicalGreenhouseSeedBankMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(INPUTS), new SimpleContainerData(BotanicalGreenhouseBlockEntity.SEED_SETTINGS_COUNT), null);
@@ -35,23 +37,30 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
         this.seeds = seeds;
         this.settings = settings;
         this.greenhouse = greenhouse;
+        this.inventory = inventory;
         checkContainerSize(seeds, INPUTS);
         checkContainerDataCount(settings, BotanicalGreenhouseBlockEntity.SEED_SETTINGS_COUNT);
         addDataSlots(settings);
         seeds.startOpen(inventory.player);
         for (int slot = 0; slot < INPUTS; slot++) {
-            addSlot(new Slot(seeds, slot, 16 + slot * 23, 53) {
+            addSlot(new AccessSlot(seeds, slot, 16 + slot * 23, 53) {
                 @Override public boolean mayPlace(ItemStack stack) {
-                    return stack.getItem() instanceof SpeciesSeedItem;
+                    return super.mayPlace(stack) && stack.getItem() instanceof SpeciesSeedItem;
                 }
             });
         }
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, 9 + row * 9 + col, 16 + col * 23, 181 + row * 18));
+            addSlot(new AccessSlot(inventory, 9 + row * 9 + col, 16 + col * 23, 181 + row * 18));
         }
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col, 16 + col * 23, 244));
+            addSlot(new AccessSlot(inventory, col, 16 + col * 23, 244));
         }
+    }
+
+    private class AccessSlot extends Slot {
+        AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
+        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
     }
 
     public boolean slotEnabled(int slot) {
@@ -65,21 +74,23 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
     public int plantingSpecies(int slot) {return slot>=0&&slot<INPUTS?settings.get(20+slot):0;}
     public int minimumGene(int gene) {return gene>=0&&gene<3?settings.get(29+gene):0;}
 
-    public int exclusions(int slot) { return settings.get(32+slot); }
-    public int eligibleSeeds(int slot) { return settings.get(41+slot); }
+    public int exclusions(int slot) { return slot >= 0 && slot < INPUTS ? settings.get(32 + slot) : 1; }
+    public int eligibleSeeds(int slot) { return slot >= 0 && slot < INPUTS ? settings.get(41 + slot) : 0; }
     public int totalEligibleSeeds() { int count=0; for(int i=0;i<INPUTS;i++)count+=eligibleSeeds(i); return count; }
 
     public boolean hasPreset(int index) {
-        return settings.get(BotanicalGreenhouseBlockEntity.PRESET_STATUS_START + index) != BotanicalGreenhouseBlockEntity.PRESET_EMPTY;
+        return index >= 0 && index < PRESET_COUNT
+                && settings.get(BotanicalGreenhouseBlockEntity.PRESET_STATUS_START + index) != BotanicalGreenhouseBlockEntity.PRESET_EMPTY;
     }
 
     public boolean presetMatches(int index) {
-        return settings.get(BotanicalGreenhouseBlockEntity.PRESET_STATUS_START + index) == BotanicalGreenhouseBlockEntity.PRESET_MATCHES;
+        return index >= 0 && index < PRESET_COUNT
+                && settings.get(BotanicalGreenhouseBlockEntity.PRESET_STATUS_START + index) == BotanicalGreenhouseBlockEntity.PRESET_MATCHES;
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (greenhouse == null || !greenhouse.isSmartFarmingUpgraded()
-                || !WorkstationAccess.mayConfigure(greenhouse, player)) return false;
+        if (!stillValid(player) || greenhouse == null || !greenhouse.isSmartFarmingUpgraded()
+                || !WorkstationAccess.mayConfigure(greenhouse, player) || !stillValid(player) || !player.mayBuild()) return false;
         if (button >= 0 && button < INPUTS) greenhouse.toggleSeedSlot(button);
         else if (button >= INPUTS && button < INPUTS * 2) greenhouse.cycleSeedPriority(button - INPUTS);
         else if (button == 18) greenhouse.cycleSeedReserve();
@@ -97,13 +108,18 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
         return true;
     }
 
-    @Override public boolean stillValid(Player player) { return seeds.stillValid(player); }
+    @Override public boolean stillValid(Player player) {
+        return !closed && player == inventory.player && (player == null ? greenhouse == null
+                : player.isAlive() && !player.isSpectator() && seeds.stillValid(player));
+    }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
         if (stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
+        if (closed || player != inventory.player) return;
+        closed = true;
         super.removed(player);
         seeds.stopOpen(player);
     }

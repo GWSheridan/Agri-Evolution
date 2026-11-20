@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.25
+
+- Closing the Botanical Greenhouse dashboard, Seed Bank, Harvest Manager or storage disables its old controls and transfers. Each screen checks its owning viewer and rejects dead players and spectators.
+- Seed Bank and storage slots check access before direct insertion or withdrawal, including the player inventory slots. Old slot references cannot move named seeds, genetics or harvested items after the screen closes or the controller is removed.
+- Closing one player's screen leaves other viewers' screens usable. Adventure players retain ordinary inventory access, and greenhouse previews still work without a world or player.
+- Invalid Seed Bank status indices no longer read another slot's eligibility, gene filter or preset status. Valid seed counts, exclusions and saved planting presets keep their existing behavior.
+- Botanical Greenhouse ticks check the current controller, world, position and block state before advancing work. Late ticks cannot spend a removed or replaced controller's water and heater fuel.
+- A current greenhouse still uses exactly one mB of water and one second of heater fuel per working second. After a rotation, stale ticks are ignored and the next current tick resumes normally.
+
 ## 1.3.24
 
 - Closing a Vertical Greenhouse screen disables its old controls and item transfers. Controls and individual slots check the owning viewer and reject dead players and spectators. Ordinary Adventure inventory access and world-free previews still work.

@@ -12,6 +12,8 @@ import net.minecraft.world.item.ItemStack;
 public final class BotanicalGreenhouseHarvestMenu extends AbstractContainerMenu {
     private final BotanicalGreenhouseBlockEntity greenhouse;
     private final ContainerData settings;
+    private final Inventory inventory;
+    private boolean closed;
 
     public BotanicalGreenhouseHarvestMenu(int id, Inventory inv) {
         this(id, inv, null);
@@ -19,6 +21,7 @@ public final class BotanicalGreenhouseHarvestMenu extends AbstractContainerMenu 
     public BotanicalGreenhouseHarvestMenu(int id, Inventory inv, BotanicalGreenhouseBlockEntity greenhouse) {
         super(AEMenus.BOTANICAL_GREENHOUSE_HARVEST.get(), id);
         this.greenhouse = greenhouse;
+        this.inventory = inv;
         settings = greenhouse == null ? new SimpleContainerData(15) : greenhouse.exportSettings;
         checkContainerDataCount(settings, 15);
         addDataSlots(settings);
@@ -47,9 +50,10 @@ public final class BotanicalGreenhouseHarvestMenu extends AbstractContainerMenu 
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (greenhouse == null || !greenhouse.isAutomationUpgraded() || !greenhouse.stillValid(player))
+        if (!stillValid(player) || greenhouse == null || !greenhouse.isAutomationUpgraded())
             return false;
-        if (player.level().isClientSide || button != 4 && !WorkstationAccess.mayConfigure(greenhouse, player)) return false;
+        if (player.level().isClientSide || button != 4
+                && (!WorkstationAccess.mayConfigure(greenhouse, player) || !stillValid(player) || !player.mayBuild())) return false;
         if (button == 0) greenhouse.toggleExport();
         else if (button == 1) greenhouse.toggleExportMode();
         else if (button == 2) greenhouse.cycleExportReserve();
@@ -65,7 +69,13 @@ public final class BotanicalGreenhouseHarvestMenu extends AbstractContainerMenu 
     }
 
     @Override public boolean stillValid(Player player) {
-        return greenhouse == null || greenhouse.stillValid(player);
+        return !closed && player == inventory.player && (player == null ? greenhouse == null
+                : player.isAlive() && !player.isSpectator() && (greenhouse == null || greenhouse.stillValid(player)));
+    }
+    @Override public void removed(Player player) {
+        if (closed || player != inventory.player) return;
+        closed = true;
+        super.removed(player);
     }
     @Override public ItemStack quickMoveStack(Player player, int index) { return ItemStack.EMPTY; }
 }

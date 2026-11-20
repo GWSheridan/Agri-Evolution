@@ -16,20 +16,23 @@ public final class BotanicalGreenhouseMenu extends AbstractContainerMenu {
     private final ContainerData data;
     private final BotanicalGreenhouseBlockEntity greenhouse;
     private final ContainerLevelAccess access;
+    private final Inventory inventory;
+    private boolean closed;
 
     public BotanicalGreenhouseMenu(int id, Inventory inventory) {
-        this(id, new SimpleContainerData(BotanicalGreenhouseBlockEntity.DASHBOARD_DATA_COUNT), ContainerLevelAccess.NULL, null);
+        this(id, inventory, new SimpleContainerData(BotanicalGreenhouseBlockEntity.DASHBOARD_DATA_COUNT), ContainerLevelAccess.NULL, null);
     }
 
     public BotanicalGreenhouseMenu(int id, Inventory inventory, BotanicalGreenhouseBlockEntity greenhouse) {
-        this(id, greenhouse.data, ContainerLevelAccess.create(greenhouse.getLevel(), greenhouse.getBlockPos()), greenhouse);
+        this(id, inventory, greenhouse.data, ContainerLevelAccess.create(greenhouse.getLevel(), greenhouse.getBlockPos()), greenhouse);
     }
 
-    private BotanicalGreenhouseMenu(int id, ContainerData data, ContainerLevelAccess access,
+    private BotanicalGreenhouseMenu(int id, Inventory inventory, ContainerData data, ContainerLevelAccess access,
                                     BotanicalGreenhouseBlockEntity greenhouse) {
         super(AEMenus.BOTANICAL_GREENHOUSE.get(), id);
         checkContainerDataCount(data, BotanicalGreenhouseBlockEntity.DASHBOARD_DATA_COUNT);
         this.greenhouse = greenhouse;
+        this.inventory = inventory;
         this.data = data;
         this.access = access;
         addDataSlots(data);
@@ -140,9 +143,10 @@ public final class BotanicalGreenhouseMenu extends AbstractContainerMenu {
 
     /** Vanilla menu-button packet, no custom network registration needed. */
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (greenhouse == null || player.level().isClientSide || !stillValid(player)) return false;
+        if (!stillValid(player) || greenhouse == null || player.level().isClientSide) return false;
         // Storage and management pages can be viewed without changing the configuration.
-        if (button != 4 && button != 6 && button != 9 && !WorkstationAccess.mayConfigure(greenhouse, player)) return false;
+        if (button != 4 && button != 6 && button != 9
+                && (!WorkstationAccess.mayConfigure(greenhouse, player) || !stillValid(player) || !player.mayBuild())) return false;
         if (button == 0) greenhouse.toggleHeater();
         else if (button == 1) greenhouse.toggleVentilation();
         else if (button == 2 && greenhouseUpgradeAllowed()) greenhouse.toggleAutomation();
@@ -171,8 +175,15 @@ public final class BotanicalGreenhouseMenu extends AbstractContainerMenu {
     private boolean greenhouseUpgradeAllowed() { return greenhouse != null && upgraded(); }
 
     @Override public boolean stillValid(Player player) {
-        return (greenhouse == null || greenhouse.stillValid(player))
-                && stillValid(access, player, AEBlocks.BOTANICAL_GREENHOUSE.get());
+        return !closed && player == inventory.player && (player == null ? greenhouse == null
+                : player.isAlive() && !player.isSpectator() && (greenhouse == null || greenhouse.stillValid(player))
+                    && stillValid(access, player, AEBlocks.BOTANICAL_GREENHOUSE.get()));
+    }
+
+    @Override public void removed(Player player) {
+        if (closed || player != inventory.player) return;
+        closed = true;
+        super.removed(player);
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) { return ItemStack.EMPTY; }

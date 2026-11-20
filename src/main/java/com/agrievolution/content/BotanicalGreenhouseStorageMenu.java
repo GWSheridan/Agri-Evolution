@@ -12,6 +12,8 @@ import net.minecraft.world.item.ItemStack;
 /** 27 output-only slots in the upgraded controller and a normal player inventory. */
 public final class BotanicalGreenhouseStorageMenu extends AbstractContainerMenu {
     private final Container storage;
+    private final Inventory inventory;
+    private boolean closed;
 
     public BotanicalGreenhouseStorageMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(BotanicalGreenhouseBlockEntity.STORAGE_SIZE));
@@ -20,28 +22,40 @@ public final class BotanicalGreenhouseStorageMenu extends AbstractContainerMenu 
     public BotanicalGreenhouseStorageMenu(int id, Inventory inventory, Container storage) {
         super(AEMenus.BOTANICAL_GREENHOUSE_STORAGE.get(), id);
         this.storage = storage;
+        this.inventory = inventory;
         checkContainerSize(storage, BotanicalGreenhouseBlockEntity.STORAGE_SIZE);
         storage.startOpen(inventory.player);
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(storage, col + row * 9, 17 + col * 18, 47 + row * 18) {
+            addSlot(new AccessSlot(storage, col + row * 9, 17 + col * 18, 47 + row * 18) {
                 @Override public boolean mayPlace(ItemStack stack) { return false; }
             });
         }
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col + row * 9 + 9, 17 + col * 18, 118 + row * 18));
+            addSlot(new AccessSlot(inventory, col + row * 9 + 9, 17 + col * 18, 118 + row * 18));
         }
         for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, col, 17 + col * 18, 182));
+            addSlot(new AccessSlot(inventory, col, 17 + col * 18, 182));
         }
     }
 
-    @Override public boolean stillValid(Player player) { return storage.stillValid(player); }
+    private class AccessSlot extends Slot {
+        AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
+        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
+    }
+
+    @Override public boolean stillValid(Player player) {
+        return !closed && player == inventory.player && (player == null ? storage instanceof SimpleContainer
+                : player.isAlive() && !player.isSpectator() && storage.stillValid(player));
+    }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
         if (stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
+        if (closed || player != inventory.player) return;
+        closed = true;
         super.removed(player);
         storage.stopOpen(player);
     }

@@ -668,7 +668,9 @@ public final class BotanicalGreenhouseBlockEntity extends BlockEntity implements
     /** Perform structure checks periodically; a removed glass pane shuts off irrigation. */
     public static void serverTick(Level level, BlockPos pos, BlockState state,
                                   BotanicalGreenhouseBlockEntity greenhouse) {
-        if (!(level instanceof ServerLevel server)) return;
+        if (!(level instanceof ServerLevel server) || greenhouse.getLevel() != level
+                || !greenhouse.getBlockPos().equals(pos) || !WorkstationAccess.isCurrent(greenhouse)
+                || level.getBlockState(pos) != state) return;
         greenhouse.tickCount++;
         if (greenhouse.tickCount % 40 == 0) greenhouse.refresh();
         // Transferring stored output does not require consuming greenhouse irrigation water.
