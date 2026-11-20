@@ -30,11 +30,14 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     public static final int FOOD = 18, RETURNS = FOOD + 6, SLOTS = RETURNS + 3, QUEUE_LIMIT = 8;
     private static final int[] INPUTS = IntStream.range(0, FOOD).toArray();
     private static final int[] OUTPUTS = IntStream.range(FOOD, SLOTS).toArray();
+    private static final int[] NO_SLOTS = {};
     private NonNullList<ItemStack> items = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
     private final ArrayList<Order> queue = new ArrayList<>();
     private Status status = Status.IDLE;
     private int nextOrderId;
+    private boolean cooking;
     record Order(int id, int dish, int count) {}
+    private record PreparedMeal(Status status, NonNullList<ItemStack> contents) {}
     public enum Status { IDLE, COOKING, MISSING_INGREDIENTS, OUTPUT_FULL, RECIPE_UNAVAILABLE, CONTAINERS_FULL, QUEUED }
 
     public BatchCookingBlockEntity(BlockPos pos, BlockState state) {
@@ -46,16 +49,19 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     @Override public int getContainerSize() { return SLOTS; }
     @Override protected NonNullList<ItemStack> getItems() { return items; }
     @Override protected void setItems(NonNullList<ItemStack> items) { this.items = items; }
-    @Override public boolean canPlaceItem(int slot, ItemStack stack) { return slot < FOOD; }
-    @Override public int[] getSlotsForFace(Direction side) { return side == Direction.DOWN ? OUTPUTS : INPUTS; }
-    @Override public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction side) { return side != Direction.DOWN && slot < FOOD; }
-    @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction side) { return side == Direction.DOWN && slot >= FOOD; }
+    @Override public boolean canPlaceItem(int slot, ItemStack stack) { return slot >= 0 && slot < FOOD && WorkstationAccess.isCurrent(this); }
+    @Override public int[] getSlotsForFace(Direction side) { return !WorkstationAccess.isCurrent(this) ? NO_SLOTS : side == Direction.DOWN ? OUTPUTS : INPUTS; }
+    @Override public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction side) { return side != Direction.DOWN && canPlaceItem(slot, stack); }
+    @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction side) {
+        return side == Direction.DOWN && slot >= FOOD && slot < SLOTS && WorkstationAccess.isCurrent(this);
+    }
 
-    Order order(int index) { return index < queue.size() ? queue.get(index) : null; }
+    Order order(int index) { return index >= 0 && index < queue.size() ? queue.get(index) : null; }
     Status status() { return status; }
 
     boolean enqueue(int dish, int count) {
-        if (queue.size() >= QUEUE_LIMIT || dish < 0 || dish >= CookingFoods.ALL.size() || count < 1 || count > 16) return false;
+        if (!(level instanceof ServerLevel) || !WorkstationAccess.isCurrent(this)
+                || queue.size() >= QUEUE_LIMIT || dish < 0 || dish >= CookingFoods.ALL.size() || count < 1 || count > 16) return false;
         addOrder(dish, count);
         if (queue.size() == 1) status = Status.QUEUED;
         setChanged();
@@ -77,6 +83,7 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     }
 
     boolean cancel(int id) {
+        if (!(level instanceof ServerLevel) || !WorkstationAccess.isCurrent(this)) return false;
         int row = indexOfOrder(id);
         if (row < 0) return false;
         queue.remove(row);
@@ -90,46 +97,79 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     }
 
     void cookOne(ServerLevel server) {
+        if (cooking || level != server || !WorkstationAccess.isCurrent(this)) return;
+        cooking = true;
+        try {
+            prepareCurrentOrder(server);
+        } finally {
+            cooking = false;
+        }
+    }
+
+    private void prepareCurrentOrder(ServerLevel server) {
         var job = order(0);
         if (job == null) { status = Status.IDLE; return; }
+        var before = copyItems(items);
         var dish = CookingFoods.ALL.get(job.dish());
         var shaped = recipe(server.getRecipeManager(), server.registryAccess(), dish);
         if (shaped == null) {
-            status = Status.RECIPE_UNAVAILABLE;
+            if (sameAttempt(server, job, before)) status = Status.RECIPE_UNAVAILABLE;
             return;
         }
         var ingredients = shaped.getIngredients();
-        int[] matches = matchIngredients(ingredients);
-        if (matches == null) { status = Status.MISSING_INGREDIENTS; return; }
-        status = tryCook(server, shaped, dish, matches);
-        if (status == Status.CONTAINERS_FULL) {
-            // Prefer fewer container returns without excluding required milk buckets or similar inputs.
-            var fresh = matchFreshIngredients(ingredients);
-            if (fresh != null && tryCook(server, shaped, dish, fresh) == Status.COOKING) status = Status.COOKING;
+        int[] matches = matchIngredients(ingredients, before);
+        if (matches == null) {
+            if (sameAttempt(server, job, before)) status = Status.MISSING_INGREDIENTS;
+            return;
         }
+        var prepared = prepareMeal(server, shaped, dish, matches, before);
+        if (prepared.status() == Status.CONTAINERS_FULL) {
+            // Prefer fewer container returns without excluding required milk buckets or similar inputs.
+            var fresh = matchFreshIngredients(ingredients, before);
+            if (fresh != null) {
+                var alternative = prepareMeal(server, shaped, dish, fresh, before);
+                if (alternative.status() == Status.COOKING) prepared = alternative;
+            }
+        }
+        var currentRecipe = server.getRecipeManager().byKey(ResourceLocation.fromNamespaceAndPath("agri_evolution", dish.id())).orElse(null);
+        if (!sameAttempt(server, job, before) || currentRecipe == null || currentRecipe.value() != shaped) return;
+        status = prepared.status();
         if (status != Status.COOKING) return;
+        // Commit inventory and the same queue head together, after all recipe callbacks have returned.
+        items = prepared.contents();
         if (job.count() == 1) queue.removeFirst();
         else queue.set(0, new Order(job.id(), job.dish(), job.count() - 1));
         if (queue.isEmpty()) status = Status.IDLE;
         setChanged();
     }
 
-    private Status tryCook(ServerLevel server, ShapelessRecipe recipe, CookingFoods.Dish dish, int[] matches) {
-        var input = craftingInput(matches);
-        if (!recipe.matches(input, server)) return Status.RECIPE_UNAVAILABLE;
+    private static NonNullList<ItemStack> copyItems(List<ItemStack> source) {
+        var copy = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
+        for (int i = 0; i < SLOTS; i++) copy.set(i, source.get(i).copy());
+        return copy;
+    }
+
+    private boolean sameAttempt(ServerLevel server, Order job, List<ItemStack> before) {
+        if (level != server || !WorkstationAccess.isCurrent(this) || order(0) != job) return false;
+        for (int i = 0; i < SLOTS; i++) if (!ItemStack.matches(items.get(i), before.get(i))) return false;
+        return true;
+    }
+
+    private PreparedMeal prepareMeal(ServerLevel server, ShapelessRecipe recipe, CookingFoods.Dish dish, int[] matches,
+                                     List<ItemStack> before) {
+        var input = craftingInput(matches, before);
+        if (!recipe.matches(input, server)) return new PreparedMeal(Status.RECIPE_UNAVAILABLE, null);
         var result = recipe.assemble(input, server.registryAccess());
-        if (result.isEmpty() || !result.is(dish.item().get())) return Status.RECIPE_UNAVAILABLE;
-        var next = NonNullList.withSize(SLOTS, ItemStack.EMPTY);
-        for (int i = 0; i < SLOTS; i++) next.set(i, items.get(i).copy());
-        if (!insert(next, result, FOOD, RETURNS)) return Status.OUTPUT_FULL;
-        if (!insertContainers(next, recipe, input)) return Status.CONTAINERS_FULL;
+        if (result.isEmpty() || !result.is(dish.item().get())) return new PreparedMeal(Status.RECIPE_UNAVAILABLE, null);
+        var next = copyItems(before);
+        if (!insert(next, result, FOOD, RETURNS)) return new PreparedMeal(Status.OUTPUT_FULL, null);
+        if (!insertContainers(next, recipe, input)) return new PreparedMeal(Status.CONTAINERS_FULL, null);
         for (int slot : matches) {
             var stack = next.get(slot);
             stack.shrink(1);
             if (stack.isEmpty()) next.set(slot, ItemStack.EMPTY);
         }
-        items = next;
-        return Status.COOKING;
+        return new PreparedMeal(Status.COOKING, next);
     }
 
     public static ShapelessRecipe recipe(RecipeManager manager, HolderLookup.Provider registries, CookingFoods.Dish dish) {
@@ -140,18 +180,18 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
         return recipe;
     }
 
-    private int[] matchIngredients(List<Ingredient> ingredients) {
+    private int[] matchIngredients(List<Ingredient> ingredients, List<ItemStack> before) {
         int[] matches = new int[ingredients.size()];
         Arrays.fill(matches, -1);
         for (int i = 0; i < matches.length; i++) {
-            if (!findSlot(ingredients, i, matches, new boolean[FOOD])) return null;
+            if (!findSlot(ingredients, i, matches, new boolean[FOOD], before)) return null;
         }
         return matches;
     }
 
-    private CraftingInput craftingInput(int[] matches) {
+    private CraftingInput craftingInput(int[] matches, List<ItemStack> before) {
         var grid = NonNullList.withSize(9, ItemStack.EMPTY);
-        for (int i = 0; i < matches.length; i++) grid.set(i, items.get(matches[i]).copyWithCount(1));
+        for (int i = 0; i < matches.length; i++) grid.set(i, before.get(matches[i]).copyWithCount(1));
         return CraftingInput.of(3, 3, grid);
     }
 
@@ -163,9 +203,9 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     }
 
     /** Reassign earlier flexible ingredients when a later one needs their stack. */
-    private boolean findSlot(List<Ingredient> ingredients, int ingredient, int[] matches, boolean[] visited) {
+    private boolean findSlot(List<Ingredient> ingredients, int ingredient, int[] matches, boolean[] visited, List<ItemStack> before) {
         for (int slot = 0; slot < FOOD; slot++) {
-            var stack = items.get(slot);
+            var stack = before.get(slot);
             if (visited[slot] || stack.isEmpty() || !ingredients.get(ingredient).test(stack)) continue;
             visited[slot] = true;
             int used = 0;
@@ -175,7 +215,7 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
                 return true;
             }
             for (int i = 0; i < matches.length; i++) {
-                if (matches[i] != slot || !findSlot(ingredients, i, matches, visited)) continue;
+                if (matches[i] != slot || !findSlot(ingredients, i, matches, visited, before)) continue;
                 matches[ingredient] = slot;
                 return true;
             }
@@ -202,19 +242,19 @@ public final class BatchCookingBlockEntity extends BaseContainerBlockEntity impl
     }
 
     /** Bounded minimum-cost matching: up to nine ingredients and eighteen input stacks. */
-    private int[] matchFreshIngredients(List<Ingredient> ingredients) {
+    private int[] matchFreshIngredients(List<Ingredient> ingredients, List<ItemStack> before) {
         int count = ingredients.size(), source = count + FOOD, sink = source + 1, nodes = sink + 1;
         var graph = new ArrayList<List<MatchEdge>>(nodes);
         for (int i = 0; i < nodes; i++) graph.add(new ArrayList<>());
         for (int i = 0; i < count; i++) {
             addMatchEdge(graph, source, i, 1, 0);
             for (int slot = 0; slot < FOOD; slot++) {
-                var stack = items.get(slot);
+                var stack = before.get(slot);
                 if (!stack.isEmpty() && ingredients.get(i).test(stack)) addMatchEdge(graph, i, count + slot, 1, 0);
             }
         }
         for (int slot = 0; slot < FOOD; slot++) {
-            var stack = items.get(slot);
+            var stack = before.get(slot);
             int cost = !stack.isEmpty() && stack.copyWithCount(1).hasCraftingRemainingItem() ? 1 : 0;
             addMatchEdge(graph, count + slot, sink, Math.min(count, stack.getCount()), cost);
         }

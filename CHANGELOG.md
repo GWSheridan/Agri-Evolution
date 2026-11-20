@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.19
+
+- Batch Cooking Stations prepare meals from a saved copy of their inputs and commit only if the inventory, current order and recipe still match. Recipe callbacks cannot charge replacement ingredients or overwrite newly inserted outputs.
+- Cancelling the current batch during a recipe callback cancels that cooking attempt. The next queued batch keeps its count, and appending a later batch still works normally.
+- Recursive recipe callbacks cannot cook another serving from the same station. A failed callback leaves the station able to retry.
+- Removed or replaced stations reject cooking, queue changes and sided automation through old references. Cooking also checks the station's world, and invalid inventory or queue indices are rejected safely.
+- Closing a cooking screen disables its old controls and transfers. Screens and individual slots check the owning viewer and reject dead players and spectators, while ordinary Adventure inventory and queue use remain available.
+- Breaking a kitchen or replacing its recipe during preparation cancels the old attempt. Existing ingredient alternatives and returned containers still use the same recipes.
+
 ## 1.3.18
 
 - Spanner edits to pipes, sprinklers, valve names and controller selections reject spectators and dead players. Valve inspection remains available without changing its settings.

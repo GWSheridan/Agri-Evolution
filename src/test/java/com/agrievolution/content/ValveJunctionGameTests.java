@@ -45,7 +45,10 @@ public final class ValveJunctionGameTests {
     @GameTest(template = "empty")
     public static void loadedValvesUseTheirCurrentRedstoneSignal(GameTestHelper h) {
         var level = h.getLevel();
-        var unpowered = h.absolutePos(new BlockPos(3, 165, 3));
+        var origin = h.absolutePos(new BlockPos(3, 165, 3));
+        var chunk = new net.minecraft.world.level.ChunkPos(origin);
+        // Both scheduled load ticks must stay inside the template's ticking chunk.
+        var unpowered = new BlockPos(chunk.getMinBlockX() + 4, origin.getY(), chunk.getMinBlockZ() + 4);
         var powered = unpowered.east(3);
         var valve = AEBlocks.IRRIGATION_VALVE.get().defaultBlockState();
         int quietUpdate = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;

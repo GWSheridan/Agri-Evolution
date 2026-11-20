@@ -19,6 +19,8 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
     private static final int DATA_COUNT = ORDER_DATA_START + BatchCookingBlockEntity.QUEUE_LIMIT * ORDER_DATA_SIZE;
     private final BatchCookingBlockEntity kitchen;
     private final ContainerData data;
+    private final Inventory inventory;
+    private boolean closed;
     private int selection;
 
     public BatchCookingMenu(int id, Inventory inv) { this(id, inv, null); }
@@ -26,6 +28,7 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
     BatchCookingMenu(int id, Inventory inv, BatchCookingBlockEntity kitchen) {
         super(AEMenus.BATCH_COOKING_STATION.get(), id);
         this.kitchen = kitchen;
+        this.inventory = inv;
         Container contents = kitchen == null ? new SimpleContainer(BatchCookingBlockEntity.SLOTS) : kitchen;
         data = kitchen == null ? new SimpleContainerData(DATA_COUNT) : new ContainerData() {
             @Override public int get(int index) {
@@ -46,17 +49,23 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
             @Override public void set(int index, int value) { }
             @Override public int getCount() { return DATA_COUNT; }
         };
-        for (int i = 0; i < BatchCookingBlockEntity.FOOD; i++) addSlot(new Slot(contents, i, 89 + i % 9 * 18, 109 + i / 9 * 18));
+        for (int i = 0; i < BatchCookingBlockEntity.FOOD; i++) addSlot(new AccessSlot(contents, i, 89 + i % 9 * 18, 109 + i / 9 * 18));
         for (int i = BatchCookingBlockEntity.FOOD; i < BatchCookingBlockEntity.SLOTS; i++) {
             int x = i < BatchCookingBlockEntity.RETURNS ? 89 + (i - BatchCookingBlockEntity.FOOD) * 18
                     : 206 + (i - BatchCookingBlockEntity.RETURNS) * 18;
-            addSlot(new Slot(contents, i, x, 155) {
+            addSlot(new AccessSlot(contents, i, x, 155) {
                 @Override public boolean mayPlace(ItemStack stack) { return false; }
             });
         }
-        for (int i = 0; i < 27; i++) addSlot(new Slot(inv, i + 9, 89 + i % 9 * 18, 182 + i / 9 * 18));
-        for (int i = 0; i < 9; i++) addSlot(new Slot(inv, i, 89 + i * 18, 239));
+        for (int i = 0; i < 27; i++) addSlot(new AccessSlot(inv, i + 9, 89 + i % 9 * 18, 182 + i / 9 * 18));
+        for (int i = 0; i < 9; i++) addSlot(new AccessSlot(inv, i, 89 + i * 18, 239));
         addDataSlots(data);
+    }
+
+    private class AccessSlot extends Slot {
+        AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
+        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
     }
 
     public int selection() { return data.get(0); }
@@ -81,8 +90,14 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
     }
 
     @Override public boolean stillValid(Player player) {
-        if (kitchen == null) return true;
-        return WorkstationAccess.stillValid(kitchen, player);
+        return !closed && player == inventory.player && (player == null ? kitchen == null
+                : player.isAlive() && !player.isSpectator() && (kitchen == null || WorkstationAccess.stillValid(kitchen, player)));
+    }
+
+    @Override public void removed(Player player) {
+        if (player != inventory.player) return;
+        closed = true;
+        super.removed(player);
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
