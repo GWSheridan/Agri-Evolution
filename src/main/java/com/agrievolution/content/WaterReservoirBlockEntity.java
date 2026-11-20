@@ -18,10 +18,10 @@ public final class WaterReservoirBlockEntity extends BlockEntity implements IFlu
     public boolean upgrade(){if(renewable||!complete())return false;renewable=true;generationSeconds=0;setChanged();return true;}
     boolean removeUpgrade(){boolean result=renewable;renewable=false;setChanged();return result;}
     public void generationSecond(){
-        if (complete() && !level.isClientSide) generateSecondInCompleteTank();
+        generateSecondInCompleteTank();
     }
     void generateSecondInCompleteTank() {
-        if (!renewable || water == CAPACITY) return;
+        if (!complete() || level.isClientSide || !renewable || water == CAPACITY) return;
         if (++generationSeconds >= 10) {
             generationSeconds = 0;
             setWater(Math.min(CAPACITY, water + 1000));

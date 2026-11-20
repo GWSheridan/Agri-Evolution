@@ -299,6 +299,7 @@ public final class ReservoirGameTests {
             var hit = new BlockHitResult(Vec3.atCenterOf(face), Direction.WEST, face, false);
             for (var item : List.of(Items.WATER_BUCKET, Items.CONDUIT)) {
                 var held = new ItemStack(item);
+                player.setItemInHand(InteractionHand.MAIN_HAND, held);
                 AEBlocks.WATER_RESERVOIR.get().useItemOn(held, inlet, level, face, player, InteractionHand.MAIN_HAND, hit);
                 h.assertTrue(player.message.equals(expected.message) && held.is(item), "Unavailable shells explain the failure and preserve the item");
             }

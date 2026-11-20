@@ -57,6 +57,7 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
         }
     }
     @Override protected void tick(BlockState state,ServerLevel level,BlockPos pos,RandomSource random){
+        if (!level.hasChunkAt(pos) || !state.is(this) || level.getBlockState(pos) != state) return;
         var center=core(pos,state);
         boolean isCore = center.equals(pos);
         var tank = tank(level, pos, state);
@@ -82,7 +83,8 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
     }
 
     static boolean refreshGauge(Level level, BlockPos pos, BlockState state, int fill) {
-        return state.getValue(FILL) != fill
+        return state.getBlock() instanceof WaterReservoirBlock && level.hasChunkAt(pos)
+                && level.getBlockState(pos) == state && state.getValue(FILL) != fill
                 && level.setBlock(pos, state.setValue(FILL, fill), IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_CLIENTS));
     }
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState replacement,boolean piston){
@@ -131,13 +133,17 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
             return stack.getItem() instanceof BlockItem ? ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION
                     : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+        if (player == null || !player.isAlive() || player.getItemInHand(hand) != stack
+                || !level.hasChunkAt(pos) || !samePanel(state, level.getBlockState(pos))) return ItemInteractionResult.FAIL;
+        var before = stack.copy();
+        // Retain the original core across permission hooks; a gauge-only update is harmless.
+        var current = level.getBlockState(pos);
+        var tank = tank(level, pos, current);
         if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
-                || !state.is(this) || !level.getBlockState(pos).is(this)) return ItemInteractionResult.FAIL;
+                || !currentAction(level, pos, current, tank, player, hand, stack, before)) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
-            // Water gauges can change between reads; resolve the live panel's authoritative core.
-            var current = level.getBlockState(pos);
-            var tank = tank(level, pos, current);
-            if (tank != null && !WorkstationAccess.mayUse(level, tank.getBlockPos(), player, hit.getDirection(), stack))
+            if (tank != null && (!WorkstationAccess.mayUse(level, tank.getBlockPos(), player, hit.getDirection(), stack)
+                    || !currentAction(level, pos, current, tank, player, hand, stack, before)))
                 return ItemInteractionResult.FAIL;
             boolean transferred = tank != null && (upgrading ? tank.upgrade() : filling ? tank.addBucket() : tank.takeBucket());
             if (transferred) {
@@ -159,5 +165,18 @@ public final class WaterReservoirBlock extends Block implements EntityBlock {
             }
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    private boolean samePanel(BlockState expected, BlockState current) {
+        return expected.is(this) && current.is(this) && expected.getValue(X).equals(current.getValue(X))
+                && expected.getValue(Y).equals(current.getValue(Y)) && expected.getValue(Z).equals(current.getValue(Z));
+    }
+
+    private boolean currentAction(Level level, BlockPos pos, BlockState panel, WaterReservoirBlockEntity tank,
+                                  Player player, InteractionHand hand, ItemStack stack, ItemStack before) {
+        return player.isAlive() && !player.isSpectator() && player.mayBuild() && player.level() == level
+                && player.getItemInHand(hand) == stack && ItemStack.matches(before, stack)
+                && level.hasChunkAt(pos) && samePanel(panel, level.getBlockState(pos))
+                && (tank == null || tank.getLevel() == level && WorkstationAccess.isCurrent(tank));
     }
 }

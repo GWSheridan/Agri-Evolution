@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.27
+
+- Reservoir bucket and Conduit actions recheck the used hand after panel and core permission callbacks. Replaced items and changes to their count, name or saved data cancel the old action without transferring water or spending a module.
+- Reservoir clicks reject dead players and stop if a permission callback kills the player, changes dimension or switches to Spectator. Revoked build permission also leaves the tank and held item alone.
+- Replacing a reservoir core during either permission check cancels the old click. An old panel location cannot redirect a bucket into a newer core; gauge-only changes still allow normal interaction with the same tank.
+- Old reservoir ticks cannot advance Mk II generation after the core's block state changes. The next current tick resumes the saved cycle and produces exactly one bucket when it completes.
+- Late gauge updates cannot overwrite a newer panel state or restore a dismantled shell part over another block.
+- Generation through old references rejects removed, detached and incomplete tanks, including tanks without a world. Normal 10-second generation, saved partial cycles, offhand upgrades and stacked-bucket collection keep their existing costs.
+
 ## 1.3.26
 
 - Mk III basin refill ticks check the current basin, world, position and block state. An old tick cannot use one basin's water source to fill a different basin or its replacement.
