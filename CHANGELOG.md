@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.24
+
+- Closing a Vertical Greenhouse screen disables its old controls and item transfers. Controls and individual slots check the owning viewer and reject dead players and spectators. Ordinary Adventure inventory access and world-free previews still work.
+- Removed, replaced or incomplete Vertical Greenhouses reject direct changes to growing, breeding, pairing, water intake, output routes, batch targets and seed filters. Rejected calls preserve the previous settings and progress.
+- Invalid output-face and target-gene indices are ignored safely instead of throwing an exception or changing another setting.
+- Greenhouse ticks check the current machine, world, position and facing before advancing work. Direct processing also checks its world, and late ticks leave removed machines' old status and progress alone.
+- Automation receives a copy of the greenhouse's output-slot list. Changing that list can no longer expose planted parent trays or alter other machines' output permissions.
+- Removed and incomplete columns expose no automation slots. Normal output routing, exact breeding water costs and planted-parent retention remain covered by gameplay checks.
+
 ## 1.3.23
 
 - Lunch Boxes recheck the player and packed food after modded food-property queries. Opening a menu, starting another item use, dying, changing game mode or changing dimension cancels that serving before it is spent.

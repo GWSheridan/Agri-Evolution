@@ -11,7 +11,10 @@ public final class PipeConnectionGameTests {
     @GameTest(template = "empty")
     public static void quietJunctionPlacementAndRemovalRepairConnectors(GameTestHelper h) {
         var level = h.getLevel();
-        var center = h.absolutePos(new BlockPos(4, 240, 4));
+        var origin = h.absolutePos(new BlockPos(3, 240, 3));
+        var chunk = new ChunkPos(origin);
+        // Keep all scheduled repair ticks inside the template's ticking chunk.
+        var center = new BlockPos(chunk.getMinBlockX() + 4, origin.getY(), chunk.getMinBlockZ() + 4);
         var pipe = AEBlocks.IRRIGATION_PIPE.get().defaultBlockState();
         var north = IrrigationSprinklerBlock.connection(Direction.NORTH);
         var south = IrrigationSprinklerBlock.connection(Direction.SOUTH);

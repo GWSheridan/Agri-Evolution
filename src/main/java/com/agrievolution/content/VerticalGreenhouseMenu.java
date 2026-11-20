@@ -26,8 +26,10 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     private static final VerticalGreenhouseBlockEntity.Status[] STATUSES = VerticalGreenhouseBlockEntity.Status.values();
     private static final VerticalGreenhouseBlockEntity.WaterStatus[] WATER_STATUSES = VerticalGreenhouseBlockEntity.WaterStatus.values();
     private final VerticalGreenhouseBlockEntity greenhouse;
+    private final Inventory inventory;
     private final ContainerLevelAccess access;
     private final ContainerData data;
+    private boolean closed;
 
     public VerticalGreenhouseMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(VerticalGreenhouseBlockEntity.SLOTS),
@@ -43,13 +45,14 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
                                    ContainerLevelAccess access, VerticalGreenhouseBlockEntity greenhouse) {
         super(AEMenus.VERTICAL_GREENHOUSE.get(), id);
         this.greenhouse = greenhouse;
+        this.inventory = inventory;
         this.access = access;
         this.data = data;
         checkContainerSize(contents, VerticalGreenhouseBlockEntity.SLOTS);
         checkContainerDataCount(data, VerticalGreenhouseBlockEntity.DATA_COUNT);
         for (int tray = 0; tray < VerticalGreenhouseBlockEntity.TRAYS; tray++) {
-            addSlot(new Slot(contents, tray, FIRST_TRAY_X + tray * TRAY_PITCH, TRAY_Y) {
-                @Override public boolean mayPlace(ItemStack stack) { return VerticalGreenhouseBlockEntity.acceptsSeed(stack); }
+            addSlot(new AccessSlot(contents, tray, FIRST_TRAY_X + tray * TRAY_PITCH, TRAY_Y) {
+                @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && VerticalGreenhouseBlockEntity.acceptsSeed(stack); }
                 @Override public int getMaxStackSize() { return 1; }
             });
         }
@@ -57,15 +60,21 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
             int col = (i - VerticalGreenhouseBlockEntity.HARVEST) % 9;
             int y = i < VerticalGreenhouseBlockEntity.OFFSPRING ? HARVEST_Y
                     : i < VerticalGreenhouseBlockEntity.REJECTS ? OFFSPRING_Y : REJECTS_Y;
-            addSlot(new Slot(contents, i, FIRST_OUTPUT_X + col * 18, y) {
+            addSlot(new AccessSlot(contents, i, FIRST_OUTPUT_X + col * 18, y) {
                 @Override public boolean mayPlace(ItemStack stack) { return false; }
             });
         }
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++) {
-            addSlot(new Slot(inventory, 9 + row * 9 + col, INVENTORY_X + col * 18, INVENTORY_Y + row * 18));
+            addSlot(new AccessSlot(inventory, 9 + row * 9 + col, INVENTORY_X + col * 18, INVENTORY_Y + row * 18));
         }
-        for (int col = 0; col < 9; col++) addSlot(new Slot(inventory, col, INVENTORY_X + col * 18, HOTBAR_Y));
+        for (int col = 0; col < 9; col++) addSlot(new AccessSlot(inventory, col, INVENTORY_X + col * 18, HOTBAR_Y));
         addDataSlots(data);
+    }
+
+    private class AccessSlot extends Slot {
+        AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
+        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
     }
 
     public int water() { return data.get(0); }
@@ -95,18 +104,24 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     public int minimumGene(int gene) { return data.get(VerticalGreenhouseBlockEntity.MIN_GROWTH + gene) * 10; }
 
     @Override public boolean stillValid(Player player) {
-        return (greenhouse == null || greenhouse.stillValid(player))
-                && stillValid(access, player, AEBlocks.VERTICAL_GREENHOUSE.get());
+        return !closed && player == inventory.player && (player == null ? greenhouse == null
+                : player.isAlive() && !player.isSpectator() && (greenhouse == null || greenhouse.stillValid(player))
+                    && stillValid(access, player, AEBlocks.VERTICAL_GREENHOUSE.get()));
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
         if (stillValid(player)) super.clicked(index, button, type, player);
     }
 
+    @Override public void removed(Player player) {
+        if (player != inventory.player) return;
+        closed = true;
+        super.removed(player);
+    }
+
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (greenhouse == null || player.isSpectator() || !player.mayBuild()
-                || !player.level().mayInteract(player, greenhouse.getBlockPos())
-                || !stillValid(player) || !greenhouse.complete()) return false;
+        if (!stillValid(player) || greenhouse == null || !WorkstationAccess.mayConfigure(greenhouse, player)
+                || !stillValid(player) || !player.mayBuild() || !greenhouse.complete()) return false;
         if (button == TOGGLE_GROW || button == TOGGLE_BREED) {
             greenhouse.toggle(button);
         } else if (button == TOGGLE_PAIRING) {

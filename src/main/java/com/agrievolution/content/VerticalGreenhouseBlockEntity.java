@@ -143,14 +143,15 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     @Override public boolean stillValid(Player player) { return WorkstationAccess.stillValid(this, player); }
     @Override public boolean canPlaceItem(int slot, ItemStack stack) { return slot >= 0 && slot < TRAYS && acceptsSeed(stack) && complete(); }
     @Override public int[] getSlotsForFace(Direction side) {
+        if (!complete()) return NO_SLOTS;
         for (int face = 0; face < ROUTE_COUNT; face++) {
             if (side != OUTPUT_FACES[face]) continue;
             return switch (routes[face]) {
                 case OFF -> NO_SLOTS;
-                case PRODUCE -> HARVEST_SLOTS;
-                case SEEDS -> OFFSPRING_SLOTS;
-                case BOTH -> OUTPUT_SLOTS;
-                case REJECTS -> REJECT_SLOTS;
+                case PRODUCE -> HARVEST_SLOTS.clone();
+                case SEEDS -> OFFSPRING_SLOTS.clone();
+                case BOTH -> OUTPUT_SLOTS.clone();
+                case REJECTS -> REJECT_SLOTS.clone();
             };
         }
         return NO_SLOTS;
@@ -165,29 +166,34 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     public static Direction outputFace(int face) { return OUTPUT_FACES[face]; }
 
     void cycleOutputRoute(int face) {
+        if (face < 0 || face >= ROUTE_COUNT || !complete()) return;
         routes[face] = routes[face].next();
         setChanged();
         level.invalidateCapabilities(worldPosition);
     }
 
     void toggleRejectRoute(int face) {
+        if (face < 0 || face >= ROUTE_COUNT || !complete()) return;
         routes[face] = routes[face] == OutputRoute.REJECTS ? OutputRoute.OFF : OutputRoute.REJECTS;
         setChanged();
         level.invalidateCapabilities(worldPosition);
     }
 
     void cycleBatchTarget() {
+        if (!complete()) return;
         batchIndex = (batchIndex + 1) % BATCH_TARGETS.length;
         resetBatch();
     }
 
     void resetBatch() {
+        if (!complete()) return;
         batchCount = 0;
         resetPair();
         setChanged();
     }
 
     boolean setTargetSeed(ItemStack sample) {
+        if (!complete()) return false;
         CropSpecies next = null;
         if (!sample.isEmpty()) {
             if (!(sample.getItem() instanceof SpeciesSeedItem seed)) return false;
@@ -200,6 +206,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     }
 
     void cycleTargetGene(int gene, int change) {
+        if (gene < 0 || gene >= minimumGenes.length || !complete()) return;
         minimumGenes[gene] = Math.floorMod(minimumGenes[gene] + change, 11);
         resetBatch();
     }
@@ -223,25 +230,28 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     }
 
     void toggle(int button) {
+        if (button < 0 || button > 1 || !complete()) return;
         if (button == 0) growEnabled = !growEnabled;
         else if (button == 1) breedEnabled = !breedEnabled;
         setChanged();
     }
 
     void togglePairingMode() {
+        if (!complete()) return;
         fixedPair = !fixedPair;
         resetPair();
         setChanged();
     }
 
     void cycleWaterIntake() {
+        if (!complete()) return;
         waterIntake = waterIntake.next();
         waterStatus = waterIntake == WaterIntake.OFF ? WaterStatus.OFF : WaterStatus.CHECKING;
         setChanged();
     }
 
     boolean selectParent(int tray, boolean second) {
-        if (!fixedPair || tray < 0 || tray >= TRAYS) return false;
+        if (!complete() || !fixedPair || tray < 0 || tray >= TRAYS) return false;
         if (second) {
             if (selectedA == tray) selectedA = -1;
             selectedB = selectedB == tray ? -1 : tray;
@@ -286,10 +296,13 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     @Override public FluidStack drain(int amount, FluidAction action) { return FluidStack.EMPTY; }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, VerticalGreenhouseBlockEntity greenhouse) {
-        if (level instanceof ServerLevel server && server.getGameTime() % 20 == 0) greenhouse.runSecond(server);
+        if (!(level instanceof ServerLevel server) || greenhouse.getLevel() != level || !greenhouse.getBlockPos().equals(pos)
+                || !WorkstationAccess.isCurrent(greenhouse) || level.getBlockState(pos) != state) return;
+        if (server.getGameTime() % 20 == 0) greenhouse.runSecond(server);
     }
 
     void runSecond(ServerLevel server) {
+        if (level != server || !WorkstationAccess.isCurrent(this)) return;
         if (!complete()) {
             growStatus = breedStatus = Status.INCOMPLETE;
             waterStatus = WaterStatus.INCOMPLETE;
