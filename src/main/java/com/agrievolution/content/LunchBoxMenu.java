@@ -17,6 +17,8 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
     private final ItemStack bag;
     private final PortableStorageAccess access;
     private final SimpleContainer foods = new SimpleContainer(LunchBoxItem.SLOTS);
+    private boolean checkingFood;
+    private ItemStack approvedFood;
     private final net.minecraft.world.inventory.ContainerData controls;
     public LunchBoxMenu(int id, Inventory inventory, int bagSlot) {
         super(AEMenus.LUNCH_BOX.get(), id);
@@ -40,8 +42,8 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
             foods.addListener(ignored -> save());
         }
         for (int c = 0; c < 9; c++) addSlot(new Slot(foods, c, 8 + c * 18, 28) {
-            @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player) && LunchBoxItem.accepts(stack); }
-            @Override public boolean mayPickup(Player player) { return stillValid(player); }
+            @Override public boolean mayPlace(ItemStack stack) { return acceptsFood(stack); }
+            @Override public boolean mayPickup(Player player) { return !checkingFood && approvedFood == null && stillValid(player); }
         });
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++)
             addPlayerSlot(col + row * 9 + 9, 8 + col * 18, 92 + row * 18);
@@ -53,9 +55,20 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
     public String feedingStatus(){return LunchBoxItem.statusLabel(controls.get(19));}
     private void addPlayerSlot(int inventoryIndex, int x, int y) {
         addSlot(new Slot(inventory, inventoryIndex, x, y) {
-            @Override public boolean mayPickup(Player player) { return inventoryIndex != bagSlot && stillValid(player); }
-            @Override public boolean mayPlace(ItemStack stack) { return inventoryIndex != bagSlot && stillValid(inventory.player); }
+            @Override public boolean mayPickup(Player player) { return inventoryIndex != bagSlot && !checkingFood && approvedFood == null && stillValid(player); }
+            @Override public boolean mayPlace(ItemStack stack) { return inventoryIndex != bagSlot && !checkingFood && approvedFood == null && stillValid(inventory.player); }
         });
+    }
+    private boolean acceptsFood(ItemStack stack) {
+        if (!stillValid(inventory.player)) return false;
+        // Shift-click has already checked this stack before moving any items.
+        if (approvedFood != null) return stack == approvedFood;
+        if (checkingFood) return false;
+        var before = stack.copy();
+        checkingFood = true;
+        try {
+            return LunchBoxItem.accepts(stack) && stillValid(inventory.player) && ItemStack.matches(before, stack);
+        } finally { checkingFood = false; }
     }
     private void save() {
         access.save(foods.getItems());
@@ -64,21 +77,27 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
         return access.current(player);
     }
     @Override public void clicked(int slot, int button, ClickType type, Player player) {
-        if (!stillValid(player)) return;
+        if (checkingFood || approvedFood != null || !stillValid(player)) return;
         if (type == ClickType.SWAP && button == bagSlot) return;
         if (slot >= 9 && slot < slots.size() && slots.get(slot).getContainerSlot() == bagSlot) return;
         super.clicked(slot, button, type, player);
         save();
     }
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (checkingFood || approvedFood != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
         if (index < 9) {
             if (!moveItemStackTo(stack, 9, 45, true)) return ItemStack.EMPTY;
-        } else if (!LunchBoxItem.accepts(stack) || !moveItemStackTo(stack, 0, 9, false)) return ItemStack.EMPTY;
+        } else {
+            if (!acceptsFood(stack) || slot.getItem() != stack || !ItemStack.matches(original, stack)) return ItemStack.EMPTY;
+            approvedFood = stack;
+            try {
+                if (!moveItemStackTo(stack, 0, 9, false)) return ItemStack.EMPTY;
+            } finally { approvedFood = null; }
+        }
         if (stack.isEmpty()) slot.set(ItemStack.EMPTY); else slot.setChanged();
         slot.onTake(player, stack);
         save();
@@ -91,7 +110,7 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
         super.removed(player);
     }
     @Override public boolean clickMenuButton(Player player,int action){
-        if(player.level().isClientSide||!stillValid(player)||action<0||action>20)return false;
+        if(player==null||player.level().isClientSide||checkingFood||approvedFood!=null||!stillValid(player)||action<0||action>20)return false;
         if(action==2)LunchBoxItem.toggle(bag);
         else if(action>=3&&action<12)LunchBoxItem.cyclePriority(bag,action-3);
         else if(action>=12)LunchBoxItem.toggleProtected(bag,action-12);

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.23
+
+- Lunch Boxes recheck the player and packed food after modded food-property queries. Opening a menu, starting another item use, dying, changing game mode or changing dimension cancels that serving before it is spent.
+- Moving or replacing a box during food selection cancels the old attempt. Newer food contents and changes to the box's pause, priority, protection or other saved components are preserved.
+- Food callbacks cannot turn a detached inspection copy into extra stored portions. A completed serving is saved before its normal food effects and returned container are processed.
+- Protected food slots are skipped before querying their food properties for auto-feeding. Unprotected food keeps its normal priority and left-to-right selection order.
+- Lunch Box deposits recheck the menu and source stack after checking food properties. A callback that closes the screen, replaces the box or changes the source cannot lose the food or overwrite the replacement.
+- Food inspection cannot recursively start another menu transfer. Shift-click validates food before moving it and reuses that result for its destination slots; ordinary deposits, named food, sorting and returned bowls still work normally.
+
 ## 1.3.22
 
 - Closing an Irrigation Controller screen disables its old controls. Controls check the owning viewer and reject dead players and spectators. Adventure players can still read the schedule, and closing one screen leaves other viewers' screens usable.

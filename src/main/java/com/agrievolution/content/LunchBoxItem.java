@@ -45,8 +45,10 @@ public final class LunchBoxItem extends Item {
     public static int selectFood(ItemStack box,List<ItemStack> foods,Player player){
         int selected=-1,best=-1;
         for(int i=0;i<Math.min(SLOTS,foods.size());i++){
-            var stack=foods.get(i);var food=stack.getFoodProperties(player);
-            if(stack.isEmpty()||stack.getItem() instanceof LunchBoxItem||food==null||food.nutrition()<=0||protectedSlot(box,i))continue;
+            var stack=foods.get(i);
+            if(stack.isEmpty()||stack.getItem() instanceof LunchBoxItem||protectedSlot(box,i))continue;
+            var food=stack.getFoodProperties(player);
+            if(food==null||food.nutrition()<=0)continue;
             if(priority(box,i)>best){selected=i;best=priority(box,i);}
         }
         return selected;
@@ -100,29 +102,41 @@ public final class LunchBoxItem extends Item {
     }
     /** One serving total, even when several boxes are carried. Never races an open menu. */
     public static boolean feedOne(Player player){
-        if(player.level().isClientSide || !player.isAlive() || player.isCreative() || player.isSpectator()
-                || !player.getFoodData().needsFood() || player.isUsingItem()
-                || player.containerMenu!=player.inventoryMenu || !FEEDING.add(player))return false;
-        try { return feedFromInventory(player); }
+        Level level=player.level();
+        if(!canFeed(player,level) || !FEEDING.add(player))return false;
+        try { return feedFromInventory(player,level); }
         finally { FEEDING.remove(player); }
     }
-    private static boolean feedFromInventory(Player player){
+    private static boolean canFeed(Player player,Level level){
+        return player.level()==level && !level.isClientSide && player.isAlive() && !player.isCreative() && !player.isSpectator()
+                && player.getFoodData().needsFood() && !player.isUsingItem() && player.containerMenu==player.inventoryMenu;
+    }
+    private static boolean currentLunch(Player player,Level level,int slot,ItemStack box,ItemStack before){
+        return canFeed(player,level) && player.getInventory().getItem(slot)==box && ItemStack.matches(before,box);
+    }
+    private static boolean feedFromInventory(Player player,Level level){
         for(int slot=0;slot<player.getInventory().getContainerSize();slot++){
             if(slot>=36 && slot!=40)continue;
             ItemStack box=player.getInventory().getItem(slot);
             if(!(box.getItem() instanceof LunchBoxItem)||!enabled(box))continue;
+            ItemStack before=box.copy();
+            var contents=box.getOrDefault(DataComponents.CONTAINER,ItemContainerContents.EMPTY);
             var foods=NonNullList.withSize(SLOTS,ItemStack.EMPTY);
-            box.getOrDefault(DataComponents.CONTAINER,ItemContainerContents.EMPTY).copyInto(foods);
+            contents.copyInto(foods);
             int i=selectFood(box,foods,player);
+            // Modded food queries may change the player, box or detached food stacks.
+            if(!currentLunch(player,level,slot,box,before) || !contents.equals(ItemContainerContents.fromItems(foods)))return false;
             if(i>=0){
                 ItemStack stored=foods.get(i);
                 var food=stored.getFoodProperties(player);
+                if(!currentLunch(player,level,slot,box,before) || !contents.equals(ItemContainerContents.fromItems(foods)))return false;
                 if(stored.isEmpty() || stored.getItem() instanceof LunchBoxItem || food==null || food.nutrition()<=0)continue;
                 // Consume a detached single serving so container returns cannot corrupt other portions.
                 ItemStack serving=stored.copyWithCount(1);
                 foods.set(i,stored.copyWithCount(stored.getCount()-1));
                 box.set(DataComponents.CONTAINER,ItemContainerContents.fromItems(foods));
-                ItemStack remainder=serving.finishUsingItem(player.level(),player);
+                player.getInventory().setChanged();
+                ItemStack remainder=serving.finishUsingItem(level,player);
                 if(!remainder.isEmpty())player.getInventory().placeItemBackInInventory(remainder);
                 player.getInventory().setChanged();
                 return true;
