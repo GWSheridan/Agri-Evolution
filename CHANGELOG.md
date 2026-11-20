@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.30
+
+- Botanical Greenhouse upgrades, heater fuel and bucket actions recheck the used hand after permissions are checked. Replaced items and changes to their count, name or saved data cancel the old action without spending resources or overwriting the new held item.
+- Resource clicks retain their original controller. A replacement controller cannot inherit the pending fill, fuel or upgrade, even when its block state matches.
+- Dead players cannot use controller resources. Death, a controller rotation or switching to crouch mode during an access check cancels the pending action and preserves the newer state.
+- Door installation saves both wall states before checking doorway permissions. Changes to either glass block cancel the retrofit before anything is cleared or refunded.
+- Doorway permissions also recheck the original controller, facing and held door. Replaced controllers, changed door items and switching to crouch mode leave the wall and inventory alone.
+- Normal survival and Creative resource actions retain their existing costs. Offhand door installation still returns each removed glass block once, and a door that genuinely cannot be placed restores the original wall and unspent item.
+
 ## 1.3.29
 
 - Old valve ticks and neighbor updates cannot reopen a newly closed valve or restore its previous fitting state. Connection repairs check the current state before writing it back.
