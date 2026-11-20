@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.37
+
+- Trowel planting keeps track of the original offhand seeds through soil and placement permissions. Replaced stacks and changes to their count, name or genetics cancel the older attempt.
+- Single and patch planting recheck the held trowel and player after seed permissions. Tool swaps, renamed tools, changed saved data, death, Spectator mode, dimension changes, lost build access and switching crouch mode stop the pending work.
+- Each patch plot is checked again before planting. Changed soil and newly occupied spaces are skipped, while unchanged permitted neighbors can still be planted.
+- Placement events cannot give an old trowel bonus to a different crop species or seed line. A committed seed placement remains planted, but interrupted work adds no growth bonus, nutrition, tool wear, active appearance or cooldown.
+- Patch planting stops if its inputs change between plots. Previously completed plots keep their normal seed and durability costs, and later plots remain untouched.
+- Normal planting retains seed genetics, named varieties and one tending bonus. Creative use, the final seed, tool breakage, cancelled-placement refunds and native seed planting keep their existing behavior.
+
 ## 1.3.36
 
 - Custom seeds recheck the used hand after planting permissions. Swapped stacks and changes to their count, name, genes, rare trait or ancestry cancel the old placement without spending the newer seed.

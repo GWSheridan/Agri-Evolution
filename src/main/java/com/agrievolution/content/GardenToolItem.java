@@ -1,7 +1,12 @@
 package com.agrievolution.content;
 
 import java.util.List;
+import java.util.Objects;
 import com.agrievolution.farming.SoilResearch;
+import com.agrievolution.genetics.GenomeStorage;
+import com.agrievolution.genetics.HybridLineageStorage;
+import com.agrievolution.genetics.RareTraitStorage;
+import com.agrievolution.genetics.SeedVariety;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -91,23 +96,26 @@ public final class GardenToolItem extends Item {
     @Override public InteractionResult useOn(UseOnContext context) {
         Player player = context.getPlayer();
         Level level = context.getLevel();
-        BlockPos clicked = context.getClickedPos();
+        BlockPos clicked = context.getClickedPos().immutable();
         var tool = context.getItemInHand();
         var beforeTool = tool.copy();
         boolean crouching = player != null && player.isShiftKeyDown();
         if (!currentTool(context, tool, beforeTool, crouching) || !level.hasChunkAt(clicked)) return InteractionResult.FAIL;
+        boolean plantingInput = hasPlantingInput(context);
+        var seeds = player.getOffhandItem();
+        var beforeSeeds = seeds.copy();
         BlockState hit = level.getBlockState(clicked);
         BlockState above = level.getBlockState(clicked.above());
         var clickedEntity = level.getBlockEntity(clicked);
         var aboveEntity = level.getBlockEntity(clicked.above());
         if (!WorkstationAccess.mayUse(level, clicked, player, context.getClickedFace(), tool)
                 || !currentTool(context, tool, beforeTool, crouching)
+                || trowel && context.getHand() == InteractionHand.MAIN_HAND && !sameSeeds(player, seeds, beforeSeeds, false)
                 || !sameTarget(level, clicked, hit, clickedEntity)
                 || !sameTarget(level, clicked.above(), above, aboveEntity)) return InteractionResult.FAIL;
         if (areaWeeding(context)) return weedPatch(context, player, level, clicked, beforeTool, crouching);
-        boolean plantingInput = hasPlantingInput(context);
-        if (plantingInput && player.isShiftKeyDown() && canPlantPatch(hit, player.getOffhandItem())) {
-            return plantPatch(context, player, level, clicked);
+        if (plantingInput && crouching && canPlantPatch(hit, beforeSeeds)) {
+            return plantPatch(context, player, level, clicked, tool, beforeTool, seeds, beforeSeeds);
         }
         if (trowel && player.isShiftKeyDown() && level.isEmptyBlock(clicked.above())) {
             BlockState tilled = hit.getToolModifiedState(context, net.neoforged.neoforge.common.ItemAbilities.HOE_TILL, false);
@@ -124,20 +132,21 @@ public final class GardenToolItem extends Item {
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }
-        if (plantingInput && !player.isShiftKeyDown()
-                && !level.captureBlockSnapshots
-                && level.isEmptyBlock(clicked.above()) && level.mayInteract(player, clicked.above())
-                && player.mayUseItemAt(clicked.above(), context.getClickedFace(), player.getOffhandItem())) {
+        if (plantingInput && !crouching && !level.captureBlockSnapshots && above.isAir()) {
+            if (!level.mayInteract(player, clicked.above())
+                    || !player.mayUseItemAt(clicked.above(), context.getClickedFace(), seeds)
+                    || !currentTool(context, tool, beforeTool, crouching) || !sameSeeds(player, seeds, beforeSeeds, false)
+                    || !sameTarget(level, clicked, hit, clickedEntity) || !sameTarget(level, clicked.above(), above, aboveEntity))
+                return InteractionResult.FAIL;
             // Let the seed's own placement code preserve genes, soil rules and placement events.
             var seedContext = new UseOnContext(player, InteractionHand.OFF_HAND,
-                    new net.minecraft.world.phys.BlockHitResult(context.getClickLocation(), context.getClickedFace(), clicked, context.isInside()));
-            InteractionResult result = player.getOffhandItem().useOn(seedContext);
-            if (result.consumesAction()) {
-                if (!level.isClientSide && !level.isEmptyBlock(clicked.above())) {
-                    givePlantingBonus(level, clicked.above());
-                    finishUse(context, clicked.above(), true, beforeTool, crouching);
-                }
-                return result;
+                    new BlockHitResult(context.getClickLocation(), context.getClickedFace(), clicked, context.isInside()));
+            InteractionResult result = seeds.useOn(seedContext);
+            if (result.consumesAction() && !level.isClientSide
+                    && currentTool(context, tool, beforeTool, crouching) && sameSeeds(player, seeds, beforeSeeds, true)
+                    && matchingPlant(level, clicked.above(), beforeSeeds)) {
+                givePlantingBonus(level, clicked.above());
+                finishUse(context, clicked.above(), true, beforeTool, crouching);
             }
             return result;
         }
@@ -186,39 +195,84 @@ public final class GardenToolItem extends Item {
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
-    private InteractionResult plantPatch(UseOnContext context, Player player, Level level, BlockPos center) {
+    private InteractionResult plantPatch(UseOnContext context, Player player, Level level, BlockPos center,
+                                         ItemStack tool, ItemStack beforeTool, ItemStack seeds, ItemStack beforeSeeds) {
         // Each seed opens and completes its own NeoForge placement transaction.
         if (level.captureBlockSnapshots) return InteractionResult.FAIL;
         if (!(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;
-        ItemStack tool = context.getItemInHand();
-        Item seedItem = player.getOffhandItem().getItem();
         int planted = 0;
+        boolean interrupted = false;
         for (BlockPos candidate : BlockPos.withinManhattan(center, 1, 0, 1)) {
-            ItemStack seeds = player.getOffhandItem();
-            if (tool.isEmpty() || player.getMainHandItem() != tool || !seeds.is(seedItem)) break;
+            if (tool.isEmpty() || seeds.isEmpty()) break;
+            if (!currentTool(context, tool, beforeTool, true) || !sameSeeds(player, seeds, beforeSeeds, false)) {
+                interrupted = true;
+                break;
+            }
             BlockPos soil = candidate.immutable();
             BlockPos target = soil.above();
-            if (server.isOutsideBuildHeight(target) || !server.hasChunkAt(soil)
-                    || !SoilResearch.isSoil(server.getBlockState(soil)) || !server.isEmptyBlock(target)
-                    || !server.mayInteract(player, soil) || !server.mayInteract(player, target)
-                    || !player.mayUseItemAt(target, Direction.UP, seeds)) continue;
+            if (server.isOutsideBuildHeight(target) || !server.hasChunkAt(soil)) continue;
+            var soilState = server.getBlockState(soil);
+            var targetState = server.getBlockState(target);
+            if (!SoilResearch.isSoil(soilState) || !targetState.isAir()) continue;
+            var soilEntity = server.getBlockEntity(soil);
+            var targetEntity = server.getBlockEntity(target);
+            boolean allowed = server.mayInteract(player, soil) && server.mayInteract(player, target)
+                    && player.mayUseItemAt(target, Direction.UP, seeds);
+            if (!currentTool(context, tool, beforeTool, true) || !sameSeeds(player, seeds, beforeSeeds, false)) {
+                interrupted = true;
+                break;
+            }
+            if (!allowed || !sameTarget(server, soil, soilState, soilEntity) || !sameTarget(server, target, targetState, targetEntity)) continue;
 
             var hit = new BlockHitResult(Vec3.atBottomCenterOf(target), Direction.UP, soil, false);
             var seedContext = new UseOnContext(player, InteractionHand.OFF_HAND, hit);
-            if (!seeds.useOn(seedContext).consumesAction() || server.isEmptyBlock(target)) continue;
+            var result = seeds.useOn(seedContext);
+            if (!currentTool(context, tool, beforeTool, true) || !sameSeeds(player, seeds, beforeSeeds, true)) {
+                interrupted = true;
+                break;
+            }
+            if (!result.consumesAction()) continue;
+            if (!matchingPlant(server, target, beforeSeeds)) {
+                interrupted = true;
+                break;
+            }
             givePlantingBonus(server, target);
             planted++;
             damageTool(context, player);
+            // Only our completed planting may advance these snapshots for the next plot.
+            beforeTool = tool.copy();
+            beforeSeeds = seeds.copy();
         }
         if (planted == 0) {
             player.displayClientMessage(Component.literal("No seeds planted in this patch."), true);
-        } else {
+        } else if (!interrupted) {
             if (!tool.isEmpty()) markPlanted(tool, server);
             playUseEffects(server, center, center.above());
             player.getCooldowns().addCooldown(this, 10);
             player.displayClientMessage(Component.literal("Planted " + planted + (planted == 1 ? " crop." : " crops.")), true);
         }
         return InteractionResult.CONSUME;
+    }
+
+    private static boolean sameSeeds(Player player, ItemStack seeds, ItemStack before, boolean placed) {
+        if (!placed) return player.getOffhandItem() == seeds && ItemStack.matches(before, seeds);
+        // Using the final seed legitimately empties the hand. A nonempty replacement
+        // or a change to the remaining seed line must not inherit the older action.
+        if (seeds.isEmpty()) return player.getOffhandItem().isEmpty();
+        return player.getOffhandItem() == seeds && seeds.getCount() <= before.getCount()
+                && ItemStack.isSameItemSameComponents(before, seeds);
+    }
+
+    private static boolean matchingPlant(Level level, BlockPos target, ItemStack seed) {
+        var state = level.getBlockState(target);
+        if (seed.getItem() instanceof SpeciesSeedItem item) {
+            return state.is(item.cropBlock()) && level.getBlockEntity(target) instanceof AECropBlockEntity plant
+                    && plant.getLevel() == level && WorkstationAccess.isCurrent(plant)
+                    && plant.genome().equals(GenomeStorage.fromSeed(seed)) && plant.rareTrait() == RareTraitStorage.fromSeed(seed)
+                    && Objects.equals(plant.lineage(), HybridLineageStorage.fromSeed(seed)) && plant.variety().equals(SeedVariety.name(seed));
+        }
+        if (seed.getItem() instanceof BlockItem item) return state.is(item.getBlock());
+        return !state.isAir();
     }
 
     private void givePlantingBonus(Level level, BlockPos target) {
