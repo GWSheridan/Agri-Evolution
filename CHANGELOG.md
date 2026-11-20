@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.39
+
+- Soil sampling keeps the original soil, crop state and crop entity through access checks. New plants, removed crops, replacement entities and newer growth cancel the old center click without changing its report or issuing a specimen.
+- Changes to a center crop's saved records also cancel sampling. Genes, rare traits, variety names, nutrition, support wear and breeding credits cannot be read through an older permission check.
+- Area surveys recheck every permitted neighbor before measuring it or granting discovery credit. A plot changed during its own check or a later neighbor's check is excluded; unchanged permitted plots remain usable.
+- Switching crouch mode during permissions cancels the pending sampler action. An old survey cannot turn into physical specimen collection, and collection cannot silently become an area survey.
+- Dead players and detached sampler contexts are rejected before plot permissions. Crops attached to another world are excluded, and stale clicks no longer load distant chunks to inspect soil.
+- Normal crop and farmland clicks retain their measurements and one-specimen-per-plot limit. Natural soil specimens keep their soil type and existing farmland report; area surveys still issue no physical specimens, and empty farmland reports no invented crop nutrition.
+
 ## 1.3.38
 
 - Installing crop sticks and recovering them with a Spanner recheck the player after permissions. Death, Spectator mode, dimension changes and revoked build access cancel the old action without spending or returning sticks.
