@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.29
+
+- Old valve ticks and neighbor updates cannot reopen a newly closed valve or restore its previous fitting state. Connection repairs check the current state before writing it back.
+- Manual valve toggles recheck the used hand after permission callbacks. Replaced items and changes to their count or saved data cancel the old click, including clicks that would otherwise reach a replacement valve.
+- Dead players cannot toggle valves. Death, Spectator mode or a dimension change during an access check also cancels the pending toggle.
+- Flow checks reject stale open snapshots and safely return unavailable for replacement blocks. Removed valves cannot authorize scheduled or refill flow.
+- Removed and detached valves reject name, controller and schedule changes. Old load callbacks cannot queue repairs at a replacement block, and callbacks on valves without a world no longer crash or erase their saved links.
+- Controller links copy their assigned position so a caller cannot silently move a link by changing a mutable position. Normal linking, release, manual controls, redstone repairs and Unicode zone names remain covered by gameplay checks.
+
 ## 1.3.28
 
 - Sprinkler and basin bucket actions recheck the used hand after permission callbacks. Replaced buckets and changes to their count, name or saved data cancel the old transfer without spending water or overwriting the new held item.

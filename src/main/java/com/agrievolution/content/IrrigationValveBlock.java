@@ -117,7 +117,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     static boolean hardwareOpen(Level level, BlockPos pos, BlockState state) {
-        return state.getValue(OPEN) && !IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
+        return currentState(level, pos, state) && state.getValue(OPEN) && !IrrigationNetwork.hasLoadedNeighborSignal(level, pos);
     }
 
     static String flowStatus(Level level, BlockPos pos, BlockState state) {
@@ -153,6 +153,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     @Override protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (!currentState(level, pos, state)) return;
         if (level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve) valve.clearMissingController();
         refreshConnections(level, pos, state);
         IrrigationNetwork.syncLoadedFittings(level, pos, level.getBlockState(pos), this);
@@ -166,13 +167,19 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     }
 
     private static void refreshConnections(Level level, BlockPos pos, BlockState state) {
+        if (!currentState(level, pos, state)) return;
         BlockState next = connectedState(level, pos, state);
-        if (state != next) level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
+        if (state != next && currentState(level, pos, state))
+            level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL));
+    }
+
+    private static boolean currentState(Level level, BlockPos pos, BlockState state) {
+        return state.getBlock() instanceof IrrigationValveBlock && level.hasChunkAt(pos) && level.getBlockState(pos) == state;
     }
 
     @Override protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block neighbor,
                                               BlockPos fromPos, boolean movedByPiston) {
-        if (!level.isClientSide) {
+        if (!level.isClientSide && currentState(level, pos, state)) {
             refreshConnections(level, pos, state);
             notifySprinklers(level, pos);
         }
@@ -180,14 +187,19 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
 
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                          Player player, BlockHitResult hit) {
-        return toggle(state, level, pos, player, player.getMainHandItem(), hit);
+        return toggle(state, level, pos, player, InteractionHand.MAIN_HAND, player.getMainHandItem(), hit);
     }
 
-    private InteractionResult toggle(BlockState state, Level level, BlockPos pos, Player player, ItemStack stack, BlockHitResult hit) {
+    private InteractionResult toggle(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, ItemStack stack, BlockHitResult hit) {
+        var before = stack.copy();
+        if (!WorkstationAccess.mayCompleteItemUse(level, player, hand, stack, before) || !currentState(level, pos, state)
+                || !(level.getBlockEntity(pos) instanceof IrrigationValveBlockEntity valve)) return InteractionResult.FAIL;
         if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
-                || !state.is(this) || level.getBlockState(pos) != state) return InteractionResult.FAIL;
+                || !WorkstationAccess.mayCompleteItemUse(level, player, hand, stack, before)
+                || valve.getLevel() != level || !WorkstationAccess.isCurrent(valve) || !currentState(level, pos, state)) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             BlockState next = connectedState(level, pos, state.cycle(OPEN));
+            if (!WorkstationAccess.isCurrent(valve) || !currentState(level, pos, state)) return InteractionResult.FAIL;
             if (!level.setBlock(pos, next, IrrigationNetwork.loadedUpdateFlags(level, pos, Block.UPDATE_ALL)))
                 return InteractionResult.FAIL;
             player.displayClientMessage(Component.literal(!next.getValue(OPEN) ? "Valve closed - flow through this valve stopped"
@@ -200,7 +212,7 @@ public final class IrrigationValveBlock extends Block implements EntityBlock {
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                         Player player, InteractionHand hand, BlockHitResult hit) {
         if (player.isShiftKeyDown()) return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
-        return toggle(state, level, pos, player, stack, hit) == InteractionResult.FAIL
+        return toggle(state, level, pos, player, hand, stack, hit) == InteractionResult.FAIL
                 ? ItemInteractionResult.FAIL : ItemInteractionResult.sidedSuccess(level.isClientSide);
     }
 

@@ -19,9 +19,13 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
         super(AEBlockEntities.IRRIGATION_VALVE.get(), pos, state);
     }
 
+    private boolean current() {
+        return level instanceof ServerLevel && WorkstationAccess.isCurrent(this);
+    }
+
     @Override public void onLoad() {
         super.onLoad();
-        if (level instanceof ServerLevel server && getBlockState().getBlock() instanceof IrrigationValveBlock valve) {
+        if (level instanceof ServerLevel server && current() && getBlockState().getBlock() instanceof IrrigationValveBlock valve) {
             server.scheduleTick(worldPosition, valve, 1);
         }
     }
@@ -33,6 +37,7 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
     boolean controlledBy(BlockPos pos) { return pos.equals(controller); }
 
     boolean scheduleAllowsFlow(boolean refill) {
+        if (!current()) return false;
         if (controller == null) return true;
         if (level == null || !level.hasChunkAt(controller)) return false;
         return !(level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner)
@@ -47,7 +52,8 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
     }
 
     void setController(BlockPos pos) {
-        controller = pos;
+        if (!current()) return;
+        controller = pos == null ? null : pos.immutable();
         scheduledOpen = false;
         if (level instanceof ServerLevel && level.hasChunkAt(worldPosition)) {
             level.blockEntityChanged(worldPosition);
@@ -56,13 +62,13 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
     }
 
     void setScheduledOpen(boolean value) {
-        if (scheduledOpen == value) return;
+        if (!current() || scheduledOpen == value) return;
         scheduledOpen = value;
         IrrigationValveBlock.notifySprinklers(level, worldPosition);
     }
 
     void clearMissingController() {
-        if (controller != null && level.hasChunkAt(controller) && (
+        if (current() && controller != null && level.hasChunkAt(controller) && (
                 !(level.getBlockEntity(controller) instanceof IrrigationControllerBlockEntity owner)
                         || !owner.contains(worldPosition))) setController(null);
     }
@@ -72,6 +78,7 @@ public final class IrrigationValveBlockEntity extends BlockEntity {
     }
 
     void rename(String name) {
+        if (!current()) return;
         String updated = shorten(name);
         if (zone.equals(updated)) return;
         zone = updated;
