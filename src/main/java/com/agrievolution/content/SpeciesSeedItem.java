@@ -15,7 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
@@ -39,34 +38,55 @@ public class SpeciesSeedItem extends Item {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        BlockPos soilPos = context.getClickedPos();
+        BlockPos soilPos = context.getClickedPos().immutable();
         BlockPos cropPos = soilPos.above();
         if (context.getClickedFace() != net.minecraft.core.Direction.UP
-                || !com.agrievolution.farming.SoilResearch.isSoil(level.getBlockState(soilPos))
-                || !level.getBlockState(cropPos).isAir()) {
+                || level.isOutsideBuildHeight(soilPos) || level.isOutsideBuildHeight(cropPos)
+                || !level.hasChunkAt(soilPos)) return InteractionResult.PASS;
+        BlockState soil = level.getBlockState(soilPos);
+        BlockState target = level.getBlockState(cropPos);
+        if (!com.agrievolution.farming.SoilResearch.isSoil(soil) || !target.isAir()) {
             return InteractionResult.PASS;
         }
         var player = context.getPlayer();
+        var held = context.getItemInHand();
+        var before = held.copy();
+        boolean mayBuild = player != null && player.mayBuild();
+        if (!currentSeed(context, held, before, mayBuild)) return InteractionResult.FAIL;
+        var soilEntity = level.getBlockEntity(soilPos);
         if (player != null && (player.isSpectator()
                 || !level.mayInteract(player, soilPos) || !level.mayInteract(player, cropPos)
-                || !player.mayUseItemAt(cropPos, context.getClickedFace(), context.getItemInHand()))) {
+                || !player.mayUseItemAt(cropPos, context.getClickedFace(), held))) {
             return InteractionResult.FAIL;
         }
+        if (!currentSeed(context, held, before, mayBuild)
+                || level.getBlockState(soilPos) != soil || level.getBlockState(cropPos) != target
+                || level.getBlockEntity(soilPos) != soilEntity
+                || soilEntity != null && (soilEntity.getLevel() != level || !WorkstationAccess.isCurrent(soilEntity))) return InteractionResult.FAIL;
         if (!level.isClientSide) {
-            CropGenome genome = GenomeStorage.fromSeed(context.getItemInHand());
-            if (level.setBlock(cropPos, cropBlock.get().defaultBlockState(), 3)) {
-                if (level.getBlockEntity(cropPos) instanceof AECropBlockEntity crop) {
+            CropGenome genome = GenomeStorage.fromSeed(before);
+            BlockState plantedState = cropBlock.get().defaultBlockState();
+            boolean spendSeed = player == null || !player.getAbilities().instabuild;
+            if (level.setBlock(cropPos, plantedState, 3)) {
+                if (level.getBlockState(cropPos) == plantedState && level.getBlockEntity(cropPos) instanceof AECropBlockEntity crop
+                        && crop.getLevel() == level && WorkstationAccess.isCurrent(crop)) {
                     crop.setGenome(genome);
-                    crop.setRareTrait(RareTraitStorage.fromSeed(context.getItemInHand()));
-                    crop.setLineage(HybridLineageStorage.fromSeed(context.getItemInHand()));
-                    crop.setVariety(com.agrievolution.genetics.SeedVariety.name(context.getItemInHand()));
+                    crop.setRareTrait(RareTraitStorage.fromSeed(before));
+                    crop.setLineage(HybridLineageStorage.fromSeed(before));
+                    crop.setVariety(com.agrievolution.genetics.SeedVariety.name(before));
                 }
-                if (context.getPlayer() == null || !context.getPlayer().getAbilities().instabuild) {
-                    context.getItemInHand().shrink(1);
-                }
+                if (spendSeed) held.shrink(1);
             } else return InteractionResult.FAIL;
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    private boolean currentSeed(UseOnContext context, ItemStack held, ItemStack before, boolean mayBuild) {
+        var player = context.getPlayer();
+        // Keep playerless automation and vanilla Adventure CanPlaceOn permissions.
+        return !held.isEmpty() && held.getItem() == this && ItemStack.matches(before, held)
+                && (player == null || player.isAlive() && player.level() == context.getLevel() && !player.isSpectator()
+                    && player.mayBuild() == mayBuild && player.getItemInHand(context.getHand()) == held);
     }
 
     @Override

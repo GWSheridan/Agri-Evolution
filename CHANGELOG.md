@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.36
+
+- Custom seeds recheck the used hand after planting permissions. Swapped stacks and changes to their count, name, genes, rare trait or ancestry cancel the old placement without spending the newer seed.
+- Soil and target space must still match the checked plot. New blocks, replacement crops, changed moisture and farmland upgrades made during access checks are preserved instead of being overwritten or receiving an old placement.
+- Dead players and contexts from another world cannot plant crops. Death, Spectator mode, dimension changes and revoked build access during a permission check also cancel the attempt.
+- A seed must match the dispatched species and, for player use, be the actual stack in the used hand. Detached copies, unrelated seeds and empty automation contexts cannot create free crops.
+- Planted traits come from one validated copy of the seed. Placement notifications cannot mix old genes with newer traits or variety data, or write the original seed's genetics into a replacement species.
+- Stale contexts no longer load faraway chunks to inspect soil, and placements outside build height return safely. All crop species and farmland tiers retain normal planting, including Creative use, valid playerless automation, Adventure CanPlaceOn permissions and cancelled-placement refunds.
+
 ## 1.3.35
 
 - Journal field breeding rechecks the held book after permissions at both parents. Swapped books and changes to their name, count or saved records cancel the cross without overwriting newer journal data.
