@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.22
+
+- Closing an Irrigation Controller screen disables its old controls. Controls check the owning viewer and reject dead players and spectators. Adventure players can still read the schedule, and closing one screen leaves other viewers' screens usable.
+- Removed or replaced controllers cannot change settings, link valves, release the replacement controller's zones or authorize water refills. Removed valves cannot occupy a controller slot.
+- Controller ticks check the machine's current world, position and facing before updating its valves. After a rotation, the next current tick resumes scheduling normally.
+- Invalid zone and action indices are ignored safely, including reserve and power controls, instead of throwing an exception or changing another setting.
+- Saved valve links use the same 32-block limit as new Spanner links. The exact boundary remains valid, and duplicate saved entries cannot overwrite an accepted slot's valve and schedule.
+- Releasing zones clears the active-zone display and manual override as well as the valve links. Normal schedules, manual-run expiry and protected water reserves retain their existing behavior.
+
 ## 1.3.21
 
 - Soil Research Table upgrades check the current table before installation. An old click cannot demote a Mk III table, undo a rotation or install a module in a replacement machine.

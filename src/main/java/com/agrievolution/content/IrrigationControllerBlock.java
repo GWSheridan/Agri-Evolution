@@ -46,7 +46,8 @@ public final class IrrigationControllerBlock extends Block implements EntityBloc
 
     @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         return !level.isClientSide && type == AEBlockEntities.IRRIGATION_CONTROLLER.get()
-                ? (world, pos, current, entity) -> ((IrrigationControllerBlockEntity) entity).serverTick() : null;
+                ? (world, pos, current, entity) -> IrrigationControllerBlockEntity.serverTick(
+                        world, pos, current, (IrrigationControllerBlockEntity) entity) : null;
     }
 
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {

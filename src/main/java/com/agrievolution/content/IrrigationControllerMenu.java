@@ -18,6 +18,7 @@ public final class IrrigationControllerMenu extends AbstractContainerMenu {
     private final String[] labels = new String[ZONES];
     private final IrrigationControllerBlockEntity controller;
     private final Player viewer;
+    private boolean closed;
 
     public IrrigationControllerMenu(int id, Inventory inv, FriendlyByteBuf buf) {
         this(id, inv, (IrrigationControllerBlockEntity) null);
@@ -67,6 +68,7 @@ public final class IrrigationControllerMenu extends AbstractContainerMenu {
     }
 
     @Override public void broadcastChanges() {
+        if (!stillValid(viewer)) return;
         super.broadcastChanges();
         if (controller == null || !(viewer instanceof ServerPlayer player) || player.connection == null) return;
         boolean changed = false;
@@ -79,13 +81,20 @@ public final class IrrigationControllerMenu extends AbstractContainerMenu {
     }
 
     @Override public boolean stillValid(Player player) {
-        if (controller == null) return true;
-        return WorkstationAccess.stillValid(controller, player);
+        return !closed && player == viewer && (player == null ? controller == null
+                : player.isAlive() && !player.isSpectator()
+                    && (controller == null || WorkstationAccess.stillValid(controller, player)));
+    }
+
+    @Override public void removed(Player player) {
+        if (player != viewer) return;
+        closed = true;
+        super.removed(player);
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (controller == null || !WorkstationAccess.mayConfigure(controller, player)
-                || button < 0 || button >= 7 * ZONES) return false;
+        if (!stillValid(player) || controller == null || button < 0 || button >= 7 * ZONES
+                || !WorkstationAccess.mayConfigure(controller, player) || !stillValid(player)) return false;
         controller.action(button % ZONES, button / ZONES);
         return true;
     }

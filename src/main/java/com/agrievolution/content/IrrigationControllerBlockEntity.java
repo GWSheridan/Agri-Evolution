@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -28,6 +29,10 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
         super(AEBlockEntities.IRRIGATION_CONTROLLER.get(), pos, state);
     }
 
+    private boolean current() {
+        return level instanceof ServerLevel && WorkstationAccess.isCurrent(this);
+    }
+
     private IrrigationValveBlockEntity valve(int slot) {
         BlockPos pos = valves[slot];
         if (pos != null && level instanceof ServerLevel server && server.hasChunkAt(pos)
@@ -42,6 +47,7 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
     }
 
     String link(IrrigationValveBlockEntity valve) {
+        if (!current() || valve == null || !WorkstationAccess.isCurrent(valve)) return "The controller or valve is unavailable.";
         if (valve.zoneName().isEmpty()) return "Name the valve before linking it.";
         if (valve.getLevel() != level || worldPosition.distSqr(valve.getBlockPos()) > RANGE * RANGE) {
             return "The valve must be within 32 blocks.";
@@ -77,7 +83,7 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
     boolean enabled() { return enabled; }
     int manual() { return manual; }
 
-    boolean zoneActive(BlockPos zone) { return active >= 0 && zone.equals(valves[active]); }
+    boolean zoneActive(BlockPos zone) { return current() && active >= 0 && zone.equals(valves[active]); }
 
     String reserveStatus(BlockPos zone) {
         var network = IrrigationNetwork.controllerSupply(level, zone, worldPosition);
@@ -86,6 +92,7 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
     }
 
     void action(int slot, int action) {
+        if (!current() || slot < 0 || slot >= ZONES || action < 0 || action > 6) return;
         if (action == 4) {
             reserve = (reserve + 1) % RESERVES.length;
         } else if (action == 5) {
@@ -126,7 +133,11 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
     }
 
     void release() {
+        if (!current()) return;
+        active = manual = -1;
+        manualUntil = 0;
         for (int slot = 0; slot < ZONES; slot++) unlink(slot);
+        setChanged();
     }
 
     private void refresh() {
@@ -134,8 +145,10 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
         checkSchedules();
     }
 
-    void serverTick() {
-        if (level instanceof ServerLevel && level.getGameTime() % 20 == 0) checkSchedules();
+    static void serverTick(Level world, BlockPos pos, BlockState state, IrrigationControllerBlockEntity controller) {
+        if (controller.getLevel() != world || !controller.getBlockPos().equals(pos) || !controller.current()
+                || world.getBlockState(pos) != state) return;
+        if (world.getGameTime() % 20 == 0) controller.checkSchedules();
     }
 
     private boolean availableWater(BlockPos zone, int minimum) {
@@ -147,8 +160,9 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
 
     boolean permitsRefill(BlockPos zone) {
         // The consumer is about to withdraw a bucket; the last scheduling check may be stale.
-        return reserveWater() == 0 || (manual >= 0 && level.getGameTime() < manualUntil && zone.equals(valves[manual]))
-                || availableWater(zone, 1000 + reserveWater());
+        return zoneActive(zone) && (reserveWater() == 0
+                || (manual >= 0 && level.getGameTime() < manualUntil && zone.equals(valves[manual]))
+                || availableWater(zone, 1000 + reserveWater()));
     }
 
     private boolean canRun(int slot, boolean override) {
@@ -159,7 +173,7 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
     }
 
     void checkSchedules() {
-        if (!(level instanceof ServerLevel server) || isRemoved()) return;
+        if (!current() || !(level instanceof ServerLevel server)) return;
         pruneMissingValves();
         if (manual >= 0 && server.getGameTime() >= manualUntil) manual = -1;
         int next = -1;
@@ -208,9 +222,9 @@ public final class IrrigationControllerBlockEntity extends BlockEntity {
         for (Tag entry : tag.getList("Zones", Tag.TAG_COMPOUND)) {
             var zone = (CompoundTag) entry;
             int slot = zone.getInt("Slot");
-            if (slot < 0 || slot >= ZONES || !zone.contains("Valve", Tag.TAG_LONG)) continue;
+            if (slot < 0 || slot >= ZONES || valves[slot] != null || !zone.contains("Valve", Tag.TAG_LONG)) continue;
             BlockPos valve = BlockPos.of(zone.getLong("Valve"));
-            if (!worldPosition.closerThan(valve, RANGE + 1) || contains(valve)) continue;
+            if (worldPosition.distSqr(valve) > RANGE * RANGE || contains(valve)) continue;
             valves[slot] = valve;
             hours[slot] = Math.floorMod(zone.getInt("Hour"), 24);
             durations[slot] = Math.clamp(zone.getInt("Duration"), 0, DURATIONS.length - 1);
