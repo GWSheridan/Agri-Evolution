@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.34
+
+- Trowels and rakes recheck the actual tool after item-use permissions. Swapped tools, changed names or saved data, and detached context copies cannot spend durability or edit the field through an old click.
+- Dead players cannot use garden tools. Death, Spectator mode, a dimension change, lost build permission or switching crouch mode during an access check cancels the pending work.
+- Single-crop tending and raking capture the plant and soil before their permissions. Replacement plants, newer growth and changed soil are preserved instead of receiving the old action's growth, nutrition or watering.
+- Tilling rechecks the player, tool and target after tool-modification events and final permissions. Interrupted events leave the dirt, held item and cooldown alone.
+- Area raking rechecks each plot and the current tool before clearing weeds. Tool or player changes stop the patch; a separately changed plot is skipped while other permitted plots remain usable.
+- Finishing a single use checks the held tool before adding its active appearance, wear or cooldown. Normal tending, tilling, planting and raking retain their existing effects and durability costs.
+
 ## 1.3.33
 
 - Genetic Clippers recheck the used hand after item-use permissions. Swapped tools and changes to their name, count or saved data cancel the old click without creating a sample or spending the plant's clipping credit.

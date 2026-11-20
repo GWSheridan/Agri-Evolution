@@ -19,6 +19,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.FarmBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -59,6 +60,17 @@ public final class GardenToolItem extends Item {
         return SoilResearch.isSoil(soil) && (seed.getItem() instanceof SpeciesSeedItem || seed.getItem() instanceof BlockItem);
     }
 
+    private boolean currentTool(UseOnContext context, ItemStack tool, ItemStack before, boolean crouching) {
+        var player = context.getPlayer();
+        return tool.getItem() == this && WorkstationAccess.mayCompleteItemUse(context.getLevel(), player, context.getHand(), tool, before)
+                && player.isShiftKeyDown() == crouching && !player.getCooldowns().isOnCooldown(this);
+    }
+
+    private static boolean sameTarget(Level level, BlockPos pos, BlockState state, BlockEntity entity) {
+        return level.hasChunkAt(pos) && level.getBlockState(pos) == state && level.getBlockEntity(pos) == entity
+                && (entity == null || entity.getLevel() == level && WorkstationAccess.isCurrent(entity));
+    }
+
     @Override public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
         // Plant before the trowel enters its own block-snapshot transaction. The seed
         // then gets one normal placement transaction, including cancellation/refund.
@@ -80,21 +92,35 @@ public final class GardenToolItem extends Item {
         Player player = context.getPlayer();
         Level level = context.getLevel();
         BlockPos clicked = context.getClickedPos();
-        if (player == null || player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, clicked)
-                || !player.mayUseItemAt(clicked, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
-        if (player.getCooldowns().isOnCooldown(this)) return InteractionResult.FAIL;
-        if (areaWeeding(context)) return weedPatch(context, player, level, clicked);
+        var tool = context.getItemInHand();
+        var beforeTool = tool.copy();
+        boolean crouching = player != null && player.isShiftKeyDown();
+        if (!currentTool(context, tool, beforeTool, crouching) || !level.hasChunkAt(clicked)) return InteractionResult.FAIL;
         BlockState hit = level.getBlockState(clicked);
+        BlockState above = level.getBlockState(clicked.above());
+        var clickedEntity = level.getBlockEntity(clicked);
+        var aboveEntity = level.getBlockEntity(clicked.above());
+        if (!WorkstationAccess.mayUse(level, clicked, player, context.getClickedFace(), tool)
+                || !currentTool(context, tool, beforeTool, crouching)
+                || !sameTarget(level, clicked, hit, clickedEntity)
+                || !sameTarget(level, clicked.above(), above, aboveEntity)) return InteractionResult.FAIL;
+        if (areaWeeding(context)) return weedPatch(context, player, level, clicked, beforeTool, crouching);
         boolean plantingInput = hasPlantingInput(context);
         if (plantingInput && player.isShiftKeyDown() && canPlantPatch(hit, player.getOffhandItem())) {
             return plantPatch(context, player, level, clicked);
         }
         if (trowel && player.isShiftKeyDown() && level.isEmptyBlock(clicked.above())) {
             BlockState tilled = hit.getToolModifiedState(context, net.neoforged.neoforge.common.ItemAbilities.HOE_TILL, false);
-            if (tilled != null && !tilled.equals(hit) && player.mayUseItemAt(clicked, context.getClickedFace(), context.getItemInHand())) {
-                if (!level.isClientSide && (level.getBlockState(clicked) != hit || !level.setBlock(clicked, tilled, 3)))
+            if (tilled != null && !tilled.equals(hit)) {
+                if (!currentTool(context, tool, beforeTool, crouching)
+                        || !sameTarget(level, clicked, hit, clickedEntity) || !sameTarget(level, clicked.above(), above, aboveEntity)
+                        || !WorkstationAccess.mayUse(level, clicked, player, context.getClickedFace(), tool)
+                        || !currentTool(context, tool, beforeTool, crouching)
+                        || !sameTarget(level, clicked, hit, clickedEntity) || !sameTarget(level, clicked.above(), above, aboveEntity))
                     return InteractionResult.FAIL;
-                finishUse(context, clicked.above(), false);
+                if (!level.isClientSide && !level.setBlock(clicked, tilled, 3))
+                    return InteractionResult.FAIL;
+                finishUse(context, clicked.above(), false, beforeTool, crouching);
                 return InteractionResult.sidedSuccess(level.isClientSide);
             }
         }
@@ -109,7 +135,7 @@ public final class GardenToolItem extends Item {
             if (result.consumesAction()) {
                 if (!level.isClientSide && !level.isEmptyBlock(clicked.above())) {
                     givePlantingBonus(level, clicked.above());
-                    finishUse(context, clicked.above(), true);
+                    finishUse(context, clicked.above(), true, beforeTool, crouching);
                 }
                 return result;
             }
@@ -119,10 +145,15 @@ public final class GardenToolItem extends Item {
         BlockPos soil = (hit.getBlock() instanceof FarmBlock || CropWeeds.isHost(level.getBlockState(clicked.above()))) ? clicked : clicked.below();
         BlockPos plantPos = soil.above();
         BlockState state = level.getBlockState(plantPos);
-        if (!level.mayInteract(player, soil) || !level.mayInteract(player, plantPos)
-                || !player.mayUseItemAt(soil, context.getClickedFace(), context.getItemInHand())
-                || !player.mayUseItemAt(plantPos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
-        AECropBlockEntity plant = level.getBlockEntity(plantPos) instanceof AECropBlockEntity p ? p : null;
+        BlockState farmland = level.getBlockState(soil);
+        var soilEntity = level.getBlockEntity(soil);
+        var plantEntity = level.getBlockEntity(plantPos);
+        if (!WorkstationAccess.mayUse(level, soil, player, context.getClickedFace(), tool)
+                || !currentTool(context, tool, beforeTool, crouching)
+                || !WorkstationAccess.mayUse(level, plantPos, player, context.getClickedFace(), tool)
+                || !currentTool(context, tool, beforeTool, crouching)
+                || !sameTarget(level, soil, farmland, soilEntity) || !sameTarget(level, plantPos, state, plantEntity)) return InteractionResult.FAIL;
+        AECropBlockEntity plant = plantEntity instanceof AECropBlockEntity p ? p : null;
         if (trowel) {
             if (!(state.getBlock() instanceof AgriCropBlock crop) || plant == null) return InteractionResult.PASS;
             if (crop.isMaxAge(state) || plant.hasBeenTended()) {
@@ -134,12 +165,9 @@ public final class GardenToolItem extends Item {
                 plant.setTended();
                 plant.addNutrition(nutrition);
                 level.setBlock(plantPos, state.setValue(AgriCropBlock.AGE, crop.getAge(state) + 1), 3);
-                CustomData.update(DataComponents.CUSTOM_DATA, context.getItemInHand(),
-                        tag -> tag.putLong("AgriTrowelActiveUntil", level.getGameTime() + 60));
                 player.displayClientMessage(Component.literal("Crop tended: +1 growth stage, +10 nutrition."), true);
             }
         } else {
-            BlockState farmland = level.getBlockState(soil);
             boolean weeds = CropWeeds.hasWeeds(level, plantPos);
             boolean feed = plant != null && plant.soilNutrition() < 100;
             boolean hydrate = farmland.getBlock() instanceof FarmBlock && farmland.getValue(FarmBlock.MOISTURE) < 7;
@@ -154,7 +182,7 @@ public final class GardenToolItem extends Item {
                 player.displayClientMessage(Component.literal(weeds ? "Weeds cleared." : "Soil refreshed."), true);
             }
         }
-        finishUse(context, plantPos, trowel);
+        finishUse(context, plantPos, trowel, beforeTool, crouching);
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
@@ -203,25 +231,37 @@ public final class GardenToolItem extends Item {
         }
     }
 
-    private InteractionResult weedPatch(UseOnContext context, Player player, Level level, BlockPos clicked) {
+    private InteractionResult weedPatch(UseOnContext context, Player player, Level level, BlockPos clicked,
+                                        ItemStack beforeTool, boolean crouching) {
         BlockState hit = level.getBlockState(clicked);
         BlockPos center = clicked;
         if (!CropWeeds.isHost(hit)) {
             center = clicked.above();
             if (!(hit.getBlock() instanceof FarmBlock) && !CropWeeds.isHost(level.getBlockState(center))) return InteractionResult.PASS;
         }
-        if (level.isOutsideBuildHeight(center) || !level.mayInteract(player, center)
-                || !player.mayUseItemAt(center, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
+        var centerState = level.getBlockState(center);
+        var centerEntity = level.getBlockEntity(center);
+        if (level.isOutsideBuildHeight(center) || !WorkstationAccess.mayUse(level, center, player, context.getClickedFace(), context.getItemInHand())
+                || !currentTool(context, context.getItemInHand(), beforeTool, crouching)
+                || !sameTarget(level, center, centerState, centerEntity)) return InteractionResult.FAIL;
         if (!(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;
 
         int cleared = 0;
         ItemStack rake = context.getItemInHand();
         // Start at the clicked plot, then work outwards in case the rake breaks.
         for (BlockPos plot : BlockPos.withinManhattan(center, 1, 0, 1)) {
-            if (rake.isEmpty()) break;
-            if (!server.hasChunkAt(plot) || !server.mayInteract(player, plot) || !server.mayInteract(player, plot.below())
-                    || !player.mayUseItemAt(plot, context.getClickedFace(), rake)
-                    || !player.mayUseItemAt(plot.below(), context.getClickedFace(), rake)) continue;
+            var before = rake.copy();
+            if (!currentTool(context, rake, before, crouching)) break;
+            if (!server.hasChunkAt(plot)) continue;
+            var state = server.getBlockState(plot);
+            var farmland = server.getBlockState(plot.below());
+            var plantEntity = server.getBlockEntity(plot);
+            var soilEntity = server.getBlockEntity(plot.below());
+            boolean allowed = WorkstationAccess.mayUse(server, plot, player, context.getClickedFace(), rake)
+                    && currentTool(context, rake, before, crouching)
+                    && WorkstationAccess.mayUse(server, plot.below(), player, context.getClickedFace(), rake);
+            if (!currentTool(context, rake, before, crouching)) break;
+            if (!allowed || !sameTarget(server, plot, state, plantEntity) || !sameTarget(server, plot.below(), farmland, soilEntity)) continue;
             if (!CropWeeds.isHost(server.getBlockState(plot)) || !CropWeeds.hasWeeds(server, plot)) continue;
             CropWeeds.clear(server, plot);
             cleared++;
@@ -245,10 +285,10 @@ public final class GardenToolItem extends Item {
         }
     }
 
-    private void finishUse(UseOnContext context, BlockPos plantPos, boolean planted) {
+    private void finishUse(UseOnContext context, BlockPos plantPos, boolean planted, ItemStack beforeTool, boolean crouching) {
         Level level = context.getLevel();
         Player player = context.getPlayer();
-        if (player == null) return;
+        if (!currentTool(context, context.getItemInHand(), beforeTool, crouching)) return;
         if (level instanceof ServerLevel server) {
             if (planted) markPlanted(context.getItemInHand(), level);
             playUseEffects(server, context.getClickedPos(), plantPos);
