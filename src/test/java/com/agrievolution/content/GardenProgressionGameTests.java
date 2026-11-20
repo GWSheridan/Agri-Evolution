@@ -37,10 +37,13 @@ public final class GardenProgressionGameTests {
         var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
         var leaves = new ItemStack(Items.OAK_LEAVES, 5);
         var weeds = new ItemStack(AEItems.PULLED_WEEDS.get(), 3);
+        player.setItemInHand(InteractionHand.MAIN_HAND, leaves);
         for (int i = 0; i < 2; i++) bin.useItemOn(leaves, level.getBlockState(pos), level, pos, player, InteractionHand.MAIN_HAND, hit);
+        player.setItemInHand(InteractionHand.MAIN_HAND, weeds);
         for (int i = 0; i < 3; i++) bin.useItemOn(weeds, level.getBlockState(pos), level, pos, player, InteractionHand.MAIN_HAND, hit);
         helper.assertTrue(level.getBlockState(pos).getValue(CompostBinBlock.FILL) == CompostBinBlock.FULL
                         && weeds.isEmpty() && leaves.getCount() == 3, "Leaves and weeds fill by their listed amounts");
+        player.setItemInHand(InteractionHand.MAIN_HAND, leaves);
         bin.useItemOn(leaves, level.getBlockState(pos), level, pos, player, InteractionHand.MAIN_HAND, hit);
         helper.assertTrue(leaves.getCount() == 3 && CompostBinBlock.value(new ItemStack(Items.IRON_INGOT)) == 0,
                 "Full bins and unsuitable items are rejected");

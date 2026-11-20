@@ -39,7 +39,9 @@ public final class CompostAndToolGameTests {
         return state;
     }
     private static void deposit(GameTestHelper h, BlockPos pos, BlockState state, Player player, ItemStack material) {
-        AEBlocks.COMPOST_BIN.get().useItemOn(material, state, h.getLevel(), pos, player, InteractionHand.MAIN_HAND, hit(pos));
+        var hand = player.getOffhandItem() == material ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+        player.setItemInHand(hand, material);
+        AEBlocks.COMPOST_BIN.get().useItemOn(material, state, h.getLevel(), pos, player, hand, hit(pos));
     }
     private static void collect(GameTestHelper h, BlockPos pos, BlockState state, Player player) {
         AEBlocks.COMPOST_BIN.get().useWithoutItem(state, h.getLevel(), pos, player, hit(pos));
@@ -67,8 +69,9 @@ public final class CompostAndToolGameTests {
         var pos = pos(h);
         var ready = bin(h, pos, CompostBinBlock.READY);
         var player = h.makeMockPlayer(GameType.SURVIVAL);
-        collect(h, pos, ready, player);
         var leaves = new ItemStack(Items.OAK_LEAVES, 2);
+        player.setItemInHand(InteractionHand.MAIN_HAND, leaves);
+        collect(h, pos, ready, player);
         deposit(h, pos, h.getLevel().getBlockState(pos), player, leaves);
         collect(h, pos, ready, player);
         h.assertTrue(player.getInventory().countItem(AEItems.NUTRIENT_COMPOST.get()) == 2

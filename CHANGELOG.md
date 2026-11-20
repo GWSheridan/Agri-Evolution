@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.32
+
+- Compost Bin deposits recheck the used hand after item-use permissions. Swapped materials and changes to their count, name or saved data cancel the old deposit without raising the fill level or spending the newer item.
+- Ready-batch collection rechecks the player's held item and the bin after permissions are checked. An interrupted collection leaves the batch ready and issues no reward.
+- Dead players cannot deposit, collect or feed crops. Death, Spectator mode, a dimension change or revoked build permission during an access check also cancels the pending action.
+- Nutrient Compost retains the original plant through access checks. A replacement crop cannot inherit the old feed, even with the same block state; newer growth is preserved too.
+- Crop feeding requires actual Nutrient Compost in the used hand. Changed compost stacks and invalid item dispatches cannot grow a crop by spending another item.
+- Normal Survival and Creative costs remain the same: leaves add one fill point, pulled weeds add two, a ready batch returns two compost, and feeding adds up to two growth stages plus 25 nutrition. Mature crops keep the compost and receive no extra nutrition.
+
 ## 1.3.31
 
 - Vertical Greenhouse bucket fills recheck the used hand after both section and base permissions. Swapped buckets and changes to their count, name or saved data cancel the old fill without transferring water or replacing the newer held item.

@@ -19,12 +19,19 @@ public final class NutrientCompostItem extends Item {
         if (!(state.getBlock() instanceof AgriCropBlock crop)) return InteractionResult.PASS;
         var player = context.getPlayer();
         if (player == null) return InteractionResult.PASS;
-        if (player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, pos)
-                || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
+        var held = context.getItemInHand();
+        var before = held.copy();
+        if (held.getItem() != this || !WorkstationAccess.mayCompleteItemUse(level, player, context.getHand(), held, before)
+                || !(level.getBlockEntity(pos) instanceof AECropBlockEntity planted)
+                || planted.getLevel() != level || !WorkstationAccess.isCurrent(planted)
+                || !WorkstationAccess.mayUse(level, pos, player, context.getClickedFace(), held)
+                || !WorkstationAccess.mayCompleteItemUse(level, player, context.getHand(), held, before)
+                || planted.getLevel() != level || !WorkstationAccess.isCurrent(planted)
+                || level.getBlockState(pos) != state) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             if (!crop.boostGrowth(level, pos, state)) return InteractionResult.PASS;
-            if (level.getBlockEntity(pos) instanceof AECropBlockEntity planted) planted.addNutrition(25);
-            if (!player.getAbilities().instabuild) context.getItemInHand().shrink(1);
+            if (planted.getLevel() == level && WorkstationAccess.isCurrent(planted)) planted.addNutrition(25);
+            if (!player.getAbilities().instabuild) held.shrink(1);
             level.levelEvent(2005, pos, 0);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

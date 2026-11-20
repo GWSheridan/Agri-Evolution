@@ -47,8 +47,12 @@ public final class CompostBinBlock extends Block {
     }
 
     private static boolean mayEdit(Level level, BlockPos pos, Player player, ItemStack stack, BlockHitResult hit) {
-        return player != null && !player.isSpectator() && player.mayBuild()
-                && level.mayInteract(player, pos) && player.mayUseItemAt(pos, hit.getDirection(), stack);
+        return WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack);
+    }
+
+    private boolean currentUse(Level level, BlockPos pos, BlockState state, Player player,
+                               InteractionHand hand, ItemStack stack, ItemStack before) {
+        return WorkstationAccess.mayCompleteItemUse(level, player, hand, stack, before) && currentState(level, pos, state);
     }
 
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
@@ -60,7 +64,10 @@ public final class CompostBinBlock extends Block {
         }
         int amount = value(stack);
         if (amount == 0 || state.getValue(FILL) == READY) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-        if (!mayEdit(level, pos, player, stack, hit)) return ItemInteractionResult.FAIL;
+        var before = stack.copy();
+        if (!currentUse(level, pos, state, player, hand, stack, before)
+                || !mayEdit(level, pos, player, stack, hit)
+                || !currentUse(level, pos, state, player, hand, stack, before)) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
             int used = deposit((ServerLevel) level, pos, state, stack, amount);
             stack.consume(used, player);
@@ -88,8 +95,11 @@ public final class CompostBinBlock extends Block {
         if (!currentState(level, pos, state) || player == null) return InteractionResult.FAIL;
         if (!level.isClientSide) {
             int fill = state.getValue(FILL);
-            if (fill == READY && mayEdit(level, pos, player, player.getMainHandItem(), hit)
-                    && level.getBlockState(pos) == state
+            var held = player.getMainHandItem();
+            var before = held.copy();
+            if (fill == READY && currentUse(level, pos, state, player, InteractionHand.MAIN_HAND, held, before)
+                    && mayEdit(level, pos, player, held, hit)
+                    && currentUse(level, pos, state, player, InteractionHand.MAIN_HAND, held, before)
                     && level.setBlock(pos, state.setValue(FILL, 0), UPDATE_ALL)) {
                 player.getInventory().placeItemBackInInventory(new ItemStack(AEItems.NUTRIENT_COMPOST.get(), 2));
                 player.displayClientMessage(Component.literal("Collected 2 Nutrient Compost"), true);
