@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.31
+
+- Vertical Greenhouse bucket fills recheck the used hand after both section and base permissions. Swapped buckets and changes to their count, name or saved data cancel the old fill without transferring water or replacing the newer held item.
+- A fill keeps its original tank through access checks. Replacing the controller or rotating the column cancels the pending transfer instead of filling a newer machine.
+- Dead players cannot fill a column. Death, Spectator mode, a dimension change or revoked build permission during access checks also leaves the tank and bucket alone.
+- Controller lookups check that the section and tank are still current. An unrelated block snapshot now returns safely instead of trying to read greenhouse properties from it.
+- Creative fills retain the supply bucket without adding empty buckets to the inventory, matching the other irrigation fittings.
+- Manual filling still works through all three sections in either hand. Full and incomplete columns keep the supplied bucket, stacked supplies spend one bucket at a time, and a full inventory drops exactly one returned container.
+
 ## 1.3.30
 
 - Botanical Greenhouse upgrades, heater fuel and bucket actions recheck the used hand after permissions are checked. Replaced items and changes to their count, name or saved data cancel the old action without spending resources or overwriting the new held item.

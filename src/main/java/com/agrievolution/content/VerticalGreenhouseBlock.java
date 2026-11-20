@@ -80,9 +80,12 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
     public static boolean port(BlockState state, Direction side) { return state.getValue(SECTION) == 0 && side != Direction.UP; }
 
     static VerticalGreenhouseBlockEntity controller(Level level, BlockPos pos, BlockState state) {
+        if (!(state.getBlock() instanceof VerticalGreenhouseBlock) || !level.hasChunkAt(pos)
+                || level.getBlockState(pos) != state) return null;
         BlockPos base = pos.below(state.getValue(SECTION));
         return level.hasChunkAt(base) && matches(level.getBlockState(base), state.getBlock(), state.getValue(FACING), 0)
-                && level.getBlockEntity(base) instanceof VerticalGreenhouseBlockEntity greenhouse ? greenhouse : null;
+                && level.getBlockEntity(base) instanceof VerticalGreenhouseBlockEntity greenhouse
+                && greenhouse.getLevel() == level && WorkstationAccess.isCurrent(greenhouse) ? greenhouse : null;
     }
 
     @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
@@ -110,17 +113,30 @@ public final class VerticalGreenhouseBlock extends BaseEntityBlock {
         if (hand == InteractionHand.MAIN_HAND && stack.isEmpty() && player.getOffhandItem().is(Items.WATER_BUCKET))
             return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
         if (!stack.is(Items.WATER_BUCKET)) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        var before = stack.copy();
+        if (!WorkstationAccess.mayCompleteItemUse(level, player, hand, stack, before)) return ItemInteractionResult.FAIL;
+        var greenhouse = controller(level, pos, state);
+        if (greenhouse == null) return ItemInteractionResult.FAIL;
+        var baseState = level.getBlockState(greenhouse.getBlockPos());
         if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
-                || !state.is(this) || level.getBlockState(pos) != state) return ItemInteractionResult.FAIL;
+                || !currentFill(level, pos, state, greenhouse, baseState, player, hand, stack, before)) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
-            var greenhouse = controller(level, pos, state);
-            if (greenhouse != null && !WorkstationAccess.mayUse(level, greenhouse.getBlockPos(), player, hit.getDirection(), stack))
+            if (!WorkstationAccess.mayUse(level, greenhouse.getBlockPos(), player, hit.getDirection(), stack)
+                    || !currentFill(level, pos, state, greenhouse, baseState, player, hand, stack, before))
                 return ItemInteractionResult.FAIL;
-            if (greenhouse != null && greenhouse.addBucket()) {
-                player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(Items.BUCKET)));
+            if (greenhouse.addBucket()) {
+                if (!player.getAbilities().instabuild)
+                    player.setItemInHand(hand, ItemUtils.createFilledResult(stack, player, new ItemStack(Items.BUCKET)));
             } else player.displayClientMessage(Component.literal("The greenhouse needs a complete column and room for 1000 mB."), true);
         }
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    private boolean currentFill(Level level, BlockPos pos, BlockState state, VerticalGreenhouseBlockEntity greenhouse,
+                                BlockState baseState, Player player, InteractionHand hand, ItemStack stack, ItemStack before) {
+        return WorkstationAccess.mayCompleteItemUse(level, player, hand, stack, before)
+                && state.is(this) && controller(level, pos, state) == greenhouse
+                && level.getBlockState(greenhouse.getBlockPos()) == baseState;
     }
 
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
