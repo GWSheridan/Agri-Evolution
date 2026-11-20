@@ -49,9 +49,13 @@ public final class BreedingJournalItem extends Item {
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
         BlockPos pos = context.getClickedPos();
-        BlockState state = level.getBlockState(pos);
         Player player = context.getPlayer();
-        if (!(state.getBlock() instanceof AgriCropBlock crop) || player == null) return InteractionResult.PASS;
+        if (player == null || !level.hasChunkAt(pos)) return InteractionResult.PASS;
+        ItemStack journal = context.getItemInHand();
+        ItemStack beforeJournal = journal.copy();
+        if (!currentJournal(level, player, context.getHand(), journal, beforeJournal)) return InteractionResult.FAIL;
+        BlockState state = level.getBlockState(pos);
+        if (!(state.getBlock() instanceof AgriCropBlock crop)) return InteractionResult.PASS;
         if (level.isClientSide) return InteractionResult.SUCCESS;
 
         if (!(level.getBlockEntity(pos) instanceof AECropBlockEntity target)) {
@@ -59,7 +63,7 @@ public final class BreedingJournalItem extends Item {
             return InteractionResult.CONSUME;
         }
 
-        ItemStack journal = context.getItemInHand();
+        if (!currentPlant(level, pos, state, target, null)) return InteractionResult.FAIL;
         CompoundTag root = journal.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
         com.agrievolution.content.ResourceCropMigration.journal(root);
         CropGenome genome = target.genome();
@@ -122,12 +126,18 @@ public final class BreedingJournalItem extends Item {
             return InteractionResult.CONSUME;
         }
 
-        if (player.isSpectator() || !player.mayBuild()
-                || !level.mayInteract(player, pos) || !level.mayInteract(player, parentPos)
-                || !player.mayUseItemAt(pos, context.getClickedFace(), journal)
-                || !player.mayUseItemAt(parentPos, context.getClickedFace(), journal)) {
-            save(journal, root);
-            status(player, "You need permission to breed both parent crops.");
+        var targetBefore = snapshot(level, target);
+        var parentBefore = snapshot(level, parent);
+        boolean spectator = player.isSpectator(), mayBuild = player.mayBuild();
+        java.util.function.BooleanSupplier unchanged = () -> currentJournal(level, player, context.getHand(), journal, beforeJournal)
+                && !player.isShiftKeyDown() && player.isSpectator() == spectator && player.mayBuild() == mayBuild
+                && currentPlant(level, pos, state, target, targetBefore)
+                && currentPlant(level, parentPos, parentState, parent, parentBefore);
+        if (!WorkstationAccess.mayUse(level, pos, player, context.getClickedFace(), journal) || !unchanged.getAsBoolean()
+                || !WorkstationAccess.mayUse(level, parentPos, player, context.getClickedFace(), journal) || !unchanged.getAsBoolean()) {
+            boolean stable = unchanged.getAsBoolean();
+            if (stable) save(journal, root);
+            status(player, stable ? "You need permission to breed both parent crops." : "The journal or parents changed. Try again.");
             return InteractionResult.FAIL;
         }
 
@@ -165,6 +175,23 @@ public final class BreedingJournalItem extends Item {
                 + (newSpecies ? " - NEW DISCOVERY!" : " - seed produced!")
                 + (pollination > 0 ? " (bee-pollinated)" : ""));
         return InteractionResult.CONSUME;
+    }
+
+    private boolean currentJournal(Level level, Player player, InteractionHand hand, ItemStack journal, ItemStack before) {
+        // Inspection and recording remain available to visitors without field-edit permission.
+        return player.isAlive() && player.level() == level && journal.getItem() == this
+                && player.getItemInHand(hand) == journal && ItemStack.matches(before, journal);
+    }
+
+    private static CompoundTag snapshot(Level level, AECropBlockEntity plant) {
+        var tag = new CompoundTag();
+        plant.saveAdditional(tag, level.registryAccess());
+        return tag;
+    }
+
+    private static boolean currentPlant(Level level, BlockPos pos, BlockState state, AECropBlockEntity plant, CompoundTag before) {
+        return plant.getLevel() == level && plant.getBlockPos().equals(pos) && WorkstationAccess.isCurrent(plant)
+                && level.getBlockState(pos) == state && (before == null || before.equals(snapshot(level, plant)));
     }
 
     /** Read the saved collection in the real vanilla paginated book GUI. */

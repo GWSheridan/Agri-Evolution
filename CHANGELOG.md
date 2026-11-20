@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.35
+
+- Journal field breeding rechecks the held book after permissions at both parents. Swapped books and changes to their name, count or saved records cancel the cross without overwriting newer journal data.
+- Both parents must remain the original placed crops with unchanged state and saved data. Replacements, younger growth, changed supports, edited genes and newer variety or nutrition data cannot inherit the old cross.
+- Breeding rights spent during an access check are respected. A cross completed inside a permission callback cannot produce a second seed or have its saved journal selection restored by the older attempt.
+- Death, a dimension change, switching to Spectator, lost build permission or switching to parent-selection mode cancels the pending cross without spending the remaining parent rights.
+- Invalid journal dispatches and detached context copies cannot record discoveries on another held item or breed crops. Dead players and contexts from another world are rejected before records are written.
+- Ordinary inspection and recording remain available without field-edit permission. A plain permission denial keeps the selected parent for a later authorized retry; normal breeding still retains parent data and returns one offspring with its inherited genes, ancestry and variety.
+
 ## 1.3.34
 
 - Trowels and rakes recheck the actual tool after item-use permissions. Swapped tools, changed names or saved data, and detached context copies cannot spend durability or edit the field through an old click.
