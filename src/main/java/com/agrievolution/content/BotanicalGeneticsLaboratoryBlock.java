@@ -65,36 +65,35 @@ public final class BotanicalGeneticsLaboratoryBlock extends BaseEntityBlock {
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
                                                        Player player, InteractionHand hand, BlockHitResult hit) {
-        boolean upgrade = stack.is(AEItems.LABORATORY_RESEARCH_UPGRADE.get()) || stack.is(AEItems.LABORATORY_HYBRIDIZATION_UPGRADE.get());
-        if (upgrade && !level.isClientSide && (!(level.getBlockEntity(pos) instanceof BotanicalGeneticsLaboratoryBlockEntity target)
-                || !WorkstationAccess.mayConfigure(target, player))) return ItemInteractionResult.FAIL;
-        if (stack.is(AEItems.LABORATORY_HYBRIDIZATION_UPGRADE.get())
-                && level.getBlockEntity(pos) instanceof BotanicalGeneticsLaboratoryBlockEntity lab) {
-            if (!level.isClientSide) {
-                if (lab.installHybridUpgrade()) {
-                    if (!player.getAbilities().instabuild) stack.shrink(1);
-                    player.displayClientMessage(Component.literal("Tier 3: Advanced Hybrid Breeding unlocked!"), true);
-                } else player.displayClientMessage(Component.literal(lab.isHybridUpgraded()
-                        ? "Advanced hybridisation already installed" : "Install the Advanced Research upgrade first"), true);
-            }
+        if (hand == InteractionHand.MAIN_HAND && stack.isEmpty() && isUpgrade(player.getOffhandItem())) {
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+        }
+        if (!isUpgrade(stack)) {
+            open(level, pos, player);
             return ItemInteractionResult.sidedSuccess(level.isClientSide);
         }
-        if (stack.is(AEItems.LABORATORY_RESEARCH_UPGRADE.get())
-                && level.getBlockEntity(pos) instanceof BotanicalGeneticsLaboratoryBlockEntity lab) {
-            if (!lab.isUpgraded()) {
-                if (!level.isClientSide) {
-                    if (lab.installUpgrade()) {
-                        if (!player.getAbilities().instabuild) stack.shrink(1);
-                        player.displayClientMessage(Component.literal("Advanced Research unlocked: EVOLVE"), true);
-                    }
-                }
-                return ItemInteractionResult.sidedSuccess(level.isClientSide);
-            }
-            if (!level.isClientSide) player.displayClientMessage(Component.literal("Laboratory already upgraded"), true);
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
-        }
-        open(level, pos, player);
-        return ItemInteractionResult.sidedSuccess(level.isClientSide);
+        if (level.isClientSide) return ItemInteractionResult.sidedSuccess(true);
+        var before = stack.copy();
+        if (!state.is(this) || !level.hasChunkAt(pos) || !player.isAlive() || player.getItemInHand(hand) != stack
+                || !(level.getBlockEntity(pos) instanceof BotanicalGeneticsLaboratoryBlockEntity lab)
+                || !WorkstationAccess.mayConfigure(lab, player)
+                || !WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
+                || !player.isAlive() || player.isSpectator() || !player.mayBuild() || !WorkstationAccess.stillValid(lab, player)
+                || player.getItemInHand(hand) != stack || !ItemStack.matches(before, stack)
+                || level.getBlockState(pos) != state || level.getBlockEntity(pos) != lab) return ItemInteractionResult.FAIL;
+        boolean hybrid = stack.is(AEItems.LABORATORY_HYBRIDIZATION_UPGRADE.get());
+        boolean installed = hybrid ? lab.installHybridUpgrade() : lab.installUpgrade();
+        String message;
+        if (installed) {
+            if (!player.getAbilities().instabuild) stack.shrink(1);
+            message = hybrid ? "Tier 3: Advanced Hybrid Breeding unlocked!" : "Advanced Research unlocked: EVOLVE";
+        } else message = hybrid ? (lab.isHybridUpgraded() ? "Advanced hybridisation already installed"
+                : "Install the Advanced Research upgrade first") : "Laboratory already upgraded";
+        player.displayClientMessage(Component.literal(message), true);
+        return ItemInteractionResult.sidedSuccess(false);
+    }
+    private static boolean isUpgrade(ItemStack stack) {
+        return stack.is(AEItems.LABORATORY_RESEARCH_UPGRADE.get()) || stack.is(AEItems.LABORATORY_HYBRIDIZATION_UPGRADE.get());
     }
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState next, boolean moving) {
         if (!state.is(next.getBlock()) && !level.isClientSide

@@ -18,6 +18,8 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
     private final Container lab;
     private final ContainerData data;
     private final ContainerLevelAccess access;
+    private final Inventory inventory;
+    private boolean closed;
 
     public BotanicalGeneticsLaboratoryMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(MACHINE), new SimpleContainerData(4), ContainerLevelAccess.NULL);
@@ -33,30 +35,36 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
         this.lab = lab;
         this.data = data;
         this.access = access;
+        this.inventory = inventory;
         lab.startOpen(inventory.player);
-        addSlot(new Slot(lab, 0, 25, 83) {
-            @Override public boolean mayPlace(ItemStack item) { return item.getItem() instanceof SpeciesSeedItem; }
+        addSlot(new AccessSlot(lab, 0, 25, 83) {
+            @Override public boolean mayPlace(ItemStack item) { return super.mayPlace(item) && item.getItem() instanceof SpeciesSeedItem; }
         });
-        addSlot(new Slot(lab, 1, 65, 83) {
-            @Override public boolean mayPlace(ItemStack item) { return item.is(AEItems.NUTRIENT_COMPOST.get()); }
+        addSlot(new AccessSlot(lab, 1, 65, 83) {
+            @Override public boolean mayPlace(ItemStack item) { return super.mayPlace(item) && item.is(AEItems.NUTRIENT_COMPOST.get()); }
         });
-        addSlot(new Slot(lab, 2, 105, 83) {
+        addSlot(new AccessSlot(lab, 2, 105, 83) {
             @Override public boolean mayPlace(ItemStack item) {
-                return GeneticSampleItem.isValid(item)
+                return super.mayPlace(item) && (GeneticSampleItem.isValid(item)
                         || (tier() >= 3 && mode() == BotanicalGeneticsLaboratoryBlockEntity.HYBRID
-                        && item.getItem() instanceof SpeciesSeedItem);
+                        && item.getItem() instanceof SpeciesSeedItem));
             }
         });
-        addSlot(new Slot(lab, 3, 145, 83) {
-            @Override public boolean mayPlace(ItemStack item) { return item.getItem() instanceof CropSupportItem; }
+        addSlot(new AccessSlot(lab, 3, 145, 83) {
+            @Override public boolean mayPlace(ItemStack item) { return super.mayPlace(item) && item.getItem() instanceof CropSupportItem; }
         });
-        addSlot(new Slot(lab, 4, 185, 83) {
+        addSlot(new AccessSlot(lab, 4, 185, 83) {
             @Override public boolean mayPlace(ItemStack item) { return false; }
         });
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++)
-            addSlot(new Slot(inventory, col + row * 9 + 9, 96 + col * 18, 147 + row * 18));
-        for (int col = 0; col < 9; col++) addSlot(new Slot(inventory, col, 96 + col * 18, 217));
+            addSlot(new AccessSlot(inventory, col + row * 9 + 9, 96 + col * 18, 147 + row * 18));
+        for (int col = 0; col < 9; col++) addSlot(new AccessSlot(inventory, col, 96 + col * 18, 217));
         addDataSlots(data);
+    }
+    private class AccessSlot extends Slot {
+        AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
+        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPlace(ItemStack item) { return stillValid(inventory.player); }
     }
     public int mode() { return data.get(2); }
     public int tier() { return data.get(3); }
@@ -71,9 +79,9 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
         return BotanicalGeneticsLaboratoryBlockEntity.graftWouldImprove(inputSeed(), sample(), support(), tier() >= 2);
     }
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (button < 0 || button > BotanicalGeneticsLaboratoryBlockEntity.HYBRID
+        if (!stillValid(player) || button < 0 || button > BotanicalGeneticsLaboratoryBlockEntity.HYBRID
                 || !(lab instanceof BotanicalGeneticsLaboratoryBlockEntity entity)
-                || !WorkstationAccess.mayConfigure(entity, player)) return false;
+                || !WorkstationAccess.mayConfigure(entity, player) || !stillValid(player)) return false;
         if (button == BotanicalGeneticsLaboratoryBlockEntity.EVOLVE && !entity.isUpgraded()
                 || button == BotanicalGeneticsLaboratoryBlockEntity.HYBRID && !entity.isHybridUpgraded()) return false;
         entity.selectMode(button);
@@ -81,12 +89,16 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
         return true;
     }
     @Override public boolean stillValid(Player player) {
-        return lab.stillValid(player) && stillValid(access, player, AEBlocks.BOTANICAL_GENETICS_LABORATORY.get());
+        return !closed && player == inventory.player && (player == null ? !(lab instanceof BotanicalGeneticsLaboratoryBlockEntity)
+                : player.isAlive() && !player.isSpectator() && lab.stillValid(player)
+                    && stillValid(access, player, AEBlocks.BOTANICAL_GENETICS_LABORATORY.get()));
     }
     @Override public void clicked(int index, int button, ClickType type, Player player) {
         if (stillValid(player)) super.clicked(index, button, type, player);
     }
     @Override public void removed(Player player) {
+        if (player != inventory.player) return;
+        closed = true;
         super.removed(player);
         lab.stopOpen(player);
     }

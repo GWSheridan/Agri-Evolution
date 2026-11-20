@@ -209,6 +209,7 @@ public final class WorkstationGameTests {
         player.getAbilities().mayBuild = false;
         player.setPos(Vec3.atCenterOf(pos));
         var upgrade = new ItemStack(AEItems.LABORATORY_RESEARCH_UPGRADE.get(), 2);
+        player.setItemInHand(InteractionHand.MAIN_HAND, upgrade);
         var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
         block.useItemOn(upgrade, lab.getBlockState(), h.getLevel(), pos, player, InteractionHand.MAIN_HAND, hit);
         h.assertTrue(!lab.isUpgraded() && upgrade.getCount() == 2, "Denied research upgrades preserve the module");
@@ -217,6 +218,7 @@ public final class WorkstationGameTests {
         h.assertTrue(lab.isUpgraded() && upgrade.getCount() == 1, "An authorized research upgrade still installs");
         player.getAbilities().mayBuild = false;
         var hybrid = new ItemStack(AEItems.LABORATORY_HYBRIDIZATION_UPGRADE.get());
+        player.setItemInHand(InteractionHand.OFF_HAND, hybrid);
         block.useItemOn(hybrid, lab.getBlockState(), h.getLevel(), pos, player, InteractionHand.OFF_HAND, hit);
         h.assertTrue(!lab.isHybridUpgraded() && hybrid.getCount() == 1, "The hybrid upgrade has the same permission check");
         player.getAbilities().mayBuild = true;

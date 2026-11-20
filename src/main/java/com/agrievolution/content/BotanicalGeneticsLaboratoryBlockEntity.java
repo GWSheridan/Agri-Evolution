@@ -15,6 +15,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -75,6 +76,7 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
     @Override public boolean stillValid(Player player) { return WorkstationAccess.stillValid(this, player); }
 
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
+        if (!WorkstationAccess.isCurrent(this)) return false;
         return switch (slot) {
             case SEED -> stack.getItem() instanceof SpeciesSeedItem;
             case COMPOST -> stack.is(AEItems.NUTRIENT_COMPOST.get());
@@ -88,19 +90,21 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
     public boolean isUpgraded() { return upgraded; }
     public boolean isHybridUpgraded() { return hybridUpgraded; }
     public boolean installHybridUpgrade() {
-        if (!upgraded || hybridUpgraded) return false;
+        if (!(level instanceof ServerLevel) || !WorkstationAccess.isCurrent(this)
+                || !upgraded || hybridUpgraded) return false;
         hybridUpgraded = true;
         progress = 0;
         setChanged();
         return true;
     }
     public boolean installUpgrade() {
-        if (upgraded) return false;
+        if (!(level instanceof ServerLevel) || !WorkstationAccess.isCurrent(this) || upgraded) return false;
         upgraded = true;
         setChanged();
         return true;
     }
     public void selectMode(int newMode) {
+        if (!(level instanceof ServerLevel) || !WorkstationAccess.isCurrent(this)) return;
         if (newMode >= GROWTH && newMode <= HYBRID && newMode != mode
                 && (newMode != EVOLVE || upgraded) && (newMode != HYBRID || hybridUpgraded)) {
             mode = newMode;
@@ -155,6 +159,8 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
     }
     public static void serverTick(Level level, BlockPos pos, BlockState state,
                                   BotanicalGeneticsLaboratoryBlockEntity lab) {
+        if (level.isClientSide || lab.getLevel() != level || !lab.getBlockPos().equals(pos)
+                || !WorkstationAccess.isCurrent(lab) || level.getBlockState(pos) != state) return;
         if (++lab.checkTicks >= 40) {
             lab.checkTicks = 0;
             lab.greenhouseBoost = BotanicalGreenhouseLayout.hasActiveGreenhouse(level, pos);
@@ -232,7 +238,7 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
     @Override protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         ContainerHelper.saveAllItems(tag, items, registries);
-        tag.putInt("ResearchProgress", progress);
+        tag.putInt("ResearchProgress", sameInputs() ? progress : 0);
         tag.putInt("ResearchMode", mode);
         tag.putBoolean("AdvancedResearchUpgrade", upgraded);
         tag.putBoolean("HybridizationUpgrade", hybridUpgraded);
@@ -244,8 +250,10 @@ public final class BotanicalGeneticsLaboratoryBlockEntity extends BaseContainerB
         progress = Math.max(0, Math.min(320, tag.getInt("ResearchProgress")));
         upgraded = tag.getBoolean("AdvancedResearchUpgrade");
         hybridUpgraded = upgraded && tag.getBoolean("HybridizationUpgrade");
-        mode = Math.max(GROWTH, Math.min(HYBRID, tag.getInt("ResearchMode")));
+        int savedMode = tag.getInt("ResearchMode");
+        mode = Math.max(GROWTH, Math.min(HYBRID, savedMode));
         if ((!upgraded && mode == EVOLVE) || (!hybridUpgraded && mode == HYBRID)) mode = GROWTH;
+        if (mode != savedMode) progress = 0;
         trackInputs();
     }
 }

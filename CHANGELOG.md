@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.20
+
+- Genetics Laboratories reject old research ticks after removal, replacement, rotation or a mismatched world or position. Rejected ticks leave seeds, donor samples, compost, supports and progress alone.
+- Changing a seed or donor just before saving no longer carries research time into the replacement inputs. Topping up the same seed line still preserves progress. Falling back from a locked or invalid saved mode clears its old progress.
+- Closing a laboratory screen disables its old controls and transfers. Screens and individual slots check the owning viewer and reject spectators and dead players, while ordinary Adventure inventory use remains available.
+- Removed laboratories reject direct upgrade, mode and insertion calls through old references.
+- Laboratory upgrades respect the used hand's item-use permission. They recheck the held module and the placed machine after permission callbacks, so changed items and replacement machines are left alone.
+- An empty main hand passes laboratory upgrade clicks to the offhand. Both upgrade tiers still consume one module only when installation succeeds, and installed upgrades remain recoverable when the machine is broken.
+
 ## 1.3.19
 
 - Batch Cooking Stations prepare meals from a saved copy of their inputs and commit only if the inventory, current order and recipe still match. Recipe callbacks cannot charge replacement ingredients or overwrite newly inserted outputs.
