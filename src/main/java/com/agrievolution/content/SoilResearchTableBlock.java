@@ -64,12 +64,20 @@ public final class SoilResearchTableBlock extends BaseEntityBlock {
     }
     @Override protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level,
                               BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (hand != InteractionHand.MAIN_HAND) return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        if (hand == InteractionHand.MAIN_HAND && stack.isEmpty() && isUpgrade(player.getOffhandItem())) {
+            return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;
+        }
         boolean upgradeTwo = stack.is(AEItems.SOIL_RESEARCH_REFINEMENT_UPGRADE.get());
         boolean upgradeThree = stack.is(AEItems.SOIL_RESEARCH_MASTERY_UPGRADE.get());
         if (upgradeTwo || upgradeThree) {
             if (!level.isClientSide && level.getBlockEntity(pos) instanceof SoilResearchTableBlockEntity lab) {
-                if (!WorkstationAccess.mayConfigure(lab, player)) return ItemInteractionResult.FAIL;
+                var before = stack.copy();
+                if (!state.is(this) || !player.isAlive() || player.getItemInHand(hand) != stack
+                        || !WorkstationAccess.mayConfigure(lab, player)
+                        || !WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
+                        || !player.isAlive() || player.isSpectator() || !player.mayBuild() || !WorkstationAccess.stillValid(lab, player)
+                        || player.getItemInHand(hand) != stack || !ItemStack.matches(before, stack)
+                        || level.getBlockState(pos) != state || level.getBlockEntity(pos) != lab) return ItemInteractionResult.FAIL;
                 int next = state.getValue(TIER) + 1;
                 int samples = SoilResearch.analyzed(lab.getItem(SoilResearchTableBlockEntity.SAMPLER));
                 int expected = upgradeTwo ? 2 : 3;
@@ -85,6 +93,10 @@ public final class SoilResearchTableBlock extends BaseEntityBlock {
         }
         open(level, pos, player);
         return ItemInteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    private static boolean isUpgrade(ItemStack stack) {
+        return stack.is(AEItems.SOIL_RESEARCH_REFINEMENT_UPGRADE.get()) || stack.is(AEItems.SOIL_RESEARCH_MASTERY_UPGRADE.get());
     }
 
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos,

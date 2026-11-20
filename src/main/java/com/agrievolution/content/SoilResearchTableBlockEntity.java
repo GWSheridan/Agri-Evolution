@@ -23,7 +23,11 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
     private NonNullList<ItemStack> items = NonNullList.withSize(5, ItemStack.EMPTY);
     private int status = 0;
     private int lastBatch = 0;
-    public void setStatus(int value) { status = value; setChanged(); }
+    public void setStatus(int value) {
+        if (!WorkstationAccess.isCurrent(this)) return;
+        status = Math.clamp(value, 0, 16);
+        setChanged();
+    }
 
     public final ContainerData data = new ContainerData() {
         @Override public int get(int i) {
@@ -51,6 +55,7 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
     @Override public boolean stillValid(Player player) { return WorkstationAccess.stillValid(this, player); }
 
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
+        if (!WorkstationAccess.isCurrent(this)) return false;
         return switch (slot) {
             case SAMPLER -> stack.is(AEItems.SOIL_SAMPLE.get());
             case SPECIMEN -> stack.is(AEItems.SOIL_SPECIMEN.get());
@@ -65,7 +70,7 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
 
     /** Mk II/Mk III research up to 2/4 collected specimens in a single click. */
     public void analyze(Player player) {
-        if (player == null || !WorkstationAccess.mayConfigure(this, player) || !WorkstationAccess.isCurrent(this)) return;
+        if (!mayResearch(player)) return;
         ItemStack tool = getItem(SAMPLER), specimen = getItem(SPECIMEN);
         if (!tool.is(AEItems.SOIL_SAMPLE.get()) || !specimen.is(AEItems.SOIL_SPECIMEN.get())) {
             setStatus(!tool.is(AEItems.SOIL_SAMPLE.get()) ? 1 : 2);
@@ -98,7 +103,7 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
     }
 
     public void refine(Player player) {
-        if (player == null || !WorkstationAccess.mayConfigure(this, player) || !WorkstationAccess.isCurrent(this)) return;
+        if (!mayResearch(player)) return;
         ItemStack tool = getItem(SAMPLER), source = getItem(SOIL), feed = getItem(CATALYST);
         if (!tool.is(AEItems.SOIL_SAMPLE.get())) {
             setStatus(1);
@@ -161,6 +166,11 @@ public final class SoilResearchTableBlockEntity extends BaseContainerBlockEntity
         lastBatch = batch;
         setChanged();
         setStatus(11);
+    }
+
+    private boolean mayResearch(Player player) {
+        return player != null && player.isAlive() && WorkstationAccess.mayConfigure(this, player)
+                && player.isAlive() && !player.isSpectator() && player.mayBuild() && WorkstationAccess.stillValid(this, player);
     }
 
     @Override protected void saveAdditional(CompoundTag tag, HolderLookup.Provider providers) {

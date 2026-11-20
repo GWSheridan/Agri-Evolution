@@ -20,6 +20,8 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     private final ContainerData data;
     private final ContainerLevelAccess access;
     private final SoilResearchTableBlockEntity backend;
+    private final Inventory inventory;
+    private boolean closed;
 
     public SoilResearchTableMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(MACHINE), new SimpleContainerData(4), ContainerLevelAccess.NULL, null);
@@ -37,34 +39,40 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
         this.data = data;
         this.access = access;
         this.backend = backend;
+        this.inventory = inv;
         station.startOpen(inv.player);
-        addSlot(new Slot(station, 0, 30, 62) {
-            @Override public boolean mayPlace(ItemStack stack) { return stack.is(AEItems.SOIL_SAMPLE.get()); }
+        addSlot(new AccessSlot(station, 0, 30, 62) {
+            @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && stack.is(AEItems.SOIL_SAMPLE.get()); }
         });
-        addSlot(new Slot(station, 1, 83, 62) {
-            @Override public boolean mayPlace(ItemStack stack) { return stack.is(AEItems.SOIL_SPECIMEN.get()); }
+        addSlot(new AccessSlot(station, 1, 83, 62) {
+            @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && stack.is(AEItems.SOIL_SPECIMEN.get()); }
         });
-        addSlot(new Slot(station, 2, 152, 62) {
+        addSlot(new AccessSlot(station, 2, 152, 62) {
             @Override public boolean mayPlace(ItemStack stack) {
-                return stack.is(Items.DIRT) || stack.is(AEItems.CULTIVATED_FARMLAND.get())
+                return super.mayPlace(stack) && (stack.is(Items.DIRT) || stack.is(AEItems.CULTIVATED_FARMLAND.get())
                         || stack.is(AEItems.NUTRIENT_FARMLAND.get()) || stack.is(AEItems.MYTHIC_FARMLAND.get())
-                        || stack.is(AEItems.ARCANE_FARMLAND.get());
+                        || stack.is(AEItems.ARCANE_FARMLAND.get()));
             }
         });
-        addSlot(new Slot(station, 3, 202, 62) {
+        addSlot(new AccessSlot(station, 3, 202, 62) {
             @Override public boolean mayPlace(ItemStack stack) {
-                return stack.is(AEItems.NUTRIENT_COMPOST.get()) || stack.is(Items.COPPER_INGOT)
+                return super.mayPlace(stack) && (stack.is(AEItems.NUTRIENT_COMPOST.get()) || stack.is(Items.COPPER_INGOT)
                         || stack.is(Items.AMETHYST_SHARD) || stack.is(Items.GOLD_INGOT)
-                        || stack.is(Items.ECHO_SHARD);
+                        || stack.is(Items.ECHO_SHARD));
             }
         });
-        addSlot(new Slot(station, 4, 294, 62) {
+        addSlot(new AccessSlot(station, 4, 294, 62) {
             @Override public boolean mayPlace(ItemStack stack) { return false; }
         });
         for (int r = 0; r < 3; r++) for (int c = 0; c < 9; c++)
-            addSlot(new Slot(inv, c + 9 + r * 9, 94 + c * 18, 159 + r * 18));
-        for (int c = 0; c < 9; c++) addSlot(new Slot(inv, c, 94 + c * 18, 229));
+            addSlot(new AccessSlot(inv, c + 9 + r * 9, 94 + c * 18, 159 + r * 18));
+        for (int c = 0; c < 9; c++) addSlot(new AccessSlot(inv, c, 94 + c * 18, 229));
         addDataSlots(data);
+    }
+    private class AccessSlot extends Slot {
+        AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
+        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
     }
     public int tableTier() { return data.get(0); }
     public int analyzed() { return data.get(1); }
@@ -73,7 +81,8 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     public ItemStack sampler() { return station.getItem(0); }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (button < 0 || button > 1 || backend == null || !WorkstationAccess.mayConfigure(backend, player)) return false;
+        if (!stillValid(player) || button < 0 || button > 1 || backend == null
+                || !WorkstationAccess.mayConfigure(backend, player) || !stillValid(player)) return false;
         if (button == 0) backend.analyze(player);
         else backend.refine(player);
         broadcastChanges();
@@ -81,7 +90,9 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     }
 
     @Override public boolean stillValid(Player player) {
-        return station.stillValid(player) && stillValid(access, player, AEBlocks.SOIL_RESEARCH_TABLE.get());
+        return !closed && player == inventory.player && (player == null ? backend == null
+                : player.isAlive() && !player.isSpectator() && station.stillValid(player)
+                    && stillValid(access, player, AEBlocks.SOIL_RESEARCH_TABLE.get()));
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
@@ -89,6 +100,8 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     }
 
     @Override public void removed(Player player) {
+        if (player != inventory.player) return;
+        closed = true;
         super.removed(player);
         station.stopOpen(player);
     }

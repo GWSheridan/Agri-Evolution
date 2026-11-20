@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.21
+
+- Soil Research Table upgrades check the current table before installation. An old click cannot demote a Mk III table, undo a rotation or install a module in a replacement machine.
+- Both table upgrades respect item-use permissions and recheck the held module after permission callbacks. Changed or replaced modules are left alone, and dead players cannot install upgrades.
+- An empty main hand now passes table upgrade clicks to the offhand. Successful installations still use one module and retain the table's inventory.
+- Closing a Soil Research Table disables its old controls and transfers. Screens and individual slots check the owning viewer and reject dead players and spectators, while ordinary Adventure inventory use remains available.
+- Analysis and refinement recheck the player and the placed table after permission checks. Removed tables reject insertion queries and late status changes.
+- Added regression coverage for each tier's research limit, upgrade requirements and all five refinement recipes, including exact ingredient costs and retained sampler research.
+
 ## 1.3.20
 
 - Genetics Laboratories reject old research ticks after removal, replacement, rotation or a mismatched world or position. Rejected ticks leave seeds, donor samples, compost, supports and progress alone.

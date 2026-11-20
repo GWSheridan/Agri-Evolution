@@ -188,6 +188,7 @@ public final class WorkstationGameTests {
         player.getAbilities().mayBuild = false;
         player.setPos(Vec3.atCenterOf(pos));
         var upgrade = new ItemStack(AEItems.SOIL_RESEARCH_REFINEMENT_UPGRADE.get(), 2);
+        player.setItemInHand(InteractionHand.MAIN_HAND, upgrade);
         var hit = new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false);
         block.useItemOn(upgrade, table.getBlockState(), h.getLevel(), pos, player, InteractionHand.MAIN_HAND, hit);
         h.assertTrue(table.data.get(0) == 1 && upgrade.getCount() == 2, "Denied upgrades preserve the table and module");
