@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.28
+
+- Sprinkler and basin bucket actions recheck the used hand after permission callbacks. Replaced buckets and changes to their count, name or saved data cancel the old transfer without spending water or overwriting the new held item.
+- Bucket actions retain the original sprinkler or basin through access checks. Replacing the block entity cancels the old click, even when the replacement has the same block state.
+- Dead players cannot fill or drain these fittings. Death, Spectator mode or a dimension change during a permission callback also cancels the pending transfer.
+- Basin upgrades recheck the original basin, held material, tier and water state after permissions are checked. Replaced materials and replacement basins remain untouched, and a player who stops crouching no longer spends an upgrade material.
+- Both basin upgrades still use one Copper or Amethyst Block, preserve stored water and apply their normal watering radius. Main-hand and offhand bucket stacks retain their exact fill and collection costs.
+- A fitting repair on the same sprinkler still allows a valid fill. Filling starts one paid spray, and collecting a stored bucket keeps that already-paid interval running.
+
 ## 1.3.27
 
 - Reservoir bucket and Conduit actions recheck the used hand after panel and core permission callbacks. Replaced items and changes to their count, name or saved data cancel the old action without transferring water or spending a module.

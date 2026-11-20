@@ -2,6 +2,7 @@ package com.agrievolution.content;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -20,6 +21,12 @@ final class WorkstationAccess {
     static boolean mayUse(Level level, BlockPos pos, Player player, Direction side, ItemStack stack) {
         return player != null && player.level() == level && !player.isSpectator() && player.mayBuild()
                 && level.hasChunkAt(pos) && level.mayInteract(player, pos) && player.mayUseItemAt(pos, side, stack);
+    }
+
+    /** Recheck the actor and the exact held stack after item-use permission callbacks. */
+    static boolean mayCompleteItemUse(Level level, Player player, InteractionHand hand, ItemStack stack, ItemStack before) {
+        return player != null && player.isAlive() && player.level() == level && !player.isSpectator() && player.mayBuild()
+                && player.getItemInHand(hand) == stack && ItemStack.matches(before, stack);
     }
 
     static boolean stillValid(BlockEntity workstation, Player player) {

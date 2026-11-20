@@ -25,8 +25,14 @@ public final class IrrigationBasinUpgradeHandler {
         event.setCancellationResult(InteractionResult.sidedSuccess(world.isClientSide));
         event.setCanceled(true);
         if (world.isClientSide) return;
-        if (!WorkstationAccess.mayUse(world, event.getPos(), player, event.getHitVec().getDirection(), held)) return;
+        var state = world.getBlockState(event.getPos());
         if (!(world.getBlockEntity(event.getPos()) instanceof IrrigationBasinBlockEntity basin)) return;
+        var before = held.copy();
+        if (!WorkstationAccess.mayCompleteItemUse(world, player, event.getHand(), held, before)
+                || !WorkstationAccess.mayUse(world, event.getPos(), player, event.getHitVec().getDirection(), held)
+                || !WorkstationAccess.mayCompleteItemUse(world, player, event.getHand(), held, before)
+                || !player.isShiftKeyDown() || basin.getLevel() != world || !WorkstationAccess.isCurrent(basin)
+                || world.getBlockState(event.getPos()) != state) return;
         int current = basin.upgradeTier();
         boolean correct = (current == 0 && held.is(Items.COPPER_BLOCK))
                 || (current == 1 && held.is(Items.AMETHYST_BLOCK));

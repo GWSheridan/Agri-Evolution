@@ -113,8 +113,14 @@ public final class IrrigationBasinBlock extends Block implements EntityBlock {
         if (!filling && !stack.is(Items.BUCKET)) {
             return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
         }
+        var before = stack.copy();
+        if (!WorkstationAccess.mayCompleteItemUse(level, player, hand, stack, before)
+                || !state.is(this) || !level.hasChunkAt(pos) || level.getBlockState(pos) != state
+                || !(level.getBlockEntity(pos) instanceof IrrigationBasinBlockEntity basin)) return ItemInteractionResult.FAIL;
         if (!WorkstationAccess.mayUse(level, pos, player, hit.getDirection(), stack)
-                || !state.is(this) || level.getBlockState(pos) != state) return ItemInteractionResult.FAIL;
+                || !WorkstationAccess.mayCompleteItemUse(level, player, hand, stack, before)
+                || basin.getLevel() != level || !WorkstationAccess.isCurrent(basin)
+                || level.getBlockState(pos) != state) return ItemInteractionResult.FAIL;
         if (!level.isClientSide) {
             if (filling == state.getValue(FILLED)) {
                 player.displayClientMessage(Component.literal(filling ? "The basin is already full." : "The basin is empty."), true);
