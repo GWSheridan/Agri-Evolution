@@ -38,13 +38,20 @@ public final class GeneticClippersItem extends Item {
         if (player == null) return InteractionResult.PASS;
         BlockState state = level.getBlockState(pos);
         if (!(state.getBlock() instanceof AgriCropBlock crop)) return InteractionResult.PASS;
-        if (player.isSpectator() || !player.mayBuild() || !level.mayInteract(player, pos)
-                || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())) return InteractionResult.FAIL;
+        var held = context.getItemInHand();
+        var before = held.copy();
+        if (held.getItem() != this || !WorkstationAccess.mayCompleteItemUse(level, player, context.getHand(), held, before))
+            return InteractionResult.FAIL;
+        if (!(level.getBlockEntity(pos) instanceof AECropBlockEntity plant)) return InteractionResult.PASS;
+        if (plant.getLevel() != level || !WorkstationAccess.isCurrent(plant)
+                || !WorkstationAccess.mayUse(level, pos, player, context.getClickedFace(), held)
+                || !WorkstationAccess.mayCompleteItemUse(level, player, context.getHand(), held, before)
+                || plant.getLevel() != level || !WorkstationAccess.isCurrent(plant)
+                || level.getBlockState(pos) != state) return InteractionResult.FAIL;
         if (state.getValue(CropBlock.AGE) < crop.getMaxAge()) {
             if (!level.isClientSide) player.displayClientMessage(Component.literal("Wait for the crop to mature before clipping."), true);
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
-        if (!(level.getBlockEntity(pos) instanceof AECropBlockEntity plant)) return InteractionResult.PASS;
         if (plant.hasBeenClipped()) {
             if (!level.isClientSide) player.displayClientMessage(Component.literal("Already clipped. Replant for another sample."), true);
             return InteractionResult.sidedSuccess(level.isClientSide);

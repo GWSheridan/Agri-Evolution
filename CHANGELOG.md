@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.33
+
+- Genetic Clippers recheck the used hand after item-use permissions. Swapped tools and changes to their name, count or saved data cancel the old click without creating a sample or spending the plant's clipping credit.
+- Dead players cannot clip crops. Death, Spectator mode, a dimension change or revoked build permission during an access check also cancels the pending clipping.
+- Clipping keeps its original plant through permissions. Replanted crops and replacement crop entities cannot inherit an old click, even when the block state matches.
+- A crop replaced with another species cannot produce a sample labelled with the previous crop's species. Newer growth, weed and support states are left alone; a crop made immature during permissions keeps its sample credit.
+- Clipping requires the actual Genetic Clippers stack in the used hand. Unrelated tools and detached context copies cannot claim samples.
+- Normal clipping still returns one accurate sample in either hand, including with a full inventory. Genes, rare traits and variety names remain accurate, and the planted crop retains its growth, nutrition, ancestry and supports. Sample credit is recorded before delivery so reward callbacks cannot collect it twice.
+
 ## 1.3.32
 
 - Compost Bin deposits recheck the used hand after item-use permissions. Swapped materials and changes to their count, name or saved data cancel the old deposit without raising the fill level or spending the newer item.
