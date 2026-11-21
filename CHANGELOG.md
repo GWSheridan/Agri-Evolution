@@ -9,7 +9,7 @@
 - Spanner edits stop if build access is revoked during a permission check. Changing crouch mode also cancels the pending irrigation action or controller selection.
 - Crop-stick upgrades assign the new support's remaining life before notifying neighbors. Immediate recovery returns the correct wear without duplicating supports.
 - Fixed initial GUI positioning near the scrolling boundary. Content now uses the same footer space when opening and scrolling.
-- Replaced the journal's outdated character limit with a client font-width check. Retired obsolete maintenance checks and kept historical scripts and project instructions local.
+- Replaced the journal's outdated character limit with a client font-width check. Retired obsolete maintenance checks.
 
 ## 1.3.40
 
