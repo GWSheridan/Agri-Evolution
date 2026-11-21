@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 public final class AEMenus {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, AgriEvolution.MOD_ID);
+    public static final Supplier<MenuType<FarmLedgerMenu>> FARM_LEDGER = MENUS.register("farm_ledger",
+            () -> new MenuType<>(FarmLedgerMenu::new, FeatureFlags.DEFAULT_FLAGS));
     public static final Supplier<MenuType<IrrigationControllerMenu>> IRRIGATION_CONTROLLER = MENUS.register("irrigation_controller",
             () -> net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create(IrrigationControllerMenu::new));
     public static final Supplier<MenuType<BatchCookingMenu>> BATCH_COOKING_STATION = MENUS.register("batch_cooking_station",

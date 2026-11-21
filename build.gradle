@@ -79,6 +79,7 @@ if (project.hasProperty('guiPreview')) {
             if (project.hasProperty('selectivePlantingPreview')) systemProperty 'agri.selectivePlantingPreview', 'true'
             if (project.hasProperty('machinePreview')) systemProperty 'agri.machinePreview', 'true'
             if (project.hasProperty('update134Preview')) systemProperty 'agri.update134Preview', 'true'
+            if (project.hasProperty('ledgerPreview')) systemProperty 'agri.ledgerPreview', 'true'
             programArguments.addAll('--width', '1024', '--height', '576')
         }
     }

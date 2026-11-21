@@ -30,6 +30,18 @@ The Genetics Laboratory keeps your materials when a graft cannot improve the see
 
 Collected samples, field-bred seeds and workstation rewards drop beside you when your inventory is full, including in Creative. Breeding and clipping require permission to work on the parent crops.
 
+## Farm Ledger
+
+Craft a Farm Ledger with a book, a compass and a copper ingot. Open it and choose **Mark field**, then use it on two farmland corners at the same height. A field can cover up to 32×32 blocks, and each player can own 16 fields.
+
+In **Layouts**, choose one of four plans and search for seeds. Select a seed, then click plots to paint them; Shift-click fills a whole row. Scroll to move through a large field, or Shift-scroll to move sideways. **Save** keeps the plan. **Reload** discards the draft and gets the latest saved layout. Copy layouts between fields with the same dimensions.
+
+Turn on **Preview**, close the screen and hold the ledger to see planting outlines. Green means correct, gold means missing, red means the wrong plant, purple means unsuitable soil and grey means unknown. The ledger provides guidance; planting remains in your hands.
+
+**Status** shows seed requirements, carried seeds and growing conditions. Nearby fields update within 64 blocks while the ledger is being viewed or previewed. Other fields retain dated snapshots. Unloaded cells remain unknown, and the ledger never loads chunks to inspect them.
+
+Select a field, then use the ledger on a Botanical Greenhouse, Vertical Greenhouse, Irrigation Controller or Water Reservoir to link it. Each field supports eight machine links. The **Sharing** tab accepts an online player name or UUID and offers viewing or layout-editing access. Only the owner can rename or delete the field and manage invitations. Conflicting layout edits keep your draft until you reload it.
+
 ## Build from source
 
 Use a Java 21 JDK and the included Gradle wrapper. The built JAR is in `build/libs`.

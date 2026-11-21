@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.0
+
+- Added the Farm Ledger. Mark flat fields up to 32×32 blocks, name them and keep four planting layouts for each field. Plans stay in the world save if the ledger is lost.
+- Paint individual plots or whole rows, copy layouts between matching fields and check seed requirements against loose seeds and Seed Bags. Planting previews show correct crops, gaps, wrong plants and unsuitable soil.
+- Check crop maturity, weeds, dry soil, nutrition and worn supports. Nearby fields update while viewed; distant fields show dated reports without loading chunks.
+- Link up to eight greenhouses, irrigation controllers or reservoirs to each field for a quick status report.
+- Invite other players to view or edit layouts. Fields start private, and conflicting edits keep the unsaved draft for review.
+- Craft the ledger with a book, a compass and a copper ingot. Its recipe is also included in the Building & Machines Journal.
+
 ## 1.3.43
 
 - Expiring crop sticks keep the correct remaining life if a neighboring block immediately installs another worn support.

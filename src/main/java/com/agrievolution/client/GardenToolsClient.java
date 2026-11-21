@@ -16,6 +16,7 @@ public final class GardenToolsClient {
         event.registerEntityRenderer(AEEntities.CROP_WEED.get(), CropWeedRenderer::new);
     }
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event) {
+        event.register(AEMenus.FARM_LEDGER.get(), FarmLedgerScreen::new);
         event.register(AEMenus.SEED_BAG.get(), SeedBagScreen::new);
         event.register(AEMenus.LUNCH_BOX.get(), LunchBoxScreen::new);
         event.register(AEMenus.GARDEN_WORK.get(), GardenWorkScreen::new);

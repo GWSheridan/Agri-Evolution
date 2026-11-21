@@ -1,0 +1,12 @@
+{
+  "texture": {
+    "blur": false,
+    "clamp": false
+  },
+  "agri_evolution": {
+    "sha256": "F5FF1E259A13300D2EC9DDC17036D298AD92B0E210DBBA93294CC1BB176850D0",
+    "origin": "Original artwork made for Agri Evolution",
+    "credit": "GWSHERIDAN",
+    "master": "Local artwork archive: farm-ledger-1.4.0"
+  }
+}

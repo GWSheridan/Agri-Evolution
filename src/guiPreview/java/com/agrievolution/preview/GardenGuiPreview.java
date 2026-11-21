@@ -45,7 +45,7 @@ public final class GardenGuiPreview {
             JournalLayoutChecks.verify(client.font);
             checkedJournalLayout = true;
         }
-        if(Boolean.getBoolean("agri.update134Preview")) return;
+        if(Boolean.getBoolean("agri.update134Preview") || Boolean.getBoolean("agri.ledgerPreview")) return;
         if(Boolean.getBoolean("agri.cropPreview")) return;
         if(Boolean.getBoolean("agri.stickPreview")||Boolean.getBoolean("agri.lunchControlsPreview")||Boolean.getBoolean("agri.selectivePlantingPreview")||Boolean.getBoolean("agri.plannerPreview")||Boolean.getBoolean("agri.journalIndexPreview")||Boolean.getBoolean("agri.machinePreview")||Boolean.getBoolean("agri.irrigationPreview")||Boolean.getBoolean("agri.grandmasPreview")) return;
         boolean stickMapOnly = Boolean.getBoolean("agri.greenhouseStickPreview");

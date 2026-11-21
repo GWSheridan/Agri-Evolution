@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [{"item":"minecraft:book"},{"item":"minecraft:compass"},{"item":"minecraft:copper_ingot"}],
+  "result": {"id":"agri_evolution:farm_ledger","count":1}
+}
