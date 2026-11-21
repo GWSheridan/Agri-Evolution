@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.41
+
+- Fixed Seed Vault and Breeding Station deposits losing a newer inventory stack if a modded seed check changed the source. Transfers now check the source again and reject recursive transfers.
+- Seed Bag and Lunch Box insertion keeps a newer cursor, hotbar stack or destination when an item check changes it. Ordinary clicks, hotbar swaps and drag distribution retain their normal behavior.
+- Opening and saving a Seed Bag or Lunch Box with imported contents beyond its nine visible slots preserves those extra entries, including their names and other item data.
+- Lunch Box use rejects the wrong held item, dead players, Spectator mode and a mismatched world. Playerless preview clicks and transfers return safely.
+- Spanner edits stop if build access is revoked during a permission check. Changing crouch mode also cancels the pending irrigation action or controller selection.
+- Crop-stick upgrades assign the new support's remaining life before notifying neighbors. Immediate recovery returns the correct wear without duplicating supports.
+- Fixed initial GUI positioning near the scrolling boundary. Content now uses the same footer space when opening and scrolling.
+- Replaced the journal's outdated character limit with a client font-width check. Retired obsolete maintenance checks and kept historical scripts and project instructions local.
+
 ## 1.3.40
 
 - Seed Bag deposits recheck the bag and input after modded seed inspection. Replaced or moved bags, newer contents and closed menus cancel the old transfer without losing the inventory stack.

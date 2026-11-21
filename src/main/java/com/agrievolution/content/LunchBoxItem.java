@@ -85,6 +85,8 @@ public final class LunchBoxItem extends Item {
     }
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){
         ItemStack box=player.getItemInHand(hand);
+        if (box.getItem() != this || player.level() != level || !player.isAlive() || player.isSpectator())
+            return InteractionResultHolder.fail(box);
         if(player instanceof ServerPlayer server){
             if(player.isShiftKeyDown()){
                 toggle(box);player.getInventory().setChanged();

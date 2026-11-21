@@ -30,6 +30,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 @EventBusSubscriber(modid="agri_evolution",value=Dist.CLIENT)
 public final class GardenGuiPreview {
     private static int ticks, index=-1;
+    private static boolean checkedJournalLayout;
     private static final String[] STICK_MAP_NAMES = {"greenhouse-stick-map", "greenhouse-stick-map-tooltip", "greenhouse-weed-map", "greenhouse-weed-map-tooltip"};
     private static final String[] NATIVE_BREEDING_NAMES = {"native-breeding-compost", "native-breeding-progress", "native-breeding-mismatch"};
     private static final String[] VERTICAL_NAMES = {"vertical-greenhouse-menu", "vertical-greenhouse-model",
@@ -37,6 +38,11 @@ public final class GardenGuiPreview {
     private static final String[] PROGRESSION_NAMES = {"expanded-orders", "garden-commissions", "seed-vault", "garden-progression-models"};
     private static final String[] NAMES={"analyzer","breeding","laboratory","greenhouse","harvest","seed_bank","storage","soil_research","soil_sampler","journal","journal_compact","seed_bag_layout","building_journal","building_journal_compact","greenhouse_0","greenhouse_1","greenhouse_2","greenhouse_3","greenhouse_4","greenhouse_5","greenhouse_6","greenhouse_7","breeding_planner","breeding_planner_compact"};
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
+        var client = Minecraft.getInstance();
+        if (!checkedJournalLayout && client.screen != null && client.getOverlay() == null) {
+            JournalLayoutChecks.verify(client.font);
+            checkedJournalLayout = true;
+        }
         if(Boolean.getBoolean("agri.update134Preview")) return;
         if(Boolean.getBoolean("agri.cropPreview")) return;
         if(Boolean.getBoolean("agri.stickPreview")||Boolean.getBoolean("agri.lunchControlsPreview")||Boolean.getBoolean("agri.selectivePlantingPreview")||Boolean.getBoolean("agri.plannerPreview")||Boolean.getBoolean("agri.journalIndexPreview")||Boolean.getBoolean("agri.machinePreview")||Boolean.getBoolean("agri.irrigationPreview")||Boolean.getBoolean("agri.grandmasPreview")) return;

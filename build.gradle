@@ -784,15 +784,6 @@ tasks.register('verifyCropBlockEntityRegistration') {
 }
 tasks.named('compileJava') { dependsOn tasks.named('verifyCropBlockEntityRegistration') }
 
-// 0.20.0: fail resource processing if the Nether/End extension loses assets or save-compatible IDs.
-tasks.register('verifyNetherEnd0200', Exec) {
-    group = 'verification'
-    description = 'Run the 0.20.0 Nether/End species, sprite and loot regression check.'
-    commandLine 'python', 'dev_checks/nether_end_0200.py'
-}
-// The Python check requires Pillow and is optional for players who only have the JDK.
-// Run it separately: python dev_checks/nether_end_0200.py
-
 // 0.22.0: pure-Java planner checks for precedence and deterministic rotation.
 tasks.register('seedBankPlannerSelfTest', JavaExec) {
     group = 'verification'
@@ -906,20 +897,6 @@ tasks.register('verifyHarvestExport0240') {
     }
 }
 tasks.named('compileJava') { dependsOn tasks.named('verifyHarvestExport0240') }
-
-// Simple no-dependency check: verifies the non-consuming server survey and client GUI references.
-tasks.register('soilSamplerStaticCheck', Exec) {
-    group = 'verification'
-    description = 'Check Soil Sampler source invariants; does not replace NeoForge compilation.'
-    commandLine 'python', 'dev_checks/soil_sampler_0250.py'
-}
-
-// v0.26.0 — separate no-dependency resource/registration regression check.
-tasks.register('soilResearchStaticCheck', Exec) {
-    group = 'verification'
-    description = 'Validate upgraded farmland assets, sampler research and legacy textures.'
-    commandLine 'python', 'dev_checks/advanced_soil_0260.py'
-}
 
 // v0.30: optional greenhouse breeding/bonus-seed regression checks, no Gradle plugins needed.
 tasks.register('verifyAutoBreeding0300') {

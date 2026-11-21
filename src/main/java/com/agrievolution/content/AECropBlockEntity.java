@@ -42,6 +42,16 @@ public final class AECropBlockEntity extends BlockEntity {
         return life<0?-1:Math.clamp(ticks,-1,life);
     }
     public void setSupportTicks(int ticks){supportTicks=boundedSupportTicks(ticks);setChanged();}
+    // Prepare wear before setBlock publishes the new tier to neighbor callbacks.
+    int prepareSupportTicks(int tier, int ticks) {
+        int previous = supportTicks;
+        int life = CropSupportItem.lifetime(tier);
+        supportTicks = life < 0 ? -1 : Math.clamp(ticks, -1, life);
+        return previous;
+    }
+    void rollbackSupportTicks(int prepared, int previous) {
+        if (supportTicks == prepared) supportTicks = previous;
+    }
     public ItemStack recoverSupport() {
         int tier = CropSupportItem.tier(getBlockState());
         int remaining = supportTicks();

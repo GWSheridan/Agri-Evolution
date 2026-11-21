@@ -19,6 +19,8 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
     private final SimpleContainer foods = new SimpleContainer(LunchBoxItem.SLOTS);
     private boolean checkingFood;
     private ItemStack approvedFood;
+    private boolean inserting, clickAccepts;
+    private ItemStack clickInput;
     private final net.minecraft.world.inventory.ContainerData controls;
     public LunchBoxMenu(int id, Inventory inventory, int bagSlot) {
         super(AEMenus.LUNCH_BOX.get(), id);
@@ -63,6 +65,7 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
         if (!stillValid(inventory.player)) return false;
         // Shift-click has already checked this stack before moving any items.
         if (approvedFood != null) return stack == approvedFood;
+        if (inserting) return clickAccepts && stack == clickInput;
         if (checkingFood) return false;
         var before = stack.copy();
         checkingFood = true;
@@ -77,14 +80,23 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
         return access.current(player);
     }
     @Override public void clicked(int slot, int button, ClickType type, Player player) {
-        if (checkingFood || approvedFood != null || !stillValid(player)) return;
+        if (player == null || inserting || checkingFood || approvedFood != null || !stillValid(player)) return;
         if (type == ClickType.SWAP && button == bagSlot) return;
         if (slot >= 9 && slot < slots.size() && slots.get(slot).getContainerSlot() == bagSlot) return;
-        super.clicked(slot, button, type, player);
+        if (MenuInsertion.applies(slot, 9, type)) {
+            var input = new MenuInsertion(this, inventory, slot, button, type);
+            boolean accepted = acceptsFood(input.input());
+            if (!stillValid(player) || !input.current()) return;
+            clickInput = input.input();
+            clickAccepts = accepted;
+            inserting = true;
+            try { super.clicked(slot, button, type, player); }
+            finally { inserting = false; clickInput = null; }
+        } else super.clicked(slot, button, type, player);
         save();
     }
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (checkingFood || approvedFood != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || inserting || checkingFood || approvedFood != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();
@@ -110,7 +122,7 @@ public final class LunchBoxMenu extends AbstractContainerMenu {
         super.removed(player);
     }
     @Override public boolean clickMenuButton(Player player,int action){
-        if(player==null||player.level().isClientSide||checkingFood||approvedFood!=null||!stillValid(player)||action<0||action>20)return false;
+        if(player==null||player.level().isClientSide||inserting||checkingFood||approvedFood!=null||!stillValid(player)||action<0||action>20)return false;
         if(action==2)LunchBoxItem.toggle(bag);
         else if(action>=3&&action<12)LunchBoxItem.cyclePriority(bag,action-3);
         else if(action>=12)LunchBoxItem.toggleProtected(bag,action-12);

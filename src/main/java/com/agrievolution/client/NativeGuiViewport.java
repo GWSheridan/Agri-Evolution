@@ -10,7 +10,7 @@ public final class NativeGuiViewport {
         this.contentWidth = contentWidth;
         this.contentHeight = contentHeight;
         x = contentWidth > width - 8 ? 4 : (width - contentWidth) / 2;
-        y = contentHeight > height - 8 ? 4 : (height - contentHeight) / 2;
+        y = contentHeight > this.height - 8 ? 4 : (this.height - contentHeight) / 2;
     }
 
     public int x() { return x; }

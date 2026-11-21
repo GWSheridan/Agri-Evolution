@@ -77,8 +77,12 @@ public final class CropSupportItem extends Item {
         if(!level.isClientSide) {
             var installed=state.setValue(AgriCropBlock.SUPPORTED,true).setValue(AgriCropBlock.SUPPORT_TIER,tier);
             if(tier==3)installed=installed.setValue(AgriCropBlock.WEEDY,false);
-            if(!level.setBlock(pos,installed,Block.UPDATE_ALL))return InteractionResult.FAIL;
-            if(level.getBlockEntity(pos)==plant && tier(level.getBlockState(pos))==tier)plant.setSupportTicks(remaining);
+            int previousTicks = plant.prepareSupportTicks(tier, remaining);
+            if(!level.setBlock(pos,installed,Block.UPDATE_ALL)) {
+                if (currentPlant(level,pos,state,plant,null)) plant.rollbackSupportTicks(remaining, previousTicks);
+                return InteractionResult.FAIL;
+            }
+            if(level.getBlockEntity(pos)==plant)plant.setChanged();
             if(!player.getAbilities().instabuild) {
                 held.shrink(1);
                 if(previous>0) {

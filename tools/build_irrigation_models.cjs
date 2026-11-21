@@ -1,4 +1,4 @@
-// Original geometry; raster materials are AI originals documented in artwork/irrigation-v2.
+// Irrigation fitting geometry. Material provenance is kept in the local artwork/irrigation-v2 archive.
 const fs=require('fs');
 const root='src/main/resources/assets/agri_evolution/';
 const textures=Object.fromEntries(['copper','enamel','nozzle'].map(n=>[n,'agri_evolution:block/irrigation_'+n]));

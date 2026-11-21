@@ -57,8 +57,8 @@ public final class JournalNavigationSelfTest {
         for (int i = 0; i < MachineGuidePages.count(); i++) {
             MachineGuidePages.Page page = MachineGuidePages.get(i);
             assertState(page.left().length <= 6 && page.right().length <= 6, "guide fits vertically");
-            for (String line : page.left()) assertState(line.length() <= 27, "left text too long " + line);
-            for (String line : page.right()) assertState(line.length() <= 27, "right text too long " + line);
+            // Horizontal fit uses the loaded client font in JournalLayoutChecks.
+            // Character counts do not reflect the uniform font's glyph widths.
         }
         var machineIndex=JournalIndex.entries(true);var cropIndex=JournalIndex.entries(false);
         for(var recipe:MachineRecipeCatalog.ALL)if(MachineRecipeCatalog.isFood(recipe.id())){

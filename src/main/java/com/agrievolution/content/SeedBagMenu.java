@@ -19,6 +19,8 @@ public final class SeedBagMenu extends AbstractContainerMenu {
     private final SimpleContainer seeds = new SimpleContainer(SeedBagItem.SLOTS);
     private boolean checkingSeed;
     private ItemStack approvedSeed;
+    private boolean inserting, clickAccepts;
+    private ItemStack clickInput;
     public SeedBagMenu(int id, Inventory inventory, int bagSlot) {
         super(AEMenus.SEED_BAG.get(), id);
         this.inventory = inventory;
@@ -48,6 +50,7 @@ public final class SeedBagMenu extends AbstractContainerMenu {
         // Shift-click validates the source before moving any seeds. Slot insertion
         // must not ask modded planting items to classify themselves a second time.
         if (approvedSeed != null) return stack == approvedSeed;
+        if (inserting) return clickAccepts && stack == clickInput;
         if (checkingSeed) return false;
         var before = stack.copy();
         checkingSeed = true;
@@ -62,14 +65,23 @@ public final class SeedBagMenu extends AbstractContainerMenu {
         return access.current(player);
     }
     @Override public void clicked(int slot, int button, ClickType type, Player player) {
-        if (player == null || checkingSeed || approvedSeed != null || !stillValid(player)) return;
+        if (player == null || inserting || checkingSeed || approvedSeed != null || !stillValid(player)) return;
         if (type == ClickType.SWAP && button == bagSlot) return;
         if (slot >= 9 && slot < slots.size() && slots.get(slot).getContainerSlot() == bagSlot) return;
-        super.clicked(slot, button, type, player);
+        if (MenuInsertion.applies(slot, 9, type)) {
+            var input = new MenuInsertion(this, inventory, slot, button, type);
+            boolean accepted = acceptsSeed(input.input());
+            if (!stillValid(player) || !input.current()) return;
+            clickInput = input.input();
+            clickAccepts = accepted;
+            inserting = true;
+            try { super.clicked(slot, button, type, player); }
+            finally { inserting = false; clickInput = null; }
+        } else super.clicked(slot, button, type, player);
         save();
     }
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (player == null || checkingSeed || approvedSeed != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || inserting || checkingSeed || approvedSeed != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();
@@ -95,7 +107,7 @@ public final class SeedBagMenu extends AbstractContainerMenu {
         super.removed(player);
     }
     @Override public boolean clickMenuButton(Player player,int action){
-        if(player==null||player.level().isClientSide||checkingSeed||approvedSeed!=null||!stillValid(player)||action<0||action>1)return false;
+        if(player==null||player.level().isClientSide||inserting||checkingSeed||approvedSeed!=null||!stillValid(player)||action<0||action>1)return false;
         if(action==0){for(int index=9;index<slots.size();index++)quickMoveStack(player,index);}
         else {
             var sorted=new java.util.ArrayList<ItemStack>();

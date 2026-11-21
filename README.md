@@ -40,6 +40,8 @@ Use a Java 21 JDK and the included Gradle wrapper. The built JAR is in `build/li
 
 The `tools` folder contains the model generators and journal recipe catalogue generator. Run `node tools/build_machine_recipe_catalog.cjs --check` to check the catalogue.
 
+Run the server gameplay tests with `.\gradlew.bat -PgameplayTests runGameplayTests`. The journal navigation check is `.\gradlew.bat journalNavigationSelfTest`. For screen previews and guide text measurements using the actual client font, run `.\gradlew.bat -PguiPreview runGuiPreview`. These checks use disposable data under `build`.
+
 Old update scripts, screenshots, and verification reports are kept in local backups. Backups, artwork masters, and generated build reports stay out of the repository.
 
 ## Bugs and suggestions

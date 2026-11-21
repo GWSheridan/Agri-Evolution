@@ -1,4 +1,4 @@
-// Original hollow trough geometry. Generated AI material art is staged separately.
+// Hollow trough geometry; material artwork is kept separately in the local archive.
 const fs=require('node:fs');
 const root='src/main/resources/assets/agri_evolution/models/block/';
 function box(from,to,texture,uv){

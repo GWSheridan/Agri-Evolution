@@ -21,6 +21,10 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
     private final ContainerData data;
     private final Inventory inventory;
     private boolean closed;
+    private boolean checkingSeed;
+    private ItemStack approvedSeed;
+    private boolean inserting, clickAccepts;
+    private ItemStack clickInput;
 
     public SeedVaultMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(SIZE), null, new SimpleContainerData(DATA_COUNT));
@@ -47,12 +51,23 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
         for (int i = 0; i < SIZE; i++) {
             int slot = i;
             addSlot(new Slot(seeds, slot, FIRST_X + slot % 9 * PITCH, FIRST_Y + slot / 9 * PITCH) {
-                @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player) && !locked(slot) && SeedBagItem.accepts(stack); }
-                @Override public boolean mayPickup(Player player) { return stillValid(player) && !locked(slot); }
+                @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player) && !locked(slot) && acceptsSeed(stack) && !locked(slot); }
+                @Override public boolean mayPickup(Player player) { return !checkingSeed && approvedSeed == null && stillValid(player) && !locked(slot); }
             });
         }
         for (int i = 0; i < 27; i++) addPlayerSlot(i + 9, FIRST_X + i % 9 * PITCH, 132 + i / 9 * PITCH);
         for (int i = 0; i < 9; i++) addPlayerSlot(i, FIRST_X + i * PITCH, 190);
+    }
+
+    private boolean acceptsSeed(ItemStack stack) {
+        if (checkingSeed || !stillValid(inventory.player)) return false;
+        if (approvedSeed != null) return stack == approvedSeed;
+        if (inserting) return clickAccepts && stack == clickInput;
+        var before = stack.copy();
+        checkingSeed = true;
+        try {
+            return SeedBagItem.accepts(stack) && stillValid(inventory.player) && ItemStack.matches(before, stack);
+        } finally { checkingSeed = false; }
     }
 
     private void addPlayerSlot(int index, int x, int y) {
@@ -91,7 +106,7 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
     }
 
     @Override public boolean clickMenuButton(Player player, int slot) {
-        if (vault == null || !stillValid(player) || !player.mayBuild()
+        if (inserting || checkingSeed || approvedSeed != null || vault == null || !stillValid(player) || !player.mayBuild()
                 || !player.level().mayInteract(player, vault.getBlockPos())
                 || slot < 0 || slot >= CYCLE_MINIMUM + 3 || !stillValid(player)) return false;
         if (slot < SIZE) {
@@ -113,12 +128,21 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (!stillValid(player) || (index >= 0 && index < SIZE && locked(index))) return;
-        super.clicked(index, button, type, player);
+        if (player == null || inserting || checkingSeed || approvedSeed != null || !stillValid(player) || (index >= 0 && index < SIZE && locked(index))) return;
+        if (MenuInsertion.applies(index, SIZE, type)) {
+            var input = new MenuInsertion(this, inventory, index, button, type);
+            boolean accepted = acceptsSeed(input.input());
+            if (!stillValid(player) || !input.current() || index >= 0 && index < SIZE && locked(index)) return;
+            clickInput = input.input();
+            clickAccepts = accepted;
+            inserting = true;
+            try { super.clicked(index, button, type, player); }
+            finally { inserting = false; clickInput = null; }
+        } else super.clicked(index, button, type, player);
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || inserting || checkingSeed || approvedSeed != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         var slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         var stack = slot.getItem();
@@ -126,18 +150,21 @@ public final class SeedVaultMenu extends AbstractContainerMenu {
         if (index < SIZE) {
             if (!moveItemStackTo(stack, SIZE, slots.size(), true)) return ItemStack.EMPTY;
         } else {
-            if (!SeedBagItem.accepts(stack)) return ItemStack.EMPTY;
-            for (int target = 0; target < SIZE && !stack.isEmpty(); target++) {
-                var destination = getSlot(target);
-                if (destination.hasItem() && destination.mayPlace(stack)
-                        && ItemStack.isSameItemSameComponents(stack, destination.getItem())) {
-                    destination.safeInsert(stack);
+            if (!acceptsSeed(stack) || slot.getItem() != stack || !ItemStack.matches(original, stack)) return ItemStack.EMPTY;
+            approvedSeed = stack;
+            try {
+                for (int target = 0; target < SIZE && !stack.isEmpty(); target++) {
+                    var destination = getSlot(target);
+                    if (destination.hasItem() && destination.mayPlace(stack)
+                            && ItemStack.isSameItemSameComponents(stack, destination.getItem())) {
+                        destination.safeInsert(stack);
+                    }
                 }
-            }
-            for (int target = 0; target < SIZE && !stack.isEmpty(); target++) {
-                var destination = getSlot(target);
-                if (!destination.hasItem() && destination.mayPlace(stack)) destination.safeInsert(stack);
-            }
+                for (int target = 0; target < SIZE && !stack.isEmpty(); target++) {
+                    var destination = getSlot(target);
+                    if (!destination.hasItem() && destination.mayPlace(stack)) destination.safeInsert(stack);
+                }
+            } finally { approvedSeed = null; }
             if (stack.getCount() == original.getCount()) return ItemStack.EMPTY;
         }
         if (stack.isEmpty()) slot.set(ItemStack.EMPTY);

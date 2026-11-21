@@ -42,7 +42,11 @@ final class PortableStorageAccess {
 
     void save(List<ItemStack> contents) {
         if (openedLevel != null && !openedLevel.isClientSide && current(inventory.player)) {
-            saved = ItemContainerContents.fromItems(contents);
+            // Imported containers may contain extra slots. Editing the visible
+            // nine slots must not erase those saved entries.
+            var merged = new java.util.ArrayList<>(contents);
+            for (int index = contents.size(); index < saved.getSlots(); index++) merged.add(saved.getStackInSlot(index));
+            saved = ItemContainerContents.fromItems(merged);
             stack.set(DataComponents.CONTAINER, saved);
             inventory.setChanged();
         }

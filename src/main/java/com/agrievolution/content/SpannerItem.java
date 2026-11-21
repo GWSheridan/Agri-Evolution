@@ -99,8 +99,10 @@ public final class SpannerItem extends Item {
         var tool = player.getMainHandItem();
         var beforeTool = tool.copy();
         var entity = level.getBlockEntity(pos);
+        boolean crouching = player.isShiftKeyDown();
         if ((!valve || player.isShiftKeyDown()) && (!canEdit(player, level, pos, side, tool)
                 || !sameTool(player, level, event.getHand(), tool, beforeTool)
+                || player.isShiftKeyDown() != crouching
                 || !sameTarget(level, pos, state, entity))) return;
         if (valve) {
             if (player.isShiftKeyDown() && linkController(player, level, pos, side)) return;
@@ -133,6 +135,7 @@ public final class SpannerItem extends Item {
             if (!canEdit(player, level, controllerPos, side, tool)) {
                 result = "You need permission to edit the Irrigation Controller.";
             } else if (sameTool(player, level, net.minecraft.world.InteractionHand.MAIN_HAND, tool, beforeTool)
+                    && player.isShiftKeyDown()
                     && sameTarget(level, controllerPos, controllerState, controller)
                     && sameTarget(level, valvePos, valveState, valve)) {
                 result = controller.link(valve);
@@ -223,7 +226,7 @@ public final class SpannerItem extends Item {
 
     private static boolean sameTool(Player player, Level level, net.minecraft.world.InteractionHand hand,
                                     ItemStack tool, ItemStack before) {
-        return player.level() == level && player.isAlive() && !player.isSpectator()
+        return player.level() == level && player.isAlive() && !player.isSpectator() && player.mayBuild()
                 && tool.getItem() instanceof SpannerItem && player.getItemInHand(hand) == tool && ItemStack.matches(before, tool);
     }
 
@@ -250,6 +253,7 @@ public final class SpannerItem extends Item {
         if (player.isShiftKeyDown() && state.is(AEBlocks.IRRIGATION_CONTROLLER.get())) {
             if (!canEdit(player, level, pos, context.getClickedFace(), tool)
                     || !sameTool(player, level, context.getHand(), tool, beforeTool)
+                    || !player.isShiftKeyDown()
                     || !sameTarget(level, pos, state, target)) return InteractionResult.FAIL;
             if (!level.isClientSide) {
                 net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA, tool, tag -> {
