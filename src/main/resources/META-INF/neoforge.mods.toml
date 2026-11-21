@@ -14,7 +14,7 @@ description='''Start with Wild Wheat, breed new crops, and build up to automated
 [[dependencies.${mod_id}]]
 modId="neoforge"
 type="required"
-versionRange="[21.1,)"
+versionRange="[${neo_version},21.2)"
 ordering="NONE"
 side="BOTH"
 

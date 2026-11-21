@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1
+
+- Updated NeoForge to 21.1.267 for Minecraft 1.21.1. Clients and servers now require this build or a newer 21.1.x release.
+
 ## 1.4.0
 
 - Added the Farm Ledger. Mark flat fields up to 32×32 blocks, name them and keep four planting layouts for each field. Plans stay in the world save if the ledger is lost.
