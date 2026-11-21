@@ -182,7 +182,19 @@ public final class GardenToolItem extends Item {
             boolean hydrate = farmland.getBlock() instanceof FarmBlock && farmland.getValue(FarmBlock.MOISTURE) < 7;
             if (!weeds && !feed && !hydrate) return InteractionResult.PASS;
             if (!level.isClientSide) {
-                if (hydrate) level.setBlock(soil, farmland.setValue(FarmBlock.MOISTURE, 7), 3);
+                if (hydrate) {
+                    var beforePlant = plant == null ? null : CropSupportItem.snapshot(level, plant);
+                    var hydrated = farmland.setValue(FarmBlock.MOISTURE, 7);
+                    level.setBlock(soil, hydrated, 3);
+                    // A soil update can invoke another block before the rest of this care action.
+                    if (!currentTool(context, tool, beforeTool, crouching)
+                            || !sameTarget(level, soil, hydrated, soilEntity)
+                            || !sameTarget(level, plantPos, state, plantEntity)
+                            || plant != null && !beforePlant.equals(CropSupportItem.snapshot(level, plant))) {
+                        finishUse(context, plantPos, false, beforeTool, crouching);
+                        return InteractionResult.CONSUME;
+                    }
+                }
                 if (plant != null) plant.addNutrition(nutrition);
                 if (weeds) {
                     CropWeeds.clear(level, plantPos);

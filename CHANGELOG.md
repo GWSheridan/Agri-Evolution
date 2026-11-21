@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.43
+
+- Expiring crop sticks keep the correct remaining life if a neighboring block immediately installs another worn support.
+- Crop record saves no longer send comparator updates. Planting, tending and breeding still save their data without invoking neighboring blocks halfway through the action.
+- Rakes recheck the crop, soil and player after watering. Interrupted actions preserve newer crop records and do not grant weeds from an unfinished clearing attempt.
+- Basin watering stops when the basin is emptied or removed during a soil update. Upgrading a basin starts a fresh sweep with the new radius.
+- Vertical Greenhouses can use empty output slots beside saved stacks that exceed their current stack limit. Existing stacks stay intact, and queued offspring still cost water only when delivered.
+
 ## 1.3.42
 
 - Vertical Greenhouse tray clicks, hotbar swaps and shift-clicks preserve newer stacks if a modded seed check changes the inventory. Nested transfers and breeding ticks cannot duplicate work.

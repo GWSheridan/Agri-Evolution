@@ -82,12 +82,19 @@ public final class AECropBlockEntity extends BlockEntity {
         }
         if (plant.supportTicks == 0 && level.setBlock(pos, state.setValue(AgriCropBlock.SUPPORTED, false)
                 .setValue(AgriCropBlock.SUPPORT_TIER, 0), Block.UPDATE_ALL)) {
-            plant.setSupportTicks(-1);
+            if (WorkstationAccess.isCurrent(plant) && CropSupportItem.tier(level.getBlockState(pos)) == 0)
+                plant.setSupportTicks(-1);
         }
     }
 
     public AECropBlockEntity(BlockPos pos, BlockState state) {
         super(AEBlockEntities.AGRI_CROP.get(), pos, state);
+    }
+
+    @Override public void setChanged() {
+        // Crop records have no comparator output. Save them without invoking
+        // neighboring blocks halfway through planting, tending or breeding.
+        if (WorkstationAccess.isCurrent(this)) level.blockEntityChanged(worldPosition);
     }
 
     public CropGenome genome() { return genome; }

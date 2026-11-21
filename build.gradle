@@ -619,7 +619,7 @@ tasks.register('verifyPermanentIrrigation') {
             'void onChunkUnloaded()',
             'void setRemoved()',
             'void setBlockState(BlockState state)',
-            'hydrateExistingFarmland(server)'
+            'hydrateExistingFarmland(server, state)'
         ].each { required ->
             if (!basin.contains(required)) throw new GradleException("Irrigation ticket lifecycle missing: ${required}")
         }

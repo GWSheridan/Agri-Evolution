@@ -124,16 +124,17 @@ public final class IrrigationBasinBlockEntity extends BlockEntity {
                     new AABB(p.getX() - r, p.getY() - 1, p.getZ() - r,
                              p.getX() + r + 1, p.getY() + 2, p.getZ() + r + 1));
             // The ticket prevents later drying; fill moisture immediately as well.
-            hydrateExistingFarmland(server);
+            hydrateExistingFarmland(server, state);
         }
     }
 
-    private void hydrateExistingFarmland(ServerLevel server) {
+    private void hydrateExistingFarmland(ServerLevel server, BlockState basinState) {
         int radius = wateringRadius();
         BlockPos center = getBlockPos();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 for (int dy = -1; dy <= 1; dy++) {
+                    if (!WorkstationAccess.isCurrent(this) || getBlockState() != basinState) return;
                     BlockPos soil = center.offset(dx, dy, dz);
                     // Do not cause neighboring chunks to load just to water them.
                     if (!server.hasChunkAt(soil)) continue;

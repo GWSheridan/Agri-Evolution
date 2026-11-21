@@ -541,14 +541,14 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         for (int i = first; i < end; i++) {
             ItemStack current = items.get(i);
             if (current.isEmpty()) space += result.getMaxStackSize();
-            else if (ItemStack.isSameItemSameComponents(result, current)) space += current.getMaxStackSize() - current.getCount();
+            else if (ItemStack.isSameItemSameComponents(result, current)) space += Math.max(0, current.getMaxStackSize() - current.getCount());
         }
         if (space < result.getCount()) return false;
         int remaining = result.getCount();
         for (int i = first; i < end && remaining > 0; i++) {
             ItemStack current = items.get(i);
             if (!ItemStack.isSameItemSameComponents(result, current)) continue;
-            int amount = Math.min(remaining, current.getMaxStackSize() - current.getCount());
+            int amount = Math.min(remaining, Math.max(0, current.getMaxStackSize() - current.getCount()));
             current.grow(amount);
             remaining -= amount;
         }
