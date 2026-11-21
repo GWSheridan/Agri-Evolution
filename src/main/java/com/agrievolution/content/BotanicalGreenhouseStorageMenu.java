@@ -50,7 +50,7 @@ public final class BotanicalGreenhouseStorageMenu extends AbstractContainerMenu 
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (stillValid(player)) super.clicked(index, button, type, player);
+        if (player != null && stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
@@ -61,7 +61,7 @@ public final class BotanicalGreenhouseStorageMenu extends AbstractContainerMenu 
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();

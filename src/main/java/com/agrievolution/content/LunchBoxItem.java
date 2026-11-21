@@ -123,7 +123,7 @@ public final class LunchBoxItem extends Item {
             if(!(box.getItem() instanceof LunchBoxItem)||!enabled(box))continue;
             ItemStack before=box.copy();
             var contents=box.getOrDefault(DataComponents.CONTAINER,ItemContainerContents.EMPTY);
-            var foods=NonNullList.withSize(SLOTS,ItemStack.EMPTY);
+            var foods=NonNullList.withSize(Math.max(SLOTS,contents.getSlots()),ItemStack.EMPTY);
             contents.copyInto(foods);
             int i=selectFood(box,foods,player);
             // Modded food queries may change the player, box or detached food stacks.

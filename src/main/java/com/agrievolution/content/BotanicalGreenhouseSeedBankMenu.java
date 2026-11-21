@@ -89,7 +89,7 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (!stillValid(player) || greenhouse == null || !greenhouse.isSmartFarmingUpgraded()
+        if (player == null || !stillValid(player) || greenhouse == null || !greenhouse.isSmartFarmingUpgraded()
                 || !WorkstationAccess.mayConfigure(greenhouse, player) || !stillValid(player) || !player.mayBuild()) return false;
         if (button >= 0 && button < INPUTS) greenhouse.toggleSeedSlot(button);
         else if (button >= INPUTS && button < INPUTS * 2) greenhouse.cycleSeedPriority(button - INPUTS);
@@ -114,7 +114,7 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (stillValid(player)) super.clicked(index, button, type, player);
+        if (player != null && stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
@@ -125,7 +125,7 @@ public final class BotanicalGreenhouseSeedBankMenu extends AbstractContainerMenu
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack stack = slot.getItem();

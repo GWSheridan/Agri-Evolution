@@ -81,7 +81,7 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     public ItemStack sampler() { return station.getItem(0); }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (!stillValid(player) || button < 0 || button > 1 || backend == null
+        if (player == null || !stillValid(player) || button < 0 || button > 1 || backend == null
                 || !WorkstationAccess.mayConfigure(backend, player) || !stillValid(player)) return false;
         if (button == 0) backend.analyze(player);
         else backend.refine(player);
@@ -96,7 +96,7 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (stillValid(player)) super.clicked(index, button, type, player);
+        if (player != null && stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
@@ -107,7 +107,7 @@ public final class SoilResearchTableMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack held = slot.getItem();

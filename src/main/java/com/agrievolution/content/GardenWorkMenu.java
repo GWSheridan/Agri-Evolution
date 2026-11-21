@@ -141,7 +141,7 @@ public final class GardenWorkMenu extends AbstractContainerMenu {
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (stillValid(player)) super.clicked(index, button, type, player);
+        if (player != null && stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
@@ -151,7 +151,7 @@ public final class GardenWorkMenu extends AbstractContainerMenu {
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (player.level().isClientSide || player.isSpectator() || player != inventory.player || !stillValid(player)) return false;
+        if (player == null || player.level().isClientSide || player.isSpectator() || player != inventory.player || !stillValid(player)) return false;
         int pageCount = CUSTOM_PAGE + customPages();
         if (!serverPreserving && button >= PAGE_BUTTON && button < PAGE_BUTTON + pageCount) {
             page = button - PAGE_BUTTON;
@@ -182,7 +182,7 @@ public final class GardenWorkMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = getSlot(index);
         ItemStack stack = slot.getItem();
         if (stack.isEmpty()) return ItemStack.EMPTY;

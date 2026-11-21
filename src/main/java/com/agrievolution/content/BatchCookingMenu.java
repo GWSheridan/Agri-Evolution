@@ -101,11 +101,11 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (stillValid(player)) super.clicked(index, button, type, player);
+        if (player != null && stillValid(player)) super.clicked(index, button, type, player);
     }
 
     @Override public boolean clickMenuButton(Player player, int action) {
-        if (kitchen == null || !stillValid(player) || player.isSpectator()) return false;
+        if (player == null || kitchen == null || !stillValid(player) || player.isSpectator()) return false;
         if (action == SELECT_PREVIOUS || action == SELECT_NEXT) {
             selection = Math.floorMod(selection + (action == SELECT_NEXT ? 1 : -1), CookingFoods.ALL.size());
             return true;
@@ -118,7 +118,7 @@ public final class BatchCookingMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int slotIndex) {
-        if (!stillValid(player) || slotIndex < 0 || slotIndex >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || !stillValid(player) || slotIndex < 0 || slotIndex >= slots.size()) return ItemStack.EMPTY;
         var slot = getSlot(slotIndex);
         var stack = slot.getItem();
         if (stack.isEmpty() || !slot.mayPickup(player)) return ItemStack.EMPTY;

@@ -4,6 +4,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
@@ -68,6 +69,9 @@ public final class BotanicalGreenhouseHarvestMenu extends AbstractContainerMenu 
         return true;
     }
 
+    @Override public void clicked(int index, int button, ClickType type, Player player) {
+        if (player != null && stillValid(player)) super.clicked(index, button, type, player);
+    }
     @Override public boolean stillValid(Player player) {
         return !closed && player == inventory.player && (player == null ? greenhouse == null
                 : player.isAlive() && !player.isSpectator() && (greenhouse == null || greenhouse.stillValid(player)));

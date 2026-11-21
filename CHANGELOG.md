@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.42
+
+- Vertical Greenhouse tray clicks, hotbar swaps and shift-clicks preserve newer stacks if a modded seed check changes the inventory. Nested transfers and breeding ticks cannot duplicate work.
+- Both breeding machines stop if their parents or machine change during seed inspection. Breeding Station hopper deposits also preserve changed destination slots and return seeds when the station has been replaced.
+- Automatic Seed Vault intake checks locks, filters and contents after inspecting the seed. Failed deliveries keep the offspring in the greenhouse.
+- Seed storage no longer sends unsupported comparator notifications during deposits. Neighbor callbacks cannot replace the cursor or inventory source halfway through those transfers.
+- Water refills recheck the receiving machine before growing or spraying. Replaced sprinklers stop immediately, and source notifications cannot start a second watering cycle or fill a tank past its capacity.
+- Lunch Boxes with imported storage beyond the nine visible slots can feed from their normal slots while preserving the extra contents.
+- Preview menus reject clicks, transfers and buttons without a player. JEI now loads correctly in optional screen previews.
+- Added a full verification command and GitHub build checks covering gameplay tests, standalone checks, resources and the recipe catalogue.
+
 ## 1.3.41
 
 - Fixed Seed Vault and Breeding Station deposits losing a newer inventory stack if a modded seed check changed the source. Transfers now check the source again and reject recursive transfers.
@@ -9,7 +20,7 @@
 - Spanner edits stop if build access is revoked during a permission check. Changing crouch mode also cancels the pending irrigation action or controller selection.
 - Crop-stick upgrades assign the new support's remaining life before notifying neighbors. Immediate recovery returns the correct wear without duplicating supports.
 - Fixed initial GUI positioning near the scrolling boundary. Content now uses the same footer space when opening and scrolling.
-- Replaced the journal's outdated character limit with a client font-width check. Retired obsolete maintenance checks and kept historical scripts and project instructions local.
+- Replaced the journal's outdated character limit with a client font-width check. Retired obsolete maintenance checks.
 
 ## 1.3.40
 

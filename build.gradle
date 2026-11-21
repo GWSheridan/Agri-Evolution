@@ -26,6 +26,7 @@ dependencies {
 
 // Opt-in, world-free visual QA; never included in the release JAR.
 sourceSets { guiPreview { compileClasspath += sourceSets.main.output; runtimeClasspath += sourceSets.main.output } }
+configurations.guiPreviewRuntimeOnly.extendsFrom(configurations.runtimeOnly)
 
 neoForge {
     version = neo_version
@@ -58,6 +59,7 @@ if (project.hasProperty('guiPreview')) {
             client()
             sourceSet = sourceSets.guiPreview
             gameDirectory = file('build/gui-preview-run')
+            if (project.hasProperty('withJei')) systemProperty 'agri.requireJei', 'true'
             if (project.hasProperty('irrigationPreview')) systemProperty 'agri.irrigationPreview', 'true'
             if (project.hasProperty('farmlandPreview')) systemProperty 'agri.farmlandPreview', 'true'
             if (project.hasProperty('basinPreview')) systemProperty 'agri.basinPreview', 'true'
@@ -88,7 +90,7 @@ if (project.hasProperty('gameplayTests')) {
             sourceSet = sourceSets.test
             gameDirectory = file('build/gameplay-test-run')
             systemProperty 'neoforge.enabledGameTestNamespaces', 'agri_evolution'
-            if (project.hasProperty('profileAudit')) jvmArgument "-XX:StartFlightRecording=settings=profile,dumponexit=true,filename=${file('build/audit-1.3.4/gameplay.jfr').absolutePath}"
+            if (project.hasProperty('profileAudit')) jvmArgument "-XX:StartFlightRecording=settings=profile,dumponexit=true,filename=${file('build/gameplay-test-run/gameplay.jfr').absolutePath}"
         }
     }
 }
@@ -992,4 +994,24 @@ tasks.register('verifyTextureCatalog0322') {
     }
 }
 tasks.named('processResources') { dependsOn(tasks.named('verifyTextureCatalog0322')) }
+
+tasks.register('verifyRecipeCatalogue', Exec) {
+    group = 'verification'
+    description = 'Check the illustrated machine recipe catalogue against crafting recipes.'
+    commandLine 'node', 'tools/build_machine_recipe_catalog.cjs', '--check'
+}
+
+tasks.register('verifyMod') {
+    group = 'verification'
+    description = 'Build the mod and run all automated checks. Requires -PgameplayTests and Node.js.'
+    dependsOn 'build', 'compileGuiPreviewJava', 'verifyRecipeCatalogue',
+            'genomeSelfTest', 'speciesSelfTest', 'farmingSelfTest', 'seedAnalyzerSelfTest',
+            'breedingStationSelfTest', 'resourceProgressionSelfTest', 'seedBankPlannerSelfTest',
+            'smartGreenhouseMonitoringSelfTest', 'harvestExportPolicySelfTest', 'journalNavigationSelfTest'
+    if (project.hasProperty('gameplayTests')) dependsOn 'runGameplayTests'
+    doFirst {
+        if (!project.hasProperty('gameplayTests'))
+            throw new GradleException('Use -PgameplayTests verifyMod to include the server gameplay tests.')
+    }
+}
 

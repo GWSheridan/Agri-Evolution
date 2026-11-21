@@ -30,6 +30,8 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     private final ContainerLevelAccess access;
     private final ContainerData data;
     private boolean closed;
+    private boolean checkingSeed, inserting, clickAccepts;
+    private ItemStack approvedSeed, clickInput;
 
     public VerticalGreenhouseMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(VerticalGreenhouseBlockEntity.SLOTS),
@@ -52,7 +54,7 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
         checkContainerDataCount(data, VerticalGreenhouseBlockEntity.DATA_COUNT);
         for (int tray = 0; tray < VerticalGreenhouseBlockEntity.TRAYS; tray++) {
             addSlot(new AccessSlot(contents, tray, FIRST_TRAY_X + tray * TRAY_PITCH, TRAY_Y) {
-                @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && VerticalGreenhouseBlockEntity.acceptsSeed(stack); }
+                @Override public boolean mayPlace(ItemStack stack) { return super.mayPlace(stack) && acceptsSeed(stack); }
                 @Override public int getMaxStackSize() { return 1; }
             });
         }
@@ -73,8 +75,19 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
 
     private class AccessSlot extends Slot {
         AccessSlot(Container contents, int index, int x, int y) { super(contents, index, x, y); }
-        @Override public boolean mayPickup(Player player) { return stillValid(player); }
+        @Override public boolean mayPickup(Player player) { return !checkingSeed && approvedSeed == null && stillValid(player); }
         @Override public boolean mayPlace(ItemStack stack) { return stillValid(inventory.player); }
+    }
+
+    private boolean acceptsSeed(ItemStack stack) {
+        if (checkingSeed || !stillValid(inventory.player)) return false;
+        if (approvedSeed != null) return stack == approvedSeed;
+        if (inserting) return clickAccepts && stack == clickInput;
+        var before = stack.copy();
+        checkingSeed = true;
+        try {
+            return VerticalGreenhouseBlockEntity.acceptsSeed(stack) && stillValid(inventory.player) && ItemStack.matches(before, stack);
+        } finally { checkingSeed = false; }
     }
 
     public int water() { return data.get(0); }
@@ -110,7 +123,17 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     }
 
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (stillValid(player)) super.clicked(index, button, type, player);
+        if (player == null || inserting || checkingSeed || approvedSeed != null || !stillValid(player)) return;
+        if (MenuInsertion.applies(index, VerticalGreenhouseBlockEntity.TRAYS, type)) {
+            var input = new MenuInsertion(this, inventory, index, button, type);
+            boolean accepted = acceptsSeed(input.input());
+            if (!stillValid(player) || !input.current()) return;
+            clickInput = input.input();
+            clickAccepts = accepted;
+            inserting = true;
+            try { super.clicked(index, button, type, player); }
+            finally { inserting = false; clickInput = null; }
+        } else super.clicked(index, button, type, player);
     }
 
     @Override public void removed(Player player) {
@@ -120,7 +143,7 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     }
 
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (!stillValid(player) || greenhouse == null || !WorkstationAccess.mayConfigure(greenhouse, player)
+        if (player == null || !stillValid(player) || greenhouse == null || !WorkstationAccess.mayConfigure(greenhouse, player)
                 || !stillValid(player) || !player.mayBuild() || !greenhouse.complete()) return false;
         if (button == TOGGLE_GROW || button == TOGGLE_BREED) {
             greenhouse.toggle(button);
@@ -151,7 +174,7 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || inserting || checkingSeed || approvedSeed != null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = getSlot(index);
         ItemStack source = slot.getItem();
         if (source.isEmpty() || !slot.mayPickup(player)) return ItemStack.EMPTY;
@@ -159,8 +182,14 @@ public final class VerticalGreenhouseMenu extends AbstractContainerMenu {
         int firstPlayerSlot = VerticalGreenhouseBlockEntity.SLOTS;
         if (index < firstPlayerSlot) {
             if (!moveItemStackTo(source, firstPlayerSlot, slots.size(), true)) return ItemStack.EMPTY;
-        } else if (!VerticalGreenhouseBlockEntity.acceptsSeed(source)
-                || !moveItemStackTo(source, 0, VerticalGreenhouseBlockEntity.TRAYS, false)) return ItemStack.EMPTY;
+        } else {
+            boolean accepted = acceptsSeed(source);
+            if (!accepted || !stillValid(player) || slot.getItem() != source || !ItemStack.matches(original, source)) return ItemStack.EMPTY;
+            approvedSeed = source;
+            try {
+                if (!moveItemStackTo(source, 0, VerticalGreenhouseBlockEntity.TRAYS, false)) return ItemStack.EMPTY;
+            } finally { approvedSeed = null; }
+        }
         if (source.isEmpty()) slot.set(ItemStack.EMPTY);
         else slot.setChanged();
         slot.onTake(player, source);

@@ -94,6 +94,8 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     private int selectedA = -1, selectedB = -1;
     private ItemStack pendingChild = ItemStack.EMPTY;
     private boolean exportingItems;
+    private boolean running;
+    private boolean refillingWater;
     private boolean growEnabled = true, breedEnabled = true;
     private boolean fixedPair;
     private Status growStatus = Status.NO_SEEDS, breedStatus = Status.NO_PAIR;
@@ -284,7 +286,7 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     @Override public int getTankCapacity(int tank) { return tank == 0 ? CAPACITY : 0; }
     @Override public boolean isFluidValid(int tank, FluidStack fluid) { return tank == 0 && fluid.is(Fluids.WATER); }
     @Override public int fill(FluidStack fluid, FluidAction action) {
-        if (!(level instanceof ServerLevel) || !complete() || !isFluidValid(0, fluid)) return 0;
+        if (refillingWater || !(level instanceof ServerLevel) || !complete() || !isFluidValid(0, fluid)) return 0;
         int amount = Math.min(CAPACITY - water, fluid.getAmount());
         if (action.execute() && amount > 0) {
             water += amount;
@@ -302,7 +304,13 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
     }
 
     void runSecond(ServerLevel server) {
-        if (level != server || !WorkstationAccess.isCurrent(this)) return;
+        if (running || level != server || !WorkstationAccess.isCurrent(this)) return;
+        running = true;
+        try { advanceSecond(server); }
+        finally { running = false; }
+    }
+
+    private void advanceSecond(ServerLevel server) {
         if (!complete()) {
             growStatus = breedStatus = Status.INCOMPLETE;
             waterStatus = WaterStatus.INCOMPLETE;
@@ -316,8 +324,15 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
             hasHarvest |= harvests[tray] != null;
         }
         boolean breedingActive = breedEnabled && !batchComplete();
-        if (breedingActive) selectPair();
-        waterStatus = refillFromNetwork(server, growEnabled && hasHarvest || breedingActive && parentA >= 0);
+        if (breedingActive && !selectPair()) return;
+        var inventory = new ContainerSnapshot(this);
+        int[] workState = workState();
+        var nextWaterStatus = refillFromNetwork(server, growEnabled && hasHarvest || breedingActive && parentA >= 0);
+        if (!complete() || !inventory.current() || !java.util.Arrays.equals(workState, workState())) {
+            if (complete()) reconcileSeeds();
+            return;
+        }
+        waterStatus = nextWaterStatus;
         // Alternate which job gets first access to a nearly empty tank.
         if ((growCursor & 1) == 0) {
             growStatus = grow(harvests);
@@ -388,7 +403,12 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         var network = inspection.network();
         if (network.overflow()) return WaterStatus.NETWORK_LIMIT;
         for (var supply : network.supplies()) {
-            if (supply.takeBucket(server)) {
+            boolean transferred;
+            refillingWater = true;
+            try { transferred = supply.takeBucket(server); }
+            finally { refillingWater = false; }
+            if (!complete()) return WaterStatus.INCOMPLETE;
+            if (transferred) {
                 water += BUCKET;
                 return WaterStatus.REFILLING;
             }
@@ -403,6 +423,12 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
             case INCOMPLETE_RESERVOIR -> WaterStatus.INCOMPLETE_RESERVOIR;
             default -> WaterStatus.NO_SOURCE;
         };
+    }
+
+    private int[] workState() {
+        // A refill changes water and its status, but cannot authorize work on
+        // parents, output buffers or settings changed by a source notification.
+        return IntStream.range(1, DATA_COUNT).filter(index -> index != WATER_STATUS).map(data::get).toArray();
     }
 
     private Status grow(VerticalGreenhouseHarvests.Harvest[] harvests) {
@@ -435,24 +461,37 @@ public final class VerticalGreenhouseBlockEntity extends BaseContainerBlockEntit
         return Status.NO_SEEDS;
     }
 
-    private void selectPair() {
-        if (parentA >= 0 && compatible(parentA, parentB)) return;
-        resetPair();
-        if (fixedPair) {
+    private boolean selectPair() {
+        var inventory = new ContainerSnapshot(this);
+        int[] before = IntStream.range(0, DATA_COUNT).map(data::get).toArray();
+        var previousChild = pendingChild;
+        var childContents = pendingChild.copy();
+        int first = -1, second = -1;
+        boolean retain = parentA >= 0 && compatible(parentA, parentB);
+        if (retain) {
+            first = parentA;
+            second = parentB;
+        } else if (fixedPair) {
             if (selectedA >= 0 && selectedB >= 0 && compatible(selectedA, selectedB)) {
-                parentA = Math.min(selectedA, selectedB);
-                parentB = Math.max(selectedA, selectedB);
+                first = Math.min(selectedA, selectedB);
+                second = Math.max(selectedA, selectedB);
             }
-            return;
+        } else {
+            for (int step = 0; step < TRAYS * TRAYS; step++) {
+                int index = (breedCursor + step) % (TRAYS * TRAYS);
+                int a = index / TRAYS, b = index % TRAYS;
+                if (a >= b || !compatible(a, b)) continue;
+                first = a;
+                second = b;
+                break;
+            }
         }
-        for (int step = 0; step < TRAYS * TRAYS; step++) {
-            int index = (breedCursor + step) % (TRAYS * TRAYS);
-            int first = index / TRAYS, second = index % TRAYS;
-            if (first >= second || !compatible(first, second)) continue;
-            parentA = first;
-            parentB = second;
-            return;
-        }
+        if (!complete() || !inventory.current() || pendingChild != previousChild || !ItemStack.matches(childContents, pendingChild)
+                || !java.util.Arrays.equals(before, IntStream.range(0, DATA_COUNT).map(data::get).toArray())) return false;
+        if (!retain) resetPair();
+        parentA = first;
+        parentB = second;
+        return true;
     }
 
     private boolean compatible(int first, int second) {

@@ -15,6 +15,8 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 @GameTestHolder("agri_evolution") @PrefixGameTestTemplate(false)
 public final class ReservoirAutomationGameTests {
+ private static final net.minecraft.server.level.TicketType<net.minecraft.world.level.ChunkPos> SCHEDULED_TICKET =
+   net.minecraft.server.level.TicketType.create("agri_evolution_reservoir_test",java.util.Comparator.comparingLong(net.minecraft.world.level.ChunkPos::toLong),300);
     @GameTest(template = "empty")
     public static void fullReservoirRestartsMkTwoGenerationTimer(GameTestHelper h) {
         var tank = ReservoirGameTests.tank(h, h.absolutePos(new BlockPos(3, 160, 3)));
@@ -77,11 +79,20 @@ public final class ReservoirAutomationGameTests {
         });
     }
 
- @GameTest(template="empty",timeoutTicks=240) public static void scheduledGenerationAndUpgradeRecovery(GameTestHelper h){
-  var core=h.absolutePos(new BlockPos(3,55,3));var tank=ReservoirGameTests.tank(h,core);tank.upgrade();
+ @GameTest(template="empty",batch="reservoirScheduling",timeoutTicks=240) public static void scheduledGenerationAndUpgradeRecovery(GameTestHelper h){
+  var core=h.absolutePos(new BlockPos(3,55,3));
+  // Own the ticking tickets: other test batches can release their global
+  // forced-chunk flags while this scheduled check is still running.
+  var pinned=new java.util.HashSet<net.minecraft.world.level.ChunkPos>();
+  for(var part:BlockPos.betweenClosed(core.offset(-1,0,-1),core.offset(1,0,1))){
+   var chunk=new net.minecraft.world.level.ChunkPos(part);
+   if(pinned.add(chunk))h.getLevel().getChunkSource().addRegionTicket(SCHEDULED_TICKET,chunk,2,chunk,true);
+  }
+  var tank=ReservoirGameTests.tank(h,core);h.assertTrue(tank.upgrade(),"A complete new reservoir accepts its renewable upgrade");
   h.runAfterDelay(199,()->h.assertTrue(tank.water()==1000,"No bucket before ten actual seconds"));
   h.runAfterDelay(201,()->{
-   h.assertTrue(tank.water()==2000,"Scheduled core ticks generate exactly one bucket");
+   for(var chunk:pinned)h.getLevel().getChunkSource().removeRegionTicket(SCHEDULED_TICKET,chunk,2,chunk,true);
+   h.assertTrue(tank.water()==2000,"Scheduled core ticks generate exactly one bucket; water="+tank.water()+", progress="+tank.saveWithoutMetadata(h.getLevel().registryAccess()).getInt("GenerationSeconds")+", complete="+tank.complete()+", renewable="+tank.renewable()+", queued="+h.getLevel().getBlockTicks().hasScheduledTick(core,AEBlocks.WATER_RESERVOIR.get())+", capture="+h.getLevel().captureBlockSnapshots);
    h.getLevel().setBlock(core.east(),Blocks.AIR.defaultBlockState(),3);
    int count=h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new net.minecraft.world.phys.AABB(core).inflate(3)).stream().filter(e->e.getItem().is(net.minecraft.world.item.Items.CONDUIT)).mapToInt(e->e.getItem().getCount()).sum();
    h.assertTrue(count==1,"Dismantle returns exactly one upgrade");h.succeed();

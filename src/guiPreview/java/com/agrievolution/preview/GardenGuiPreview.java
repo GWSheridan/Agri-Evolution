@@ -40,6 +40,8 @@ public final class GardenGuiPreview {
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         var client = Minecraft.getInstance();
         if (!checkedJournalLayout && client.screen != null && client.getOverlay() == null) {
+            if (Boolean.getBoolean("agri.requireJei") && !net.neoforged.fml.ModList.get().isLoaded("jei"))
+                throw new IllegalStateException("JEI was requested but is missing from the preview runtime");
             JournalLayoutChecks.verify(client.font);
             checkedJournalLayout = true;
         }

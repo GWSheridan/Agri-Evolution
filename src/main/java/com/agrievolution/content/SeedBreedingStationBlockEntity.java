@@ -33,6 +33,8 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
     private int progress;
     private int greenhouseCheckTicks;
     private boolean greenhouseBoost;
+    private boolean ticking;
+    private boolean checkingSeed;
 
     /** Vanilla menu data synchronization only transmits the two progress ints. */
     public final ContainerData data = new ContainerData() {
@@ -47,6 +49,11 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
 
     public SeedBreedingStationBlockEntity(BlockPos pos, BlockState state) {
         super(AEBlockEntities.SEED_BREEDING_STATION.get(), pos, state);
+    }
+
+    @Override public void setChanged() {
+        // Inventory saves do not need comparator notifications on this block.
+        if (WorkstationAccess.isCurrent(this)) level.blockEntityChanged(worldPosition);
     }
 
     @Override public int getContainerSize() { return items.size(); }
@@ -67,13 +74,23 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
     }
 
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
-        if (!WorkstationAccess.isCurrent(this)) return false;
+        if (checkingSeed || !WorkstationAccess.isCurrent(this)) return false;
         return switch (slot) {
-            case SEED_A, SEED_B -> SeedBreedingParents.accepts(stack);
+            case SEED_A, SEED_B -> acceptsInput(stack);
             case COMPOST -> stack.is(AEItems.NUTRIENT_COMPOST.get());
             case SUPPORT -> stack.getItem() instanceof CropSupportItem;
             default -> false;
         };
+    }
+
+    private boolean acceptsInput(ItemStack stack) {
+        var inventory = new ContainerSnapshot(this);
+        var before = stack.copy();
+        checkingSeed = true;
+        try {
+            return SeedBreedingParents.accepts(stack) && WorkstationAccess.isCurrent(this)
+                    && inventory.current() && ItemStack.matches(before, stack);
+        } finally { checkingSeed = false; }
     }
 
     private boolean sameParents() {
@@ -88,13 +105,24 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, SeedBreedingStationBlockEntity station) {
         if (level.isClientSide || station.getLevel() != level || !station.getBlockPos().equals(pos)
-                || !WorkstationAccess.isCurrent(station) || level.getBlockState(pos) != state) return;
+                || station.ticking || !WorkstationAccess.isCurrent(station) || level.getBlockState(pos) != state) return;
+        station.ticking = true;
+        try { station.advanceBreeding(level, state); }
+        finally { station.ticking = false; }
+    }
+
+    private void advanceBreeding(Level level, BlockState state) {
+        var station = this;
+        var inventory = new ContainerSnapshot(this);
+        int previousProgress = progress;
+        var pair = SeedBreedingParents.pair(getItem(SEED_A), getItem(SEED_B));
+        if (!WorkstationAccess.isCurrent(this) || level.getBlockState(worldPosition) != state
+                || !inventory.current() || progress != previousProgress) return;
         if (++station.greenhouseCheckTicks >= 40) {
             station.greenhouseCheckTicks = 0;
             station.greenhouseBoost = com.agrievolution.farming.BotanicalGreenhouseLayout
-                    .hasActiveGreenhouse(level, pos);
+                    .hasActiveGreenhouse(level, worldPosition);
         }
-        var pair = SeedBreedingParents.pair(station.getItem(SEED_A), station.getItem(SEED_B));
         boolean ready = pair == SeedBreedingParents.Pair.AGRI
                 || pair == SeedBreedingParents.Pair.NATIVE && station.getItem(COMPOST).is(AEItems.NUTRIENT_COMPOST.get());
         if (!ready || !station.getItem(OUTPUT).isEmpty()) {
@@ -107,7 +135,6 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
             station.rememberParents();
         }
         station.progress++;
-        station.setChanged();
         if (station.progress >= station.requiredTicks()) {
             if (pair == SeedBreedingParents.Pair.NATIVE) {
                 ItemStack offspring = station.getItem(SEED_A).copyWithCount(1);
@@ -118,8 +145,8 @@ public final class SeedBreedingStationBlockEntity extends BaseContainerBlockEnti
             }
             station.progress = 0;
             station.rememberParents();
-            station.setChanged();
         }
+        station.setChanged();
     }
 
     private void breedAgriSeeds(Level level) {

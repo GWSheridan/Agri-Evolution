@@ -27,6 +27,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
     private static final int WATER_PER_SPRAY = 25;
     private static final int WATERING_INTERVAL = 40;
     private int water;
+    private boolean irrigating, refillingWater;
     private boolean smartWatering;
     private int redstoneMode; // 0: powered pauses (legacy), 1: powered enables, 2: ignore
     public boolean smartWatering(){return smartWatering;}
@@ -86,7 +87,7 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         return soils;
     }
     public boolean fillBucket() {
-        if (!isCurrentServer() || water > CAPACITY - 1000) return false;
+        if (refillingWater || !isCurrentServer() || water > CAPACITY - 1000) return false;
         water += 1000;
         waterChanged();
         return true;
@@ -241,14 +242,27 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
 
     private void refillForSpray(IrrigationNetwork.Search network) {
         if (water >= WATER_PER_SPRAY) return;
-        for(var supply:network.supplies()) if(supply.takeBucket(level)) {
-            water += 1000;
-            return;
+        for(var supply:network.supplies()) {
+            boolean transferred;
+            refillingWater = true;
+            try { transferred = supply.takeBucket(level); }
+            finally { refillingWater = false; }
+            if (!isCurrentServer()) return;
+            if (transferred) {
+                water += 1000;
+                return;
+            }
         }
     }
     /** One 25 mB watering interval, called every 40 ticks. Public for real-server tests. */
     public void irrigateCycle() {
-        if (!(level instanceof ServerLevel server) || !isCurrentServer()) return;
+        if (irrigating || !(level instanceof ServerLevel server) || !isCurrentServer()) return;
+        irrigating = true;
+        try { irrigate(server); }
+        finally { irrigating = false; }
+    }
+
+    private void irrigate(ServerLevel server) {
         if (localShutoff() != null) { stopWatering(); return; }
         var network = water < WATER_PER_SPRAY ? IrrigationNetwork.searchForRefill(server, worldPosition)
                 : IrrigationNetwork.search(server, worldPosition);
@@ -258,7 +272,17 @@ public final class IrrigationSprinklerBlockEntity extends BlockEntity {
         if (smartWatering && !hasDrySoil(soils)) {
             stopWatering();return;
         }
+        boolean neededRefill = water < WATER_PER_SPRAY;
         refillForSpray(network);
+        if (!isCurrentServer()) return;
+        if (neededRefill) {
+            if (localShutoff() != null || networkBlocked(IrrigationNetwork.search(server, worldPosition))) {
+                stopWatering();return;
+            }
+            soils = wateredSoils();
+            if (!isCurrentServer()) return;
+            if (smartWatering && !hasDrySoil(soils)) { stopWatering();return; }
+        }
         if (water < WATER_PER_SPRAY) { stopWatering(); return; }
         water -= WATER_PER_SPRAY;
         paidSoils = Set.copyOf(soils);

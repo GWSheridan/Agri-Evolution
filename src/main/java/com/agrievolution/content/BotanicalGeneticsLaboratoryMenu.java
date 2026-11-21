@@ -79,7 +79,7 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
         return BotanicalGeneticsLaboratoryBlockEntity.graftWouldImprove(inputSeed(), sample(), support(), tier() >= 2);
     }
     @Override public boolean clickMenuButton(Player player, int button) {
-        if (!stillValid(player) || button < 0 || button > BotanicalGeneticsLaboratoryBlockEntity.HYBRID
+        if (player == null || !stillValid(player) || button < 0 || button > BotanicalGeneticsLaboratoryBlockEntity.HYBRID
                 || !(lab instanceof BotanicalGeneticsLaboratoryBlockEntity entity)
                 || !WorkstationAccess.mayConfigure(entity, player) || !stillValid(player)) return false;
         if (button == BotanicalGeneticsLaboratoryBlockEntity.EVOLVE && !entity.isUpgraded()
@@ -94,7 +94,7 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
                     && stillValid(access, player, AEBlocks.BOTANICAL_GENETICS_LABORATORY.get()));
     }
     @Override public void clicked(int index, int button, ClickType type, Player player) {
-        if (stillValid(player)) super.clicked(index, button, type, player);
+        if (player != null && stillValid(player)) super.clicked(index, button, type, player);
     }
     @Override public void removed(Player player) {
         if (player != inventory.player) return;
@@ -103,7 +103,7 @@ public final class BotanicalGeneticsLaboratoryMenu extends AbstractContainerMenu
         lab.stopOpen(player);
     }
     @Override public ItemStack quickMoveStack(Player player, int index) {
-        if (!stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
+        if (player == null || !stillValid(player) || index < 0 || index >= slots.size()) return ItemStack.EMPTY;
         Slot slot = slots.get(index);
         if (!slot.hasItem() || !slot.mayPickup(player)) return ItemStack.EMPTY;
         ItemStack current = slot.getItem();
