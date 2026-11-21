@@ -222,6 +222,8 @@ public final class FarmLedgerService {
         if (age != null && state.getValue(age).equals(Collections.max(age.getPossibleValues()))) flags |= MATURE;
         if (CropWeeds.hasWeeds(level, pos)) flags |= WEEDS;
         if (ground.hasProperty(FarmBlock.MOISTURE) && ground.getValue(FarmBlock.MOISTURE) <= 2) flags |= DRY;
+        if (SoilCareData.rotationBonus(level,pos)>0) flags |= 256;
+        if (SoilCareData.mulched(level,soil)) flags |= 512;
         if (level.getBlockEntity(pos) instanceof AECropBlockEntity plant) {
             if (plant.soilNutrition() < 35) flags |= LOW_FOOD;
             int tier = CropSupportItem.tier(state);

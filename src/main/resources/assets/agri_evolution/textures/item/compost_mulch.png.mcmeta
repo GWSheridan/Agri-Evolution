@@ -1,0 +1,9 @@
+{
+  "texture": { "blur": false, "clamp": false },
+  "agri_evolution": {
+    "sha256": "11F6E611C3959DE3BC3BC3EE224EFBA74320C9A98481930795AA63F09F37131C",
+    "origin": "Original artwork made for Agri Evolution",
+    "credit": "GWSHERIDAN",
+    "master": "Local artwork archive: compost-mulch-1.5.0"
+  }
+}

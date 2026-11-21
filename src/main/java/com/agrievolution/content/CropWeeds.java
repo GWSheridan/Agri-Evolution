@@ -84,6 +84,7 @@ public final class CropWeeds {
     }
     private static void spawn(ServerLevel level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof AgriCropBlock || !growing(level, pos, state) || hasWeeds(level, pos)) return;
+        if (SoilCareData.mulched(level,pos.below()) && level.random.nextBoolean()) return;
         var weed = AEEntities.CROP_WEED.get().create(level);
         if (weed != null) { weed.attach(pos, state); level.addFreshEntity(weed); }
     }

@@ -28,12 +28,13 @@ public final class SoilSamplerScreen extends Screen {
     private static final int RED = 0xFF9E4544;
     private static final int BLUE = 0xFF3679A1;
 
-    private enum Page { PLOT, AREA, ADVICE, RESEARCH }
+    private enum Page { PLOT, AREA, ADVICE, RESEARCH, CARE }
     private final CompoundTag sample;
     private final int research;
     private final int samplerTier;
     private Page page = Page.PLOT;
     private int left, top;
+    private final com.agrievolution.client.NativeGuiViewport viewport=new com.agrievolution.client.NativeGuiViewport();
 
     public SoilSamplerScreen(ItemStack sampler) {
         super(Component.literal("Agri Evolution - Soil Sampler"));
@@ -45,8 +46,7 @@ public final class SoilSamplerScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        left = (width - W) / 2;
-        top = (height - H) / 2;
+        viewport.init(width,height,W,H);left=viewport.x();top=viewport.y();
     }
 
     @Override
@@ -61,12 +61,15 @@ public final class SoilSamplerScreen extends Screen {
         line(gui, "SOIL ANALYSIS / FIELD REPORT", 163, 15, PARCHMENT);
         line(gui, "FIELD NOTES  /  SOIL HEALTH", 18, 30, 0xFFE9D8B5);
         tab(gui, "PLOT", 12, page == Page.PLOT);
-        tab(gui, "AREA", 112, page == Page.AREA);
-        tab(gui, "ADVICE", 212, page == Page.ADVICE);
-        tab(gui, "RESEARCH", 312, page == Page.RESEARCH);
+        tab(gui, "AREA", 90, page == Page.AREA);
+        tab(gui, "ADVICE", 168, page == Page.ADVICE);
+        tab(gui, "RESEARCH", 246, page == Page.RESEARCH);
+        tab(gui, "CARE", 324, page == Page.CARE);
         panel(gui, 12, 82, 382, 135, PARCHMENT, BORDER);
         if (page == Page.RESEARCH) {
             researchPage(gui);
+        } else if (page == Page.CARE) {
+            care(gui);
         } else if (sample.isEmpty()) {
             line(gui, "NO FIELD SAMPLE RECORDED", 26, 96, GREEN);
             line(gui, "Right-click farmland or a planted Agri crop", 26, 119, INK);
@@ -79,6 +82,7 @@ public final class SoilSamplerScreen extends Screen {
                 case AREA -> area(gui);
                 case ADVICE -> advice(gui);
                 case RESEARCH -> researchPage(gui);
+                case CARE -> care(gui);
             }
         }
         panel(gui, 12, 222, 382, 16, 0xFFB9A37B, BORDER);
@@ -88,6 +92,22 @@ public final class SoilSamplerScreen extends Screen {
         if (footer.length() > 55) footer = footer.substring(0, 52) + "...";
         line(gui, footer, 20, 226, GREEN);
         gui.pose().popPose();
+        if(viewport.oversized()) {
+            gui.fill(0,height-14,width,height,0xEF281D17);
+            gui.drawCenteredString(font,"Ctrl+scroll or arrows  |  Shift: sideways",width/2,height-11,PARCHMENT);
+        }
+    }
+
+    private void care(GuiGraphics gui) {
+        line(gui, "ROTATION & MULCH  /  SAVED SAMPLE", 23, 92, GREEN);
+        line(gui, "Previous harvest: " + (sample.contains("PreviousFamily") ? sample.getString("PreviousFamily") : "Unknown"), 23, 111, INK);
+        line(gui, "Current family: " + (sample.contains("CropFamily") ? sample.getString("CropFamily") : "Unknown"), 23, 126, INK);
+        line(gui, sample.getInt("RotationBonus") > 0 ? sample.getBoolean("HasCrop") ? "Rotation active: +10 to the Agri growth roll." : "Rotation active: natural growth bonus." : "Harvest, then switch crop families for a growth bonus.", 23, 141, GREEN);
+        int seconds=(sample.getInt("MulchTicks")+19)/20;
+        line(gui, seconds>0 ? "Mulch: " + seconds/60 + "m " + seconds%60 + "s left when sampled." : "Mulch: none. Use Compost Mulch on the soil.", 23, 156, INK);
+        line(gui, "Mulch slows weeds, nutrition loss and upgraded-soil drying.", 23, 172, MUTED);
+        panel(gui, 23, 190, 356, 19, GREEN, BORDER);
+        line(gui, "OPEN RESOURCE CATALYST GUIDE", 35, 196, PARCHMENT);
     }
 
     private void researchPage(GuiGraphics gui) {
@@ -222,18 +242,20 @@ public final class SoilSamplerScreen extends Screen {
     }
 
     private void tab(GuiGraphics gui, String caption, int x, boolean active) {
-        panel(gui, x, 52, 92, 23, active ? PARCHMENT : GREEN, BORDER);
+        panel(gui, x, 52, 70, 23, active ? PARCHMENT : GREEN, BORDER);
         line(gui, caption, x + 8, 59, active ? INK : PARCHMENT);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0 && mouseY - top >= 52 && mouseY - top < 75) {
-            double x = mouseX - left;
-            if (x >= 12 && x < 104) { page = Page.PLOT; return true; }
-            if (x >= 112 && x < 204) { page = Page.AREA; return true; }
-            if (x >= 212 && x < 304) { page = Page.ADVICE; return true; }
-            if (x >= 312 && x < 404) { page = Page.RESEARCH; return true; }
+        double x=mouseX-left, y=mouseY-top;
+        if (button == 0 && y >= 52 && y < 75) {
+            int tab=(int)((x-12)/78);
+            if(x>=12 && tab>=0 && tab<Page.values().length && x<12+tab*78+70) {page=Page.values()[tab];return true;}
+        }
+        if(button==0 && page==Page.CARE && x>=23 && x<379 && y>=190 && y<209) {
+            minecraft.setScreen(new CropCareGuideScreen(this,sample.getString("ResourceId")));
+            return true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -255,4 +277,12 @@ public final class SoilSamplerScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() { return false; }
+    @Override public boolean keyPressed(int key,int scan,int modifiers) {
+        if(viewport.keyPressed(key,modifiers)){left=viewport.x();top=viewport.y();return true;}
+        return super.keyPressed(key,scan,modifiers);
+    }
+    @Override public boolean mouseScrolled(double mx,double my,double dx,double dy) {
+        if(hasControlDown()&&viewport.oversized()){viewport.scroll(dx,dy,hasShiftDown());left=viewport.x();top=viewport.y();return true;}
+        return super.mouseScrolled(mx,my,dx,dy);
+    }
 }

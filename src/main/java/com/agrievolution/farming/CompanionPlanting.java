@@ -25,7 +25,13 @@ public final class CompanionPlanting {
             new Trial("marigold_cabbage", CropSpecies.AMBER_MARIGOLD, CropSpecies.CABBAGE, 2, 0),
             new Trial("thyme_broccoli", CropSpecies.THYME, CropSpecies.BROCCOLI, 2, 0),
             new Trial("clover_strawberry", CropSpecies.CRIMSON_CLOVER, CropSpecies.STRAWBERRY, 0, 6),
-            new Trial("peas_cucumber", CropSpecies.PEAS, CropSpecies.CUCUMBER, 0, 6)
+            new Trial("peas_cucumber", CropSpecies.PEAS, CropSpecies.CUCUMBER, 0, 6),
+            new Trial("garlic_pepper", CropSpecies.GARLIC, CropSpecies.PEPPER, 2, 0),
+            new Trial("rosemary_aubergine", CropSpecies.ROSEMARY, CropSpecies.AUBERGINE, 2, 0),
+            new Trial("mint_coal", CropSpecies.MINT, CropSpecies.COAL, 2, 0),
+            new Trial("coriander_redstone", CropSpecies.CORIANDER, CropSpecies.REDSTONE, 2, 0),
+            new Trial("lentil_iron", CropSpecies.LENTIL, CropSpecies.IRON, 0, 8),
+            new Trial("chickpea_copper", CropSpecies.CHICKPEA, CropSpecies.COPPER, 0, 8)
     );
 
     private CompanionPlanting() {}
@@ -42,6 +48,7 @@ public final class CompanionPlanting {
 
     public static void harvested(Level level, BlockPos pos, CropSpecies species) {
         if (level.isClientSide) return;
+        com.agrievolution.content.SoilCareData.agriHarvest(level,pos,species);
         for (var trial : TRIALS) {
             if (trial.helper() != species || trial.nutrition() == 0) continue;
             for (var side : Direction.Plane.HORIZONTAL) {

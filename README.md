@@ -30,6 +30,18 @@ The Genetics Laboratory keeps your materials when a graft cannot improve the see
 
 Collected samples, field-bred seeds and workstation rewards drop beside you when your inventory is full, including in Creative. Breeding and clipping require permission to work on the parent crops.
 
+## Better growing conditions
+
+After harvesting a mature crop, try a different crop family on the same plot. Grains, legumes, roots and bulbs, leafy crops, fruiting crops, herbs, flowers and resources each form a family. Agri crops receive **+10 to their growth roll out of 200** while rotated. Wheat and vanilla root crops have a **20% chance of one extra stage after natural growth**. All resource crops share one family, so alternate them with food crops or herbs. Repeating a family keeps normal growth; planting or breaking an unripe crop does not advance the rotation history.
+
+Craft **two Compost Mulch** from one Nutrient Compost and two Pulled Weeds. Use it on farmland or its crop. The layer lasts **one Minecraft day (20 minutes)**, halves new weeds and Agri crop nutrition loss, and halves the drying chance of upgraded farmland. It does not supply water or remove existing weeds. Wait for a layer to expire before applying another.
+
+The Soil Sampler's **CARE** tab shows rotation and mulch from the saved sample. Resample to refresh it. Open the **resource catalyst guide** there, or choose **Crop guide** at a Soil Research Table. Search for a crop to see its matching catalyst and growth multiplier. Place the catalyst directly below the farmland, with the crop on top; the catalyst block is not consumed. Opening the guide from a table closes that table normally.
+
+There are now **12 companion trials** to observe with Grandmas Journal. New neighbours include Garlic beside Pepper, Rosemary beside Aubergine, Mint beside Coal and Coriander beside Redstone: from stage 4, each helper halves new weeds on its partner. Harvesting ripe Lentil beside Iron or Chickpea beside Copper restores **8 nutrition** to each adjacent partner. These bonuses use the four direct neighbours, so plant side by side.
+
+Datapacks can assign compatible crops to a rotation family with optional block tags under `agri_evolution:rotation/`: `grain`, `legume`, `root`, `leafy`, `fruit`, `herb`, `flower` and `resource`. Tagged `CropBlock` crops can receive the natural-growth bonus; unknown crops keep their usual behaviour.
+
 ## Farm Ledger
 
 Craft a Farm Ledger with a book, a compass and a copper ingot. Open it and choose **Mark field**, then use it on two farmland corners at the same height. A field can cover up to 32×32 blocks, and each player can own 16 fields.

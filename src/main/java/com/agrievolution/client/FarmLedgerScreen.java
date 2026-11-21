@@ -122,17 +122,19 @@ public final class FarmLedgerScreen extends AbstractContainerScreen<FarmLedgerMe
         for(var item:seedOptions){String id=BuiltInRegistries.ITEM.getKey(item).toString();if(id.contains(term)||item.getDescription().getString().toLowerCase(Locale.ROOT).contains(term))result.add(id);}return result;
     }
     private void status() {
-        int line=body+2;var f=field();int mature=0,weeds=0,dry=0,food=0,support=0,unknown=0;
+        int line=body+2;var f=field();int mature=0,weeds=0,dry=0,food=0,support=0,unknown=0,rotation=0,mulched=0;
         for(int flag:f.flags){if((flag&1)==0)unknown++;if((flag&8)!=0)mature++;if((flag&16)!=0)weeds++;if((flag&32)!=0)dry++;if((flag&64)!=0)food++;if((flag&128)!=0)support++;}
+        for(int flag:f.flags){if((flag&256)!=0)rotation++;if((flag&512)!=0)mulched++;}
         String when=f.surveyedAt==0?"Not surveyed":DateTimeFormatter.ofPattern("dd MMM HH:mm:ss").withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(f.surveyedAt));
         label("Mature "+mature+" | weeds "+weeds+" | dry "+dry, x+10,line);line+=12;
         label("Low nutrition "+food+" | supports "+support+" | unknown "+unknown,x+10,line);line+=12;
+        label("Rotation bonus "+rotation+" | mulched plots "+mulched,x+10,line);line+=12;
         label((FarmLedgerClient.latest.getBoolean("Nearby")?"Nearby survey":"Saved snapshot")+": "+when,x+10,line);line+=16;
         var needs=new TreeMap<String,int[]>();for(int i=0;i<f.size();i++){String seed=f.layouts[slot].seeds[i];if(seed.isEmpty())continue;String state=FarmLedgerService.cellStatus(f,slot,i);var a=needs.computeIfAbsent(seed,k->new int[2]);if(state.equals("Unknown"))a[1]++;else if(!state.equals("Correct"))a[0]++;}
         var details=new ArrayList<String>();var carried=FarmLedgerClient.latest.getCompound("Carried");
         needs.forEach((id,a)->details.add(seedName(id)+": need "+a[0]+", carried "+carried.getInt(id)+(a[1]>0?", unknown "+a[1]:"")));
         details.addAll(f.machineStatus);if(details.isEmpty())details.add("Assign a layout to see seed requirements.");
-        int count=Math.max(1,(bodyH-68)/13);statusPage=Math.min(statusPage,Math.max(0,(details.size()-1)/count));
+        int count=Math.max(1,(bodyH-80)/13);statusPage=Math.min(statusPage,Math.max(0,(details.size()-1)/count));
         for(int i=statusPage*count;i<Math.min(details.size(),(statusPage+1)*count);i++){label(details.get(i),x+10,line);line+=13;}
         button("More",x+w-62,body,54,()->{statusPage=(statusPage+1)%Math.max(1,(details.size()+count-1)/count);rebuild();},true);
         if(!f.machines.isEmpty()){

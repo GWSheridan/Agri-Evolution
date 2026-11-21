@@ -4,12 +4,12 @@ import com.agrievolution.client.GardenGuiTheme;
 
 import com.agrievolution.content.SoilResearchTableMenu;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import com.agrievolution.client.ScrollableGardenScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Pixel-sharp research/processing GUI using the established Agri Evolution palette. */
-public final class SoilResearchTableScreen extends AbstractContainerScreen<SoilResearchTableMenu> {
+public final class SoilResearchTableScreen extends ScrollableGardenScreen<SoilResearchTableMenu> {
     private static final int DARK = 0xFF291D17, GOLD = 0xFFC49B5A, GREEN = 0xFF255747;
     private static final int PAPER = 0xFFF1DFB8, INK = 0xFF37281A, MUTED = 0xFF8C7659;
     public SoilResearchTableScreen(SoilResearchTableMenu menu, Inventory inventory, Component title) {
@@ -23,6 +23,15 @@ public final class SoilResearchTableScreen extends AbstractContainerScreen<SoilR
     }
     private void panel(GuiGraphics ui, int x, int y, int w, int h, int color, int border) {
         GardenGuiTheme.panel(ui, x, y, w, h, color);
+    }
+    @Override protected void init() {
+        super.init();
+        addRenderableWidget(GardenGuiTheme.button(Component.literal("Crop guide"),leftPos+12,topPos+237,75,17,b->{
+            String crop=com.agrievolution.farming.SoilSurveyData.report(menu.getSlot(0).getItem()).getString("ResourceId");
+            // Close the workstation normally before opening the portable, read-only guide.
+            if(minecraft.player!=null)minecraft.player.closeContainer();
+            minecraft.setScreen(new CropCareGuideScreen(null,crop));
+        }));
     }
     private void txt(GuiGraphics ui, String text, int x, int y, int color) {
         ui.drawString(font, text, x, y, color, false);

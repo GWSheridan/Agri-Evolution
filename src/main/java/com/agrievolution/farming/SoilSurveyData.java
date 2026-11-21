@@ -78,6 +78,13 @@ public final class SoilSurveyData {
                 if (irrigated) irrigationCount++;
                 plot.putInt("Moisture", moisture);
                 plot.putBoolean("Irrigated", irrigated);
+                plot.putInt("MulchTicks",com.agrievolution.content.SoilCareData.mulchRemaining(level,soil));
+                plot.putString("PreviousFamily",com.agrievolution.content.SoilCareData.previous(level,soil).label);
+                if(soil.equals(middle)) {
+                    out.putInt("MulchTicks",plot.getInt("MulchTicks"));out.putString("PreviousFamily",plot.getString("PreviousFamily"));
+                    out.putString("CropFamily",CropFamily.of(level.getBlockState(soil.above())).label);
+                    out.putInt("RotationBonus",com.agrievolution.content.SoilCareData.rotationBonus(level,soil.above()));
+                }
                 BlockPos cropPos = soil.above();
                 BlockState state = level.getBlockState(cropPos);
                 if (state.getBlock() instanceof AgriCropBlock crop) {
@@ -99,6 +106,8 @@ public final class SoilSurveyData {
                         out.putBoolean("Supported", state.getValue(AgriCropBlock.SUPPORTED));
                         out.putInt("Light", level.getRawBrightness(cropPos, 0));
                         out.putBoolean("Resource", crop.species().isResource());
+                        out.putString("ResourceId",crop.species().isResource()?crop.species().id():"");
+                        if(crop.species().isResource())out.putString("CatalystHint",ResourceCropRules.catalystHint(crop.species()));
                         out.putInt("CatalystX100", Math.round(ResourceCropRules.growthMultiplier(
                                 crop.species(), level, cropPos) * 100));
                         if (level.getBlockEntity(cropPos) instanceof AECropBlockEntity plant) {
@@ -108,7 +117,7 @@ public final class SoilSurveyData {
                                     plant.genome().growth(), plant.soilNutrition(), moisture,
                                     com.agrievolution.content.CropSupportItem.tier(state), irrigated);
                             if (plant.rareTrait() == RareTrait.VIGOROUS) roll += 18;
-                            roll = Math.min(195, roll + SoilResearch.soilTier(level.getBlockState(soil)) * 20);
+                            roll = Math.min(195, roll + SoilResearch.soilTier(level.getBlockState(soil)) * 20 + out.getInt("RotationBonus"));
                             out.putInt("GrowthRoll", roll);
                         }
                     }

@@ -78,6 +78,7 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
     protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
         // Rare visible weeds coexist with the crop; they never replace or destroy it.
         int weedChance = CompanionPlanting.weeds(level, pos, species, CropSupportItem.weedChance(CropSupportItem.tier(state)));
+        if(weedChance>0 && SoilCareData.mulched(level,pos.below())) weedChance=(int)Math.min(Integer.MAX_VALUE,(long)weedChance*2);
         if(weedChance==0&&state.getValue(WEEDY)){state=state.setValue(WEEDY,false);level.setBlock(pos,state,3);}
         if (weedChance>0 && !state.getValue(WEEDY) && !isMaxAge(state) && random.nextInt(weedChance) == 0) {
             state = state.setValue(WEEDY, true);
@@ -97,7 +98,8 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
             // Soil research bonuses stack additively with genes and irrigation, never
             // multiply resource catalysts; higher soils also conserve nutrition.
             int soilTier = com.agrievolution.farming.SoilResearch.soilTier(level.getBlockState(pos.below()));
-            chance = Math.min(195, chance + soilTier * 20);
+            chance = Math.min(195, chance + soilTier * 20 + SoilCareData.rotationBonus(level,pos));
+            boolean mulched=SoilCareData.mulched(level,pos.below());
             // Catalyst blocks accelerate only the matching resource crop. No resource
             // catalyst affects other plants; world/light/soil checks still apply.
             float multiplier = com.agrievolution.farming.ResourceCropRules.growthMultiplier(species, level, pos);
@@ -112,7 +114,8 @@ public final class AgriCropBlock extends CropBlock implements EntityBlock {
                 if (random.nextInt(200) < chance) {
                     level.setBlock(pos, current.setValue(AGE, current.getValue(AGE) + 1), 2);
                     if (random.nextInt(3 + soilTier * 2) == 0
-                            && (plant.rareTrait() != RareTrait.TENACIOUS || random.nextInt(3) == 0))
+                            && (plant.rareTrait() != RareTrait.TENACIOUS || random.nextInt(3) == 0)
+                            && (!mulched || random.nextBoolean()))
                         plant.addNutrition(-1);
                 }
             }

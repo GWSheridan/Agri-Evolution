@@ -30,7 +30,7 @@ public final class FarmLedgerPreview {
             vw=index<4?320:width;vh=index<4?240:height;
             var tag=new CompoundTag();tag.putUUID("Id",UUID.randomUUID());tag.putUUID("Owner",UUID.randomUUID());tag.putString("Name","North resource beds");
             tag.putString("Dimension","minecraft:overworld");tag.putInt("Width",32);tag.putInt("Depth",32);tag.putString("Name","North resource beds");fixture=FarmLedgerData.readField(tag);
-            for(int i=0;i<fixture.size();i++){fixture.layouts[0].seeds[i]=i%2==0?"agri_evolution:iron_seed":"minecraft:wheat_seeds";fixture.actual[i]=i%4==0?"minecraft:wheat":"";fixture.flags[i]=i%7==0?0:3;fixture.observed[i]=System.currentTimeMillis();}
+            for(int i=0;i<fixture.size();i++){fixture.layouts[0].seeds[i]=i%2==0?"agri_evolution:iron_seed":"minecraft:wheat_seeds";fixture.actual[i]=i%4==0?"minecraft:wheat":"";fixture.flags[i]=i%7==0?0:3|(i%2==0?256:512);fixture.observed[i]=System.currentTimeMillis();}
             fixture.surveyedAt=System.currentTimeMillis();fixture.invited.put(UUID.randomUUID(),true);fixture.machineStatus.add("10, 64, 18 — Reservoir: 12000 mB");
             response=new CompoundTag();var list=new ListTag();list.add(fixture.summary());response.put("Fields",list);response.put("Selected",fixture.save());response.putBoolean("Nearby",true);response.putInt("Pages",1);
             install();var inv=new Inventory(null);inner=new FarmLedgerScreen(new FarmLedgerMenu(1,inv),inv,Component.literal("Farm Ledger"));inner.init(minecraft,vw,vh);

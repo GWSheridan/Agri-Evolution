@@ -9,6 +9,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class AEItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(AgriEvolution.MOD_ID);
+    public static final DeferredItem<CompostMulchItem> COMPOST_MULCH = ITEMS.registerItem("compost_mulch", CompostMulchItem::new, new Item.Properties());
     public static final DeferredItem<FarmLedgerItem> FARM_LEDGER = ITEMS.registerItem("farm_ledger", FarmLedgerItem::new, new Item.Properties().stacksTo(1));
     static { ResourceCropMigration.aliases(ITEMS, "_seed"); }
     public static final DeferredItem<BlockItem> COMPOST_BIN = ITEMS.registerItem("compost_bin",

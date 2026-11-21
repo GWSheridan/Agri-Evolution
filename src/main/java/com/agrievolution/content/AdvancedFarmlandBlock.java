@@ -49,7 +49,8 @@ public final class AdvancedFarmlandBlock extends FarmBlock {
         if (!state.hasProperty(MOISTURE)) return;
         int previous = state.getValue(MOISTURE);
         boolean wet = FarmEnvironment.irrigated(level, pos) || hasLocalWater(level, pos);
-        int next = wet ? 7 : Math.max(0, previous - (random.nextInt(tier + 1) == 0 ? 1 : 0));
+        int dryingInterval=(tier+1)*(SoilCareData.mulched(level,pos)?2:1);
+        int next = wet ? 7 : Math.max(0, previous - (random.nextInt(dryingInterval) == 0 ? 1 : 0));
         if (next != previous) level.setBlock(pos, state.setValue(MOISTURE, next), 2);
         // Bonus for vanilla CropBlock plants as well: they do not use the Agri genome logic.
         // Extra vanilla stages increase from +1 at Tier 2 to +4 at Tier 5.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.0
+
+- Added crop rotation. Harvest a mature crop, then plant a different crop family on the same plot for a small growth bonus. Repeating a family keeps its normal growth rate. Plot history stays in the world save.
+- Added Compost Mulch, crafted from Nutrient Compost and two Pulled Weeds. One application lasts a Minecraft day, halves new weeds and Agri crop nutrition loss, and helps upgraded farmland retain moisture. Active layers cannot be topped up or stacked.
+- Added six companion trials: Garlic with Pepper, Rosemary with Aubergine, Mint with Coal, Coriander with Redstone, Lentil with Iron, and Chickpea with Copper. Established herbs suppress weeds; harvesting ripe legumes feeds the neighbouring resource crops.
+- Added a CARE tab to the Soil Sampler and a searchable resource catalyst guide. The guide is also available at the Soil Research Table and uses the same catalyst rules as the crops.
+- The Farm Ledger now counts mulched plots and crops receiving rotation bonuses. Grandmas Journal explains the new care options and companion trials.
+- Added original 64×64 artwork for Compost Mulch. Existing crop artwork, genes, resource harvests and reservoir water generation are unchanged.
+
 ## 1.4.1
 
 - Updated NeoForge to 21.1.267 for Minecraft 1.21.1. Clients and servers now require this build or a newer 21.1.x release.

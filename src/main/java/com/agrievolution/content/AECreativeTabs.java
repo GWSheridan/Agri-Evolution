@@ -18,6 +18,7 @@ public final class AECreativeTabs {
                     .icon(() -> new ItemStack(AEItems.WILD_SEED.get()))
                     .displayItems((parameters, output) -> {
                         output.accept(AEItems.FARM_LEDGER.get());
+                        output.accept(AEItems.COMPOST_MULCH.get());
                         output.accept(AEItems.SEED_BAG.get());
                         output.accept(AEItems.LUNCH_BOX.get());
                         output.accept(AEItems.RAKE_WOOD.get());
