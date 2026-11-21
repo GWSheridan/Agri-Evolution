@@ -12,6 +12,10 @@ logs/
 /backups/
 /artwork/
 /AGENTS.md
+# Roadmaps and future release plans stay local
+ROADMAP*.md
+roadmap*.md
+Roadmap*.md
 /tools/audit_asset_usage.cjs
 /javac.*.args
 *.zip
