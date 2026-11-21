@@ -44,6 +44,11 @@ public final class ReservoirAutomationGameTests {
     public static void reservoirGaugeRepairRefreshesComparatorOutput(GameTestHelper h) {
         var level = h.getLevel();
         var core = h.absolutePos(new BlockPos(3, 161, 3));
+        var pinned = new java.util.HashSet<net.minecraft.world.level.ChunkPos>();
+        for (var part : BlockPos.betweenClosed(core.offset(-1, 0, -1), core.offset(4, 0, 1))) {
+            var chunk = new net.minecraft.world.level.ChunkPos(part);
+            if (pinned.add(chunk)) level.getChunkSource().addRegionTicket(SCHEDULED_TICKET, chunk, 2, chunk, true);
+        }
         var tank = ReservoirGameTests.tank(h, core);
         h.assertTrue(tank.takeBucket(), "Start with an empty tank before placing the comparator");
         var output = core.east(3);
@@ -74,6 +79,7 @@ public final class ReservoirAutomationGameTests {
             h.assertTrue(level.getBlockState(face).getValue(WaterReservoirBlock.FILL) == 0, "The old gauge is repaired from tank storage");
         });
         h.runAfterDelay(25, () -> {
+            for (var chunk : pinned) level.getChunkSource().removeRegionTicket(SCHEDULED_TICKET, chunk, 2, chunk, true);
             h.assertTrue(comparator.getOutputSignal() == 0, "Gauge repair also refreshes the stale comparator behind the stone");
             h.succeed();
         });

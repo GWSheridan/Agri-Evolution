@@ -25,7 +25,14 @@ public final class ResourceCropMigration {
             var records=root.getCompound("AgriSpeciesRecords");
             RetiredResourceCrops.ALIASES.forEach((oldId,newId)->{
                 if(records.contains(oldId)) {
-                    if(!records.contains(newId))records.put(newId,records.getCompound(oldId).copy());
+                    var oldRecord = records.getCompound(oldId);
+                    var current = records.getCompound(newId);
+                    var merged = oldRecord.copy().merge(current);
+                    for (String trait : java.util.List.of("Growth", "Yield", "Resilience")) {
+                        if (oldRecord.contains(trait, Tag.TAG_ANY_NUMERIC))
+                            merged.putInt(trait, Math.max(oldRecord.getInt(trait), current.getInt(trait)));
+                    }
+                    records.put(newId, merged);
                     records.remove(oldId);
                 }
             });

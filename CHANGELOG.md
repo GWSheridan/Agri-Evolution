@@ -8,6 +8,7 @@
 - Seed storage no longer sends unsupported comparator notifications during deposits. Neighbor callbacks cannot replace the cursor or inventory source halfway through those transfers.
 - Water refills recheck the receiving machine before growing or spraying. Replaced sprinklers stop immediately, and source notifications cannot start a second watering cycle or fill a tank past its capacity.
 - Lunch Boxes with imported storage beyond the nine visible slots can feed from their normal slots while preserving the extra contents.
+- Older journals containing both a retired resource crop and its replacement keep the best Growth, Yield and Resilience from both records when merging them.
 - Preview menus reject clicks, transfers and buttons without a player. JEI now loads correctly in optional screen previews.
 - Added a full verification command and GitHub build checks covering gameplay tests, standalone checks, resources and the recipe catalogue.
 

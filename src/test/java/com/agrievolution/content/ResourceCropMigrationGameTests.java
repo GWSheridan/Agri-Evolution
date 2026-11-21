@@ -41,6 +41,59 @@ public final class ResourceCropMigrationGameTests {
         h.assertTrue(root.getCompound("AgriSpeciesRecords").getCompound("copper").getInt("Growth")==72,"Journal genetics preserved");
         h.assertTrue(HybridLineageStorage.read(root).first()==CropSpecies.MAGMA_CREAM,"Retired ancestry resolves");h.succeed();
     }
+    private static CompoundTag overlappingJournal(String oldId, String currentId) {
+        var root = new CompoundTag();
+        var discoveries = new ListTag();
+        discoveries.add(StringTag.valueOf(oldId));
+        discoveries.add(StringTag.valueOf(currentId));
+        root.put("AgriDiscoveredSpecies", discoveries);
+        var records = new CompoundTag();
+        var retired = new CompoundTag();
+        retired.putInt("Growth", 80);
+        retired.putInt("Yield", 20);
+        retired.putInt("Resilience", 65);
+        retired.putString("LegacyNote", "Retained research");
+        retired.putString("SharedNote", "Older entry");
+        var current = new CompoundTag();
+        current.putInt("Growth", 40);
+        current.putInt("Yield", 90);
+        current.putInt("Resilience", 5);
+        current.putString("SharedNote", "Current entry");
+        records.put(oldId, retired);
+        records.put(currentId, current);
+        root.put("AgriSpeciesRecords", records);
+        return root;
+    }
+    @GameTest(template="empty") public static void overlappingJournalRecordsKeepEachBestTrait(GameTestHelper h) {
+        for (var alias : RetiredResourceCrops.ALIASES.entrySet()) {
+            var root = overlappingJournal(alias.getKey(), alias.getValue());
+            ResourceCropMigration.journal(root);
+            var records = root.getCompound("AgriSpeciesRecords");
+            var merged = records.getCompound(alias.getValue());
+            h.assertTrue(merged.getInt("Growth") == 80 && merged.getInt("Yield") == 90 && merged.getInt("Resilience") == 65,
+                    "Merging " + alias + " retains the strongest observed value of each trait");
+            h.assertTrue(!records.contains(alias.getKey()) && root.getList("AgriDiscoveredSpecies", Tag.TAG_STRING).size() == 1,
+                    "Retired records and discoveries merge without duplicate species");
+            h.assertTrue(merged.getString("LegacyNote").equals("Retained research") && merged.getString("SharedNote").equals("Current entry"),
+                    "Unrelated old fields survive while current fields take precedence");
+            var once = root.copy();
+            ResourceCropMigration.journal(root);
+            h.assertTrue(root.equals(once), "Journal migration is idempotent");
+        }
+        h.succeed();
+    }
+    @GameTest(template="empty") public static void savedJournalPreviewKeepsBestTraitsWithoutEditingItem(GameTestHelper h) {
+        var journal = new ItemStack(AEItems.BREEDING_JOURNAL.get());
+        journal.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,
+                net.minecraft.world.item.component.CustomData.of(overlappingJournal("copper_block", "copper")));
+        var restored = ItemStack.parseOptional(h.getLevel().registryAccess(), (CompoundTag) journal.save(h.getLevel().registryAccess()));
+        var before = restored.copy();
+        var entry = com.agrievolution.client.journal.JournalSnapshot.from(restored).entry(CropSpecies.COPPER);
+        h.assertTrue(entry.discovered() && entry.hasGenetics() && entry.growth() == 80 && entry.yield() == 90 && entry.resilience() == 65,
+                "A saved journal displays the strongest traits from overlapping old and current records");
+        h.assertTrue(ItemStack.matches(before, restored), "Reading a journal does not rewrite its saved item data");
+        h.succeed();
+    }
     @GameTest(template="empty") public static void greenhouseSavesStableSpeciesIds(GameTestHelper h) {
         var state=AEBlocks.BOTANICAL_GREENHOUSE.get().defaultBlockState();
         var house=new BotanicalGreenhouseBlockEntity(BlockPos.ZERO,state);var tag=new CompoundTag();
