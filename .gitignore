@@ -1,7 +1,8 @@
 # Gradle and Minecraft run files
-/.gradle/
-/build/
-/run/
+.gradle/
+build/
+run/
+run-data/
 *.class
 *.log
 *.hprof

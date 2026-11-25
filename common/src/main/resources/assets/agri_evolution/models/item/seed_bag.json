@@ -1,0 +1,20 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "agri_evolution:item/seed_bag_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "agri_evolution:fill": 0.5
+      },
+      "model": "agri_evolution:item/seed_bag_partial"
+    },
+    {
+      "predicate": {
+        "agri_evolution:fill": 1
+      },
+      "model": "agri_evolution:item/seed_bag_full"
+    }
+  ]
+}

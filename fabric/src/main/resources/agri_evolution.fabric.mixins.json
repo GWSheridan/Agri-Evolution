@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "com.agrievolution.fabric.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": ["BlockDropsMixin", "CropTickMixin", "FarmBlockMixin", "ServerLevelMixin"],
+  "injectors": {"defaultRequire": 1}
+}

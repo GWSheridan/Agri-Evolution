@@ -4,7 +4,15 @@ I built Agri Evolution around the kind of farm I wanted to play in Minecraft. St
 
 ## Install
 
-Agri Evolution is built for **Minecraft 1.21.1**, **NeoForge 21.1.267**, and **Java 21**. This version requires NeoForge **21.1.267 or a newer 21.1.x build**. Put the release JAR in your NeoForge profile’s `mods` folder. For multiplayer, install the same version on the server and every client. [Download the latest release](https://github.com/GWSheridan/Agri-Evolution/releases/latest) · [Changelog](CHANGELOG.md)
+Agri Evolution runs on **Minecraft 1.21.1** with **Java 21**. In the release downloads, choose the JAR that matches your loader and put it in your profile’s `mods` folder. [Downloads](https://github.com/GWSheridan/Agri-Evolution/releases/latest) · [Changelog](CHANGELOG.md) · [Wiki](https://github.com/GWSheridan/Agri-Evolution/wiki)
+
+| Loader | Minimum version | Release JAR |
+| --- | --- | --- |
+| NeoForge | 21.1.267 | `agri_evolution-1.21.1-neoforge-*.jar` |
+| Forge | 52.1.21 | `agri_evolution-1.21.1-forge-*.jar` |
+| Fabric | Fabric Loader 0.20.1 and Fabric API 0.116.18+1.21.1 | `agri_evolution-1.21.1-fabric-*.jar` |
+
+For multiplayer, use the same loader and mod version on the server and all clients. JEI is optional and must match your loader. Back up your world before upgrading. Keep an existing world on its original loader.
 
 ## Start your first garden
 
@@ -56,23 +64,21 @@ Select a field, then use the ledger on a Botanical Greenhouse, Vertical Greenhou
 
 ## Build from source
 
-Use a Java 21 JDK and the included Gradle wrapper. The built JAR is in `build/libs`.
+Use Java 25 to run the Gradle wrapper and install a Java 21 JDK for compilation and Minecraft. Gradle writes each JAR to its loader’s `build/libs` directory.
 
 ```powershell
-.\gradlew.bat --no-daemon build
+.\gradlew.bat build
 ```
 
-The `tools` folder contains the model generators and journal recipe catalogue generator. Run `node tools/build_machine_recipe_catalog.cjs --check` to check the catalogue.
+Use `:neoforge:build`, `:forge:build` or `:fabric:build` to build a single loader. Each loader provides `runClient` and `runServer` tasks, for example `:fabric:runClient`. Add `-PwithJei` to a run to include JEI.
 
-For the full automated check, install Node.js as well and run `.\gradlew.bat -PgameplayTests verifyMod`. This builds the JAR, checks resources and the recipe catalogue, compiles the screen previews, and runs all standalone and server gameplay tests. The same checks run on GitHub for pushes and pull requests, starting with fresh dependency downloads.
+Install Node.js and run `.\gradlew.bat -PgameplayTests verifyMultiLoader` to compare the three JARs and run the NeoForge gameplay and resource checks. CI also starts the Forge and Fabric distributions on dedicated test servers and checks that a farm saves and reloads. To run either server check locally, use `pwsh -File tools/verify_loader_server.ps1 -Loader forge -Java C:/path/to/java21/bin/java.exe` and substitute `fabric` for the second loader.
 
-Run the server gameplay tests with `.\gradlew.bat -PgameplayTests runGameplayTests`. The journal navigation check is `.\gradlew.bat journalNavigationSelfTest`. For screen previews and guide text measurements using the actual client font, run `.\gradlew.bat -PguiPreview runGuiPreview`. Add `-PwithJei` to check previews with JEI installed. These checks use disposable data under `build`.
-
-Old update scripts, screenshots, and verification reports are kept in local backups. Backups, artwork masters, and generated build reports stay out of the repository.
+Gameplay code and game-ready assets are in `common`. Each loader module contains its own registration, events and other platform code. The model and journal catalogue generators are in `tools`.
 
 ## Bugs and suggestions
 
-If you find a bug, tell me what happened, how to reproduce it, and which Minecraft, NeoForge, and mod versions you used. Include a screenshot or crash report if it helps. You can use the same issue tracker for suggestions. [Issue tracker](https://github.com/GWSheridan/Agri-Evolution/issues)
+If you find a bug, tell me what happened, how to reproduce it, and which Minecraft, loader and mod versions you used. Include a screenshot or crash report if it helps. You can use the same issue tracker for suggestions. [Issue tracker](https://github.com/GWSheridan/Agri-Evolution/issues)
 
 ## Credits
 

@@ -1,0 +1,22 @@
+plugins {
+    id 'base'
+}
+
+tasks.register('verifyPlatformBoundary') {
+    description = 'Check that shared sources and resources contain no loader APIs or mod metadata.'
+    group = 'verification'
+    def sources = fileTree('src/main')
+    inputs.files sources
+    doLast {
+        def forbidden = ~/\b(?:net\.neoforged|net\.minecraftforge|net\.fabricmc|cpw\.mods)\./
+        def violations = sources.matching { include '**/*.java' }
+                .findAll { it.text =~ forbidden }
+                .collect { relativePath(it) }
+        violations.addAll(sources.matching {
+            include '**/neoforge.mods.toml', '**/mods.toml', '**/fabric.mod.json', '**/loot_modifiers/**'
+        }.collect { relativePath(it) })
+        if (!violations.isEmpty()) throw new GradleException("Loader code in common: " + violations.join(', '))
+    }
+}
+
+tasks.named('check') { dependsOn 'verifyPlatformBoundary' }

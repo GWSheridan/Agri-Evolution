@@ -1,6 +1,6 @@
 // Original geometry with dedicated copper trim and existing greenhouse and crop art.
 const fs = require('node:fs');
-const assets = 'src/main/resources/assets/agri_evolution';
+const assets = 'common/src/main/resources/assets/agri_evolution';
 const directions = ['north', 'south', 'east', 'west', 'up', 'down'];
 const textures = {
     particle: 'agri_evolution:block/botanical_greenhouse_side',

@@ -1,0 +1,20 @@
+{
+  "pattern": [
+    " I",
+    "S "
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "type": "minecraft:crafting_shaped",
+  "result": {
+    "count": 1,
+    "id": "agri_evolution:trowel_empty"
+  },
+  "category": "equipment"
+}

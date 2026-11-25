@@ -1,5 +1,5 @@
 const fs = require('node:fs');
-const models = 'src/main/resources/assets/agri_evolution/models';
+const models = 'common/src/main/resources/assets/agri_evolution/models';
 const variants = { wood: 'crop_support', iron: 'iron_crop_support', obsidian: 'obsidian_crop_support' };
 
 function stake(x, z, height) {

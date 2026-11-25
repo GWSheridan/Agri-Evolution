@@ -1,6 +1,6 @@
 const fs = require('fs');
-const directory = 'src/main/resources/data/agri_evolution/recipe/';
-const destination = 'src/main/java/com/agrievolution/client/journal/MachineRecipeCatalog.java';
+const directory = 'common/src/main/resources/data/agri_evolution/recipe/';
+const destination = 'common/src/main/java/com/agrievolution/client/journal/MachineRecipeCatalog.java';
 
 function alternatives(ingredient) {
     if (Array.isArray(ingredient)) return ingredient.flatMap(alternatives);

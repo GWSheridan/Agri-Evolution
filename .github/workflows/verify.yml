@@ -1,8 +1,9 @@
-name: Verify mod
+name: Verify multi-loader builds
 
 on:
   push:
     branches: [main]
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
   pull_request:
   workflow_dispatch:
 
@@ -12,7 +13,7 @@ permissions:
 jobs:
   verify:
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
         with:
@@ -20,10 +21,60 @@ jobs:
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: |
+            21
+            25
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
           package-manager-cache: false
-      - name: Build and test from fresh dependencies
-        run: .\gradlew.bat --no-daemon -PgameplayTests -PwithJei verifyMod
+      - name: Build all distributions and run the NeoForge suite
+        run: .\gradlew.bat --no-daemon -PgameplayTests -PwithJei build verifyMultiLoader
+      - name: Check Forge and Fabric distributions on dedicated servers
+        shell: pwsh
+        run: |
+          $java = Join-Path $env:JAVA_HOME_21_X64 'bin/java.exe'
+          ./tools/verify_loader_server.ps1 -Loader forge -Java $java
+          ./tools/verify_loader_server.ps1 -Loader fabric -Java $java
+      - name: Store verified distributions
+        uses: actions/upload-artifact@v7
+        with:
+          name: agri-evolution-distributions
+          if-no-files-found: error
+          path: |
+            neoforge/build/libs/*-neoforge-*.jar
+            forge/build/libs/*-forge-*.jar
+            fabric/build/libs/*-fabric-*.jar
+            !**/*-sources.jar
+            !**/*-dev.jar
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: agri-evolution-distributions
+          path: dist
+      - name: Publish all three JARs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          version="$(sed -n 's/^mod_version=//p' gradle.properties | tr -d '\r')"
+          minecraft="$(sed -n 's/^minecraft_version=//p' gradle.properties | tr -d '\r')"
+          test "$GITHUB_REF_NAME" = "v$version"
+          for loader in neoforge forge fabric; do
+            mapfile -t jars < <(find dist -name "agri_evolution-$minecraft-$loader-$version.jar")
+            test "${#jars[@]}" -eq 1
+            assets+=("${jars[0]}")
+          done
+          awk -v heading="## $version" '$0 == heading { show=1; next } /^## / && show { exit } show' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
+          gh release create "$GITHUB_REF_NAME" "${assets[@]}" --verify-tag --latest --title "Agri Evolution $version" --notes-file release-notes.md

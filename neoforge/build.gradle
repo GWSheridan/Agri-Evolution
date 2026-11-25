@@ -1,0 +1,1024 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-${minecraft_version}-neoforge"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    maven {
+        url = 'https://maven.blamejared.com'
+        content { includeGroup 'mezz.jei' }
+    }
+}
+
+dependencies {
+    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.51.0.418'
+    if (project.hasProperty('withJei')) runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.51.0.418'
+}
+
+// Opt-in, world-free visual QA; never included in the release JAR.
+sourceSets { guiPreview { compileClasspath += sourceSets.main.output; runtimeClasspath += sourceSets.main.output } }
+configurations.guiPreviewRuntimeOnly.extendsFrom(configurations.runtimeOnly)
+
+neoForge {
+    version = neo_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        agri_evolution {
+            sourceSet sourceSets.main
+            if (project.hasProperty('gameplayTests')) sourceSet sourceSets.test
+            if (project.hasProperty('guiPreview')) sourceSet sourceSets.guiPreview
+        }
+    }
+}
+
+// Opt-in real-server tests run in a separate disposable world, never the gameplay save.
+neoForge.addModdingDependenciesTo(sourceSets.test)
+neoForge.addModdingDependenciesTo(sourceSets.guiPreview)
+if (project.hasProperty('guiPreview')) {
+    neoForge.runs {
+        guiPreview {
+            client()
+            sourceSet = sourceSets.guiPreview
+            gameDirectory = file('build/gui-preview-run')
+            if (project.hasProperty('withJei')) systemProperty 'agri.requireJei', 'true'
+            if (project.hasProperty('irrigationPreview')) systemProperty 'agri.irrigationPreview', 'true'
+            if (project.hasProperty('farmlandPreview')) systemProperty 'agri.farmlandPreview', 'true'
+            if (project.hasProperty('basinPreview')) systemProperty 'agri.basinPreview', 'true'
+            if (project.hasProperty('reservoirPreview')) systemProperty 'agri.reservoirPreview', 'true'
+            if (project.hasProperty('foodPreview')) systemProperty 'agri.foodPreview', 'true'
+            if (project.hasProperty('cookingPreview')) systemProperty 'agri.cookingPreview', 'true'
+            if (project.hasProperty('cropPreview')) systemProperty 'agri.cropPreview', 'true'
+            if (project.hasProperty('grandmasPreview')) systemProperty 'agri.grandmasPreview', 'true'
+            if (project.hasProperty('journalIndexPreview')) systemProperty 'agri.journalIndexPreview', 'true'
+            if (project.hasProperty('plannerPreview')) systemProperty 'agri.plannerPreview', 'true'
+            if (project.hasProperty('nativeBreedingPreview')) systemProperty 'agri.nativeBreedingPreview', 'true'
+            if (project.hasProperty('verticalGreenhousePreview')) systemProperty 'agri.verticalGreenhousePreview', 'true'
+            if (project.hasProperty('gardenProgressionPreview')) systemProperty 'agri.gardenProgressionPreview', 'true'
+            if (project.hasProperty('greenhouseStickPreview')) systemProperty 'agri.greenhouseStickPreview', 'true'
+            if (project.hasProperty('stickPreview')) systemProperty 'agri.stickPreview', 'true'
+            if (project.hasProperty('lunchControlsPreview')) systemProperty 'agri.lunchControlsPreview', 'true'
+            if (project.hasProperty('selectivePlantingPreview')) systemProperty 'agri.selectivePlantingPreview', 'true'
+            if (project.hasProperty('machinePreview')) systemProperty 'agri.machinePreview', 'true'
+            if (project.hasProperty('update134Preview')) systemProperty 'agri.update134Preview', 'true'
+            if (project.hasProperty('ledgerPreview')) systemProperty 'agri.ledgerPreview', 'true'
+            if (project.hasProperty('growingPreview')) systemProperty 'agri.growingPreview', 'true'
+            programArguments.addAll('--width', '1024', '--height', '576')
+        }
+    }
+}
+if (project.hasProperty('gameplayTests')) {
+    neoForge.runs {
+        gameplayTests {
+            type = 'gameTestServer'
+            sourceSet = sourceSets.test
+            gameDirectory = file('build/gameplay-test-run')
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'agri_evolution'
+            if (project.hasProperty('profileAudit')) jvmArgument "-XX:StartFlightRecording=settings=profile,dumponexit=true,filename=${file('build/gameplay-test-run/gameplay.jfr').absolutePath}"
+        }
+    }
+}
+
+// Archived texture libraries and their notice stay out of generated resources and release JARs.
+def legacyTextureEntries = [
+    'assets/agri_evolution/textures/plant/**',
+    'assets/agri_evolution/textures/seed/**',
+    'assets/agri_evolution/textures/THIRD_PARTY_TEXTURE_LICENSE.txt'
+]
+
+sourceSets.main.java.srcDir project(':common').file('src/main/java')
+
+sourceSets.main.resources {
+    srcDirs project(':common').file('src/main/resources'), project(':common').file('src/generated/resources')
+    exclude legacyTextureEntries
+}
+
+tasks.register('verifyLegacyTextureExclusion') {
+    group = 'verification'
+    dependsOn tasks.named('jar')
+    doLast {
+        def forbidden = zipTree(tasks.named('jar').get().archiveFile.get().asFile).matching {
+            include legacyTextureEntries
+        }
+        if (!forbidden.isEmpty()) throw new GradleException('Archived texture files found in the JAR')
+        logger.lifecycle('Agri Evolution: archived texture libraries and notice excluded from distribution')
+    }
+}
+tasks.named('check') { dependsOn tasks.named('verifyLegacyTextureExclusion') }
+
+tasks.register('verifyGardenGui') {
+    group = 'verification'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution/textures/gui/garden')
+        ['garden_frame':64, 'garden_header':64, 'seed_tray_slot':18].each { name, size ->
+            def png = new File(root, name + '.png')
+            def image = javax.imageio.ImageIO.read(png)
+            if (image == null || image.width != size || image.height != size)
+                throw new GradleException("Invalid garden GUI sprite: ${name}")
+            def metadata = new groovy.json.JsonSlurper().parse(new File(root, name + '.png.mcmeta'))
+            if (metadata.texture.blur != false) throw new GradleException("Garden GUI blur enabled: ${name}")
+        }
+        def client = project(':common').file('src/main/java/com/agrievolution/client')
+        ['SeedBagScreen', 'analyzer/SeedAnalyzerScreen', 'breeding/SeedBreedingStationScreen',
+         'laboratory/BotanicalGeneticsLaboratoryScreen', 'soil/SoilResearchTableScreen', 'soil/SoilSamplerScreen',
+         'greenhouse/BotanicalGreenhouseScreen', 'greenhouse/BotanicalGreenhouseHarvestScreen',
+         'greenhouse/BotanicalGreenhouseSeedBankScreen', 'greenhouse/BotanicalGreenhouseStorageScreen',
+         'journal/JournalRenderer'].each { name ->
+            if (!new File(client,name+'.java').text.contains('GardenGuiTheme'))
+                throw new GradleException("Screen missing gardening theme: ${name}")
+        }
+        logger.lifecycle('Agri Evolution: gardening theme connected to all 11 screens; native GUI assets verified')
+    }
+}
+tasks.named('processResources') { dependsOn tasks.named('verifyGardenGui') }
+
+tasks.named('jar', Jar) {
+    exclude legacyTextureEntries
+    from(rootProject.layout.projectDirectory.file('LICENSE'))
+}
+
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+        minecraft_version: minecraft_version,
+        minecraft_version_range: minecraft_version_range,
+        neo_version: neo_version,
+        loader_version_range: loader_version_range,
+        mod_id: mod_id,
+        mod_name: mod_name,
+        mod_license: mod_license,
+        mod_version: mod_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+
+// Validate crop models and the *block-atlas* texture files. A PNG in textures/plant/
+// is not enough: vanilla Minecraft's block atlas discovers textures/block/.
+tasks.register('verifyCropTextures') {
+    group = 'verification'
+    description = 'Validate that all eight Agri Evolution crop models reference usable 64x64 block atlas PNGs.'
+    doLast {
+        def assetRoot = project(':common').file('src/main/resources/assets/agri_evolution')
+        def jsonParser = new groovy.json.JsonSlurper()
+        def blockstates = jsonParser.parse(new File(assetRoot, 'blockstates/agri_crop.json'))
+        (0..7).each { age ->
+            def modelName = "agri_crop_stage${age}"
+            def modelId = "agri_evolution:block/${modelName}"
+            def modelFile = new File(assetRoot, "models/block/${modelName}.json")
+            def textureFile = new File(assetRoot, "textures/block/${modelName}.png")
+            if (!modelFile.isFile()) throw new GradleException("Missing crop model: ${modelFile}")
+            if (!textureFile.isFile()) throw new GradleException("Missing BLOCK ATLAS texture: ${textureFile}")
+            def model = jsonParser.parse(modelFile)
+            if (model.parent != 'agri_evolution:block/crop_cross' || model.textures.crop != modelId) {
+                throw new GradleException("Wrong parent or crop texture reference in ${modelFile}")
+            }
+            if (blockstates.multipart?.find { it.when?.age == "${age}" }?.apply?.model != modelId) {
+                throw new GradleException("Broken blockstate age=${age} model mapping")
+            }
+            def image = javax.imageio.ImageIO.read(textureFile)
+            if (image == null || image.width != 64 || image.height != 64 || !image.colorModel.hasAlpha()) {
+                throw new GradleException("Crop stage must be a 64x64 RGBA PNG: ${textureFile.name}")
+            }
+            def signature = textureFile.withInputStream { ins ->
+                byte[] bytes = new byte[8]
+                if (ins.read(bytes) != 8) throw new GradleException("Invalid PNG header: ${textureFile}")
+                bytes
+            }
+            if (!java.util.Arrays.equals(signature, [(byte)137, (byte)80, (byte)78, (byte)71, (byte)13, (byte)10, (byte)26, (byte)10] as byte[])) {
+                throw new GradleException("Not a PNG: ${textureFile}")
+            }
+        }
+        logger.lifecycle('Agri Evolution: validated all 8 crop stages and 64x64 block atlas PNGs')
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn(tasks.named('verifyCropTextures'))
+}
+
+// 0.32.0: enforce a unified 64x64 standard for block/crop textures so future art stays consistent.
+tasks.register('verifyBlockTextureStandard') {
+    group = 'verification'
+    description = 'Check block texture sizes and crop sprite contact with farmland.'
+    doLast {
+        def assets = project(':common').file('src/main/resources/assets/agri_evolution')
+        def models = new File(assets, 'models/block')
+        def parser = new groovy.json.JsonSlurper()
+        def cropPlanes = parser.parse(new File(models, 'crop_cross.json')).elements
+        def soilTops = models.listFiles().findAll { it.name ==~ /.+_farmland_(wet|dry)\.json/ }.collect { model ->
+            parser.parse(model).elements.collect { it.to[1] }.max()
+        }
+        def soilSurface = (soilTops + [15]).min() - 16
+        def files = new File(assets, 'textures/block').listFiles().findAll { it.name.endsWith('.png') }.sort { a, b -> a.name <=> b.name }
+        int cropStages = 0
+        files.each { file ->
+            def image = javax.imageio.ImageIO.read(file)
+            if (image == null || image.width != 64 || image.height != 64)
+                throw new GradleException("Block texture must be 64x64: ${file.name}")
+            if (file.name ==~ /.+_crop_stage[0-7]\.png/) {
+                // Minecraft's cutout shader discards alpha below 0.1.
+                def bottom = (63..0).find { y -> (0..63).any { x -> (image.getRGB(x, y) >>> 24) >= 26 } }
+                if (bottom == null || cropPlanes.any { plane ->
+                    plane.from[1] + (63 - bottom) * (plane.to[1] - plane.from[1]) / 64 > soilSurface
+                }) {
+                    throw new GradleException("Crop sprite does not reach farmland: ${file.name}")
+                }
+                cropStages++
+            }
+        }
+        logger.lifecycle("Agri Evolution: verified ${files.size()} unified 64x64 block textures")
+        logger.lifecycle("Agri Evolution: all ${cropStages} crop sprites reach farmland")
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyBlockTextureStandard')) }
+
+tasks.named('test', Test) {
+    // Project currently has skeleton test sources but no test engine/discoverable tests.
+    failOnNoDiscoveredTests = false
+}
+
+
+// Verify crisp item sprites: every generated inventory item now follows one 64x64 standard.
+// This prevents a repeat of mixed 16/32/64 sizing, halo artifacts and mismatched inventory art.
+tasks.register('verifyItemTextures') {
+    group = 'verification'
+    description = 'Check every generated Agri Evolution item texture for the 64x64 standard and crisp binary alpha.'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution')
+        def parser = new groovy.json.JsonSlurper()
+        def modelFiles = project(':common').file('src/main/resources/assets/agri_evolution/models/item')
+                .listFiles().findAll { it.name.endsWith('.json') }.sort { a, b -> a.name <=> b.name }
+        def ids = [] as Set
+        modelFiles.each { modelFile ->
+            def model = parser.parse(modelFile)
+            def layer0 = model.textures?.layer0
+            if (!(layer0 instanceof String) || !layer0.startsWith('agri_evolution:item/')) {
+                return
+            }
+            if (!(model.parent in ['minecraft:item/generated', 'minecraft:item/handheld'])) {
+                throw new GradleException("Invalid generated item model: ${modelFile.name}")
+            }
+            def id = layer0.substring('agri_evolution:item/'.length())
+            ids << id
+            def imageFile = new File(root, "textures/item/${id}.png")
+            if (!imageFile.isFile()) {
+                throw new GradleException("Missing Agri Evolution item texture: ${id}")
+            }
+            def image = javax.imageio.ImageIO.read(imageFile)
+            if (image == null || image.width != 64 || image.height != 64) {
+                throw new GradleException("Item PNG must be 64x64: ${id}")
+            }
+            boolean transparent = false
+            boolean opaque = false
+            for (int y = 0; y < image.height; y++) {
+                for (int x = 0; x < image.width; x++) {
+                    int alpha = (image.getRGB(x, y) >>> 24) & 0xFF
+                    if (alpha == 0) transparent = true
+                    else if (alpha == 255) opaque = true
+                    else throw new GradleException("Unwanted semi-transparent fringe in ${id}.png at ${x},${y}")
+                }
+            }
+            if (!transparent || !opaque) {
+                throw new GradleException("Item sprite needs visible pixels and genuine transparency: ${id}")
+            }
+        }
+        logger.lifecycle("Agri Evolution: verified ${ids.size()} crisp 64x64 item sprites and model references")
+    }
+}
+
+tasks.named('processResources') {
+    dependsOn(tasks.named('verifyItemTextures'))
+}
+
+// The plain Java genetics self-test requires no JUnit or in-game launcher.
+tasks.register('genomeSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Run deterministic genetics/mutation/clamping checks.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.genetics.GenomeSmokeTest'
+}
+
+// Prevent a repeat of the broken crop and inventory textures.
+tasks.register('verifyWorkingTextures') {
+    group = 'verification'
+    description = 'Check crop and item sprite SHA-256 fingerprints when the local baseline is available.'
+    def baseline = rootProject.layout.projectDirectory.file('WORKING_TEXTURE_SHA256.json').asFile
+    onlyIf('the local texture baseline is available') { baseline.isFile() }
+    doLast {
+        def hashes = new groovy.json.JsonSlurper().parse(baseline)
+        hashes.each { path, expected ->
+            def fileToCheck = project(':common').file("src/main/resources/assets/agri_evolution/${path}")
+            if (!fileToCheck.isFile()) throw new GradleException("Missing working texture: ${path}")
+            def digest = java.security.MessageDigest.getInstance('SHA-256')
+            def actual = digest.digest(fileToCheck.bytes).encodeHex().toString()
+            if (actual != expected) throw new GradleException("Working texture modified: ${path}")
+        }
+        logger.lifecycle("Agri Evolution: ${hashes.size()} known-good texture checksums verified (original 64px item baselines)")
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyWorkingTextures')) }
+
+// Agri Evolution 0.4: verify all new species resources and icon transparency.
+tasks.register('verifySpeciesResources') {
+    group = 'verification'
+    description = 'Check all species crop stages, blockstates, loot tables and 64x64 seed icons.'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution')
+        def data = project(':common').file('src/main/resources/data/agri_evolution/loot_table/blocks')
+        def parser = new groovy.json.JsonSlurper()
+        ['crimson_clover', 'azure_flax', 'violet_starflower', 'amber_marigold', 'silver_thistle', 'sunfire_lily', 'moon_orchid'].each { id ->
+            def blockId = "${id}_crop"
+            def seedId = "${id}_seed"
+            def states = parser.parse(new File(root, "blockstates/${blockId}.json"))
+            (0..7).each { age ->
+                def name = "${blockId}_stage${age}"
+                def modelId = "agri_evolution:block/${name}"
+                def model = parser.parse(new File(root, "models/block/${name}.json"))
+                if (states.multipart?.find { it.when?.age == "${age}" }?.apply?.model != modelId ||
+                    model.parent != 'agri_evolution:block/crop_cross' ||
+                    model.textures?.crop != modelId ||
+                    model.render_type != 'minecraft:cutout') {
+                    throw new GradleException("Invalid growth stage ${age} for ${blockId}")
+                }
+                def image = javax.imageio.ImageIO.read(new File(root, "textures/block/${name}.png"))
+                if (image == null || image.width != 64 || image.height != 64 ||
+                    !image.colorModel.hasAlpha()) {
+                    throw new GradleException("Invalid 64x64 crop sprite ${name}")
+                }
+            }
+            def model = parser.parse(new File(root, "models/item/${seedId}.json"))
+            if (model.parent != 'minecraft:item/generated' ||
+                model.textures?.layer0 != "agri_evolution:item/${seedId}") {
+                throw new GradleException("Invalid seed item model for ${seedId}")
+            }
+            def image = javax.imageio.ImageIO.read(new File(root, "textures/item/${seedId}.png"))
+            if (image == null || image.width != 64 || image.height != 64) {
+                throw new GradleException("Invalid seed icon ${seedId}")
+            }
+            def loot = parser.parse(new File(data, "${blockId}.json"))
+            if (loot.type != 'minecraft:block') {
+                throw new GradleException("Invalid loot table ${blockId}")
+            }
+        }
+        logger.lifecycle('Agri Evolution: verified all 7 non-wild species, 56 64x64 crop stages, and 7 seed icons')
+    }
+}
+
+tasks.named('processResources') { dependsOn(tasks.named('verifySpeciesResources')) }
+
+
+// 0.5.1: the four new flowers must look like plants, not filled square blocks.
+// PNG validation is intentionally independent of Python or Pillow.
+tasks.register('verifyBotanicalSilhouettes') {
+    group = 'verification'
+    description = 'Verify all 312 redrawn crop growth sprites, cutout edges and growth alignment.'
+    doLast {
+        def base = project(':common').file('src/main/resources/assets/agri_evolution/textures/block')
+        ['agri', 'crimson_clover', 'azure_flax', 'violet_starflower', 'amber_marigold',
+         'silver_thistle', 'sunfire_lily', 'moon_orchid', 'eclipse_lotus', 'twilight_sage',
+         'dirt', 'wood', 'stone', 'coal', 'copper', 'iron', 'redstone', 'gold', 'lapis',
+         'diamond', 'emerald', 'quartz', 'gravel', 'sand', 'clay', 'flint', 'glowstone',
+         'obsidian', 'netherrack', 'soul_sand', 'magma_cream', 'nether_wart', 'blaze_rod',
+         'end_stone', 'chorus_fruit', 'ender_pearl', 'shulker_shell', 'ancient_debris', 'netherite'].each { species ->
+            def seen = new HashSet<String>()
+            int previousTop = 64
+            (0..7).each { age ->
+                def path = new File(base, "${species}_crop_stage${age}.png")
+                def im = javax.imageio.ImageIO.read(path)
+                if (im == null || im.width != 64 || im.height != 64 || !im.colorModel.hasAlpha()) {
+                    throw new GradleException("Invalid 64x64 RGBA crop PNG ${path.name}")
+                }
+                def count = 0
+                def top = 64
+                for (int y=0; y<64; y++) {
+                    for (int x=0; x<64; x++) {
+                        int alpha = (im.getRGB(x,y) >>> 24) & 0xff
+                        if (alpha != 0 && alpha != 255) throw new GradleException("Partially transparent crop pixel in ${path.name}")
+                        if (alpha > 0) {
+                            count++; top = Math.min(top, y)
+                            if (x < 7 || x > 56 || y == 63) throw new GradleException("Crop exceeds its 50px planting footprint: ${path.name}")
+                        }
+                    }
+                }
+                // 0.37 crop redraw: fuller foliage while retaining open space and clear edges.
+                if (count < 64 || count > 2000 || top < 8) throw new GradleException("Oversized/empty crop: ${path.name} (${count} pixels; top=${top})")
+                if (top > previousTop) throw new GradleException("Crop shrinks between growth stages: ${path.name}")
+                previousTop = top
+                def fingerprint = java.security.MessageDigest.getInstance('SHA-256').digest(path.bytes).encodeHex().toString()
+                if (!seen.add(fingerprint)) throw new GradleException("Repeated growth artwork: ${path.name}")
+            }
+        }
+        logger.lifecycle('Agri Evolution: 312 crop growth sprites, transparent margins and growth progression verified')
+    }
+}
+tasks.named('processResources') { dependsOn tasks.named('verifyBotanicalSilhouettes') }
+
+tasks.register('speciesSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Run deterministic crop-species inheritance and mutation tests.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.genetics.SpeciesSmokeTest'
+}
+
+// Agri Evolution 0.4.2: check the new pixel-art GUI and every 32x32 icon.
+// Does not touch, regenerate or re-encode any working crop or item texture.
+tasks.register('verifyJournalUI') {
+    group = 'verification'
+    description = 'Validate journal GUI sprite sizes, PNGs and species IDs.'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution/textures/gui/journal')
+        def expected = [
+            'journal_background.png': [430, 270],
+            'journal_background_compact.png': [380, 204],
+            'arrow_left.png': [20, 20],
+            'arrow_right.png': [20, 20]
+        ]
+        ['undiscovered'].each {
+            expected["species/${it}.png"] = [32, 32]
+            expected["species/small/${it}.png"] = [16, 16]
+        }
+        expected.each { path, dimensions ->
+            def imageFile = new File(root, path)
+            def image = javax.imageio.ImageIO.read(imageFile)
+            if (image == null || image.width != dimensions[0] || image.height != dimensions[1]
+                    || !image.colorModel.hasAlpha()) {
+                throw new GradleException("Missing/invalid GUI PNG: ${path} must be ${dimensions[0]}x${dimensions[1]} RGBA")
+            }
+        }
+        logger.lifecycle("Agri Evolution: verified ${expected.size()} crisp journal GUI textures (full + compact)")
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyJournalUI')) }
+
+tasks.register('journalNavigationSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Run independent journal tab/species navigation checks.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.client.journal.JournalNavigationSelfTest'
+}
+
+// 0.4.4: enforce a blur-before-UI render order and pixel-perfect native art layouts.
+tasks.register('verifyJournalPixelPerfect') {
+    group = 'verification'
+    description = 'Protect against fractional journal pose scaling and blurred UI assets.'
+    dependsOn tasks.named('verifyJournalUI')
+    doLast {
+        def screen = project(':common').file('src/main/java/com/agrievolution/client/journal/JournalScreen.java').text
+        if (screen.contains('gui.pose().scale(uiScale') || screen.contains('uiScale = Math.min')) {
+            throw new GradleException('Fractional JournalScreen scale reintroduced')
+        }
+        if (!screen.contains('CompactJournalRenderer.render') || !screen.contains('compact = width <')) {
+            throw new GradleException('Missing native-resolution responsive journal layout')
+        }
+        // Minecraft 1.21.1 applies framebuffer blur in Screen.renderBackground().
+        // Rendering the journal *before* super.render() blurs all its text and artwork.
+        def start = screen.indexOf('public void render(GuiGraphics gui, int mouseX, int mouseY, float partialTick)')
+        def finish = screen.indexOf('private void title(', start)
+        if (start < 0 || finish < 0) throw new GradleException('JournalScreen.render() missing')
+        def renderBody = screen.substring(start, finish)
+        def backgroundFirst = renderBody.indexOf('super.render(gui, mouseX, mouseY, partialTick);')
+        def journalDrawing = renderBody.indexOf('gui.fill(0, 0, width, height, 0xB4000806);')
+        if (backgroundFirst < 0 || journalDrawing < 0 || backgroundFirst > journalDrawing ||
+                renderBody.indexOf('super.render(gui, mouseX, mouseY, partialTick);', backgroundFirst + 1) >= 0) {
+            throw new GradleException('Journal blur regression: super.render() must run ONCE before all journal drawing')
+        }
+        def folder = project(':common').file('src/main/resources/assets/agri_evolution/textures/gui/journal')
+        def names = ['journal_background','journal_background_compact','arrow_left','arrow_right']
+        names.each { name ->
+            def f = new File(folder, "${name}.png.mcmeta")
+            if (!f.isFile()) throw new GradleException("Missing sampling metadata for ${name}")
+            def metadata = new groovy.json.JsonSlurper().parse(f)
+            if (metadata.texture?.blur != false) {
+                throw new GradleException("Blur must be disabled: ${name}")
+            }
+        }
+        logger.lifecycle('Agri Evolution: native-resolution full/compact journal layouts checked')
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyJournalPixelPerfect')) }
+
+
+// 0.6.0: validates multipart crop supports and new irrigation resources.
+tasks.register('verifyFarmResources') {
+    group = 'verification'
+    description = 'Check all 8 supported-crop blockstates, trellis/basin models, recipes and art.'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution')
+        def data = project(':common').file('src/main/resources/data/agri_evolution')
+        def parser = new groovy.json.JsonSlurper()
+        def ids = ['agri_crop','crimson_clover_crop','azure_flax_crop','violet_starflower_crop',
+                   'amber_marigold_crop','silver_thistle_crop','sunfire_lily_crop','moon_orchid_crop']
+        ids.each { id ->
+            def states = parser.parse(new File(root, "blockstates/${id}.json"))
+            def parts = states.multipart
+            if (!parts || parts.size() != 12) throw new GradleException("Missing multipart crop models: ${id}")
+            if (parts.find { it.when?.weedy == 'true' }?.apply?.model != 'agri_evolution:block/crop_weeds')
+                throw new GradleException("Missing weed overlay: ${id}")
+            (0..7).each { age ->
+                if (parts.find { it.when?.age == "${age}" }?.apply?.model !=
+                    "agri_evolution:block/${id}_stage${age}")
+                    throw new GradleException("Broken age=${age} for ${id}")
+            }
+            if (parts.find { it.when?.supported == 'true' && it.when?.support_tier == '0|1' }?.apply?.model !=
+                'agri_evolution:block/crop_support_overlay')
+                throw new GradleException("Missing support model for ${id}")
+            [2:"iron",3:"obsidian"].each { tier, material ->
+                if (parts.find { it.when?.supported == "true" && it.when?.support_tier == tier.toString() }?.apply?.model != "agri_evolution:block/${material}_crop_support_overlay")
+                    throw new GradleException("Missing tier ${tier} support model for ${id}")
+            }
+        }
+        // Validate all three visual tiers, each with empty and full water models.
+        // The basin now has an upgrade blockstate property, so checking only
+        // filled=false / filled=true is no longer sufficient.
+        ['crop_support_overlay',
+         'irrigation_basin_empty', 'irrigation_basin_full',
+         'irrigation_basin_empty_mk2', 'irrigation_basin_full_mk2',
+         'irrigation_basin_empty_mk3', 'irrigation_basin_full_mk3'].each { id ->
+            def model = parser.parse(new File(root, "models/block/${id}.json"))
+            if (!model.elements || model.elements.isEmpty())
+                throw new GradleException("Missing 3D elements for ${id}")
+            model.textures.each { name, texture ->
+                def value = texture.replace('agri_evolution:block/', '')
+                if (texture != "minecraft:block/water_still" && !new File(root, "textures/block/${value}.png").isFile())
+                    throw new GradleException("Missing referenced texture: ${texture}")
+            }
+        }
+        ['crop_support', 'irrigation_basin'].each { id ->
+            if (!new File(data, "recipe/${id}.json").isFile())
+                throw new GradleException("Missing survival recipe for ${id}")
+            if (!new File(root, "models/item/${id}.json").isFile())
+                throw new GradleException("Missing item model for ${id}")
+        }
+        def basinStates = parser.parse(new File(root, 'blockstates/irrigation_basin.json'))
+        def expectedBasinStates = [
+            'filled=false,upgrade=0': 'irrigation_basin_empty',
+            'filled=true,upgrade=0' : 'irrigation_basin_full',
+            'filled=false,upgrade=1': 'irrigation_basin_empty_mk2',
+            'filled=true,upgrade=1' : 'irrigation_basin_full_mk2',
+            'filled=false,upgrade=2': 'irrigation_basin_empty_mk3',
+            'filled=true,upgrade=2' : 'irrigation_basin_full_mk3'
+        ]
+        expectedBasinStates.each { state, model ->
+            if (basinStates.variants[state]?.model != "agri_evolution:block/${model}")
+                throw new GradleException("Basin state ${state} missing its model: ${model}")
+        }
+        if (basinStates.variants.size() != expectedBasinStates.size())
+            throw new GradleException('Basin has unexpected or duplicate variant states')
+        logger.lifecycle('Agri Evolution: verified 8 supported crops, six basin states, 3D models, and crafting assets')
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyFarmResources')) }
+
+tasks.register('farmingSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Run farming balance, nutrition and supported breeding self-tests.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.farming.FarmingSelfTest'
+}
+
+// 0.6.1 regression guard: a basin must feed vanilla farmland's native water check.
+// RandomTick() alone is not reliable: vanilla farmland can revert to dirt first.
+tasks.register('verifyPermanentIrrigation') {
+    group = 'verification'
+    description = 'Confirm native NeoForge farmland-water tickets and basin lifecycle handling.'
+    doLast {
+        def classes = file('src/main/java/com/agrievolution/content')
+        def basin = readSource('content/IrrigationBasinBlockEntity.java')
+        def block = readSource('content/IrrigationBasinBlock.java')
+        def entities = readSource('content/AEBlockEntities.java')
+        def farming = project(':common').file('src/main/java/com/agrievolution/farming/FarmEnvironment.java').text
+        [
+            'Game.hooks().waterTicket',
+            'waterTicket.invalidate()',
+            'void onLoad()',
+            'void onChunkUnloaded()',
+            'void setRemoved()',
+            'void setBlockState(BlockState state)',
+            'hydrateExistingFarmland(server, state)'
+        ].each { required ->
+            if (!basin.contains(required)) throw new GradleException("Irrigation ticket lifecycle missing: ${required}")
+        }
+        if (!entities.contains('Supplier<BlockEntityType<IrrigationBasinBlockEntity>> IRRIGATION_BASIN') ||
+            !block.contains('implements EntityBlock') ||
+            !farming.contains('IRRIGATION_RANGE = 6')) {
+            throw new GradleException('Permanent six-block irrigation is not registered consistently')
+        }
+        logger.lifecycle('Agri Evolution 0.6.1: persistent farmland hydration and ticket cleanup verified')
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyPermanentIrrigation')) }
+
+// 0.8.0: exact prediction ranges, grades, comparisons and mutation recipes.
+tasks.register('seedAnalyzerSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Check seed analyzer quality grading, comparison, mutation chances and real breeding bounds.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.genetics.SeedAnalyzerSelfTest'
+}
+
+// 0.9.0: verify the station's offspring algorithm agrees with the analyzer preview.
+tasks.register('breedingStationSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Check seed breeding genetic inheritance, mutation bonus and species rules.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.genetics.SeedBreedingStationSelfTest'
+}
+
+tasks.register('verifyBreedingStationResources') {
+    group = 'verification'
+    description = 'Check all Seed Breeding Station blockstate, item, texture and recipe resources.'
+    doLast {
+        def assets = project(':common').file('src/main/resources/assets/agri_evolution')
+        def parser = new groovy.json.JsonSlurper()
+        def states = parser.parse(new File(assets, 'blockstates/seed_breeding_station.json'))
+        ['north', 'east', 'south', 'west'].each { facing ->
+            if (!states.variants["facing=${facing}"]?.model?.equals('agri_evolution:block/seed_breeding_station'))
+                throw new GradleException('Station missing facing model ' + facing)
+        }
+        def model = parser.parse(new File(assets, 'models/block/seed_breeding_station.json'))
+        model.textures.each { role, texture ->
+            def path = texture.replace('agri_evolution:', '')
+            if (!new File(assets, "textures/${path}.png").isFile())
+                throw new GradleException("Station missing texture: ${texture}")
+        }
+        if (!new File(assets, 'models/item/seed_breeding_station.json').isFile())
+            throw new GradleException('Station missing inventory/hand item model')
+        ['recipe/seed_breeding_station.json', 'loot_table/blocks/seed_breeding_station.json'].each { path ->
+            def resource = new File(project(':common').file('src/main/resources/data/agri_evolution'), path)
+            parser.parse(resource)
+        }
+        logger.lifecycle('Agri Evolution 0.9.0: Seed Breeding Station resource references verified')
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyBreedingStationResources')) }
+
+// 0.18.0: verify resource crop assets before packaging, even on machines without Pillow.
+tasks.register('verifyResourceFarming') {
+    group = 'verification'
+    description = 'Check every Resource Farming seed, crop stage, loot table and current crop illustration.'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution')
+        def data = project(':common').file('src/main/resources/data/agri_evolution')
+        ['dirt','wood','stone','coal','copper','iron','redstone','gold','lapis','diamond','emerald','quartz'].each { name ->
+            ["models/item/${name}_seed.json", "textures/item/${name}_seed.png",
+             "blockstates/${name}_crop.json"].each { rel ->
+                if (!new File(root,rel).isFile()) throw new GradleException("Missing resource file: ${rel}")
+            }
+            if (!new File(data,"loot_table/blocks/${name}_crop.json").isFile())
+                throw new GradleException("Missing loot table: ${name}")
+            (0..7).each { age ->
+                ["models/block/${name}_crop_stage${age}.json", "textures/block/${name}_crop_stage${age}.png"].each { rel ->
+                    if (!new File(root,rel).isFile()) throw new GradleException("Missing crop asset: ${rel}")
+                }
+                def stage = javax.imageio.ImageIO.read(new File(root, "textures/block/${name}_crop_stage${age}.png"))
+                if (stage == null || stage.width != 64 || stage.height != 64)
+                    throw new GradleException("Resource crop stage must be 64x64: ${name}_crop_stage${age}")
+            }
+        }
+        logger.lifecycle('Agri Evolution: all 12 resource crops and 96 64x64 growth sprites validated')
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyResourceFarming')) }
+
+// 0.19: validate complete seed/crop/loot registration for the next resource branch.
+tasks.register('verifyExtendedResourceCrops') {
+    group = 'verification'
+    description = 'Check every expanded resource seed, crop stage, and harvest loot.'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution')
+        def data = project(':common').file('src/main/resources/data/agri_evolution/loot_table/blocks')
+        def parse = new groovy.json.JsonSlurper()
+        ['gravel','sand','clay','flint','glowstone','obsidian'].each { id ->
+            def seed = "${id}_seed"
+            def crop = "${id}_crop"
+            def item = parse.parse(new File(root,"models/item/${seed}.json"))
+            if (item.textures.layer0 != "agri_evolution:item/${seed}")
+                throw new GradleException("Invalid new resource item model: ${seed}")
+            def png = javax.imageio.ImageIO.read(new File(root,"textures/item/${seed}.png"))
+            if (png.width != 64 || png.height != 64)
+                throw new GradleException("Invalid new resource seed texture: ${seed}")
+            def bs = parse.parse(new File(root,"blockstates/${crop}.json"))
+            (0..7).each { age ->
+                def model = "${crop}_stage${age}"
+                if (bs.multipart.find { it.when?.age == "${age}" }?.apply?.model != "agri_evolution:block/${model}")
+                    throw new GradleException("No stage ${age} for ${crop}")
+                if (!new File(root, "models/block/${model}.json").isFile() ||
+                    !new File(root, "textures/block/${model}.png").isFile())
+                    throw new GradleException("Missing crop stage asset: ${model}")
+                def stage = javax.imageio.ImageIO.read(new File(root, "textures/block/${model}.png"))
+                if (stage == null || stage.width != 64 || stage.height != 64)
+                    throw new GradleException("Expanded resource crop stage must be 64x64: ${model}")
+            }
+            def loot = parse.parse(new File(data, "${crop}.json"))
+            if (!loot.pools.any { pool -> pool.entries.any { entry -> entry.name == "agri_evolution:${seed}" } })
+                throw new GradleException("Seed not returned on harvest: ${crop}")
+        }
+        logger.lifecycle('Agri Evolution: six additional resource crops with 64x64 harvesting assets verified')
+    }
+}
+tasks.named('processResources') { dependsOn tasks.named('verifyExtendedResourceCrops') }
+
+tasks.register('resourceProgressionSelfTest', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.genetics.ResourceProgressionSelfTest'
+}
+
+// 0.19.2: every AgriCropBlock creates AECropBlockEntity, so all crops MUST
+// be valid for the stable agri_evolution:agri_crop block entity type.
+// This guard runs on *compileJava*, not just processResources or clean build.
+tasks.register('verifyCropBlockEntityRegistration') {
+    group = 'verification'
+    description = 'Prevent Invalid block entity crashes when planting new crop species.'
+    doLast {
+        def speciesSource = project(':common').file('src/main/java/com/agrievolution/genetics/CropSpecies.java').text
+        def blocksSource = project(':common').file('src/main/java/com/agrievolution/content/AEBlocks.java').text
+        def entitiesSource = project(':common').file('src/main/java/com/agrievolution/content/AEBlockEntities.java').text
+        def species = (speciesSource =~ /(?m)^\s*([A-Z][A-Z0-9_]*)\("[^"]+",\s*"[^"]+",\s*"[^"]+",\s*"[^"]+",\s*(?:true|false)\)[,;]/)
+                .collect { it[1] }
+        if (species.isEmpty()) throw new GradleException('CropSpecies registry was not parsed')
+        def expected = species.collect { it == 'WILD' ? 'AGRI_CROP' : "${it}_CROP" }
+        def defined = (blocksSource =~ /public static final Supplier<AgriCropBlock>\s+([A-Z][A-Z0-9_]*)\s*=/)
+                .collect { it[1] }
+        def typeMatch = (entitiesSource =~ /(?s)AECropBlockEntity::new,\s*(.*?)\)\.build\(null\)/)
+        if (!typeMatch.find()) throw new GradleException('AGRI_CROP BlockEntityType.Builder.of not found')
+        def registered = (typeMatch.group(1) =~ /AEBlocks\.([A-Z][A-Z0-9_]*)\.get\(\)/)
+                .collect { it[1] }
+        if (defined.size() != defined.toSet().size() || registered.size() != registered.toSet().size())
+            throw new GradleException('Duplicate crop block or BlockEntityType registration')
+        def missingBlocks = expected.toSet() - defined.toSet()
+        def extraneousBlocks = defined.toSet() - expected.toSet()
+        def missingValid = expected.toSet() - registered.toSet()
+        def extraValid = registered.toSet() - expected.toSet()
+        if (missingBlocks || extraneousBlocks || missingValid || extraValid) {
+            throw new GradleException("Crop registration mismatch: missing blocks=${missingBlocks}, extra blocks=${extraneousBlocks}, invalid BE blocks=${missingValid}, unexpected BE blocks=${extraValid}")
+        }
+        logger.lifecycle("Agri Evolution 0.20.0: ${expected.size()} crop blocks registered and valid for AECropBlockEntity")
+    }
+}
+tasks.named('compileJava') { dependsOn tasks.named('verifyCropBlockEntityRegistration') }
+
+// 0.22.0: pure-Java planner checks for precedence and deterministic rotation.
+tasks.register('seedBankPlannerSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Check seed bank priorities, strongest genetics and round-robin selection.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.farming.SeedBankPlannerSelfTest'
+}
+
+tasks.register('verifyAdvancedSeedBank') {
+    group = 'verification'
+    description = 'Catch missing 0.22.0 seed bank server-side settings, inventory or save keys.'
+    doLast {
+        def entity = readSource('content/BotanicalGreenhouseBlockEntity.java')
+        def menu = readSource('content/BotanicalGreenhouseSeedBankMenu.java')
+        def screen = readSource('client/greenhouse/BotanicalGreenhouseSeedBankScreen.java')
+        def planner = readSource('farming/SeedBankSelection.java')
+        [ 'SmartFarmingSeedDisabled', 'SmartFarmingSeedPriorities',
+          'SmartFarmingSeedReserve', 'SmartFarmingPreferGenes',
+          'chooseSeedBankSlot()', 'getCount() { return SEED_SETTINGS_COUNT; }',
+          'tag.getIntArray("SmartFarmingSeedPriorities")',
+          'seedSlotEnabled(slot)', 'stack.getCount() <= reservedPerSlot',
+          'GenomeStorage.fromSeed(stack).totalScore()' ].each { marker ->
+            if (!entity.contains(marker)) throw new GradleException("Advanced Seed Bank entity missing: ${marker}")
+        }
+        [ 'checkContainerDataCount(settings, BotanicalGreenhouseBlockEntity.SEED_SETTINGS_COUNT)', 'addDataSlots(settings)',
+          'clickMenuButton(Player player, int button)', 'greenhouse.toggleSeedSlot(button)',
+          'greenhouse.cycleSeedPriority(button - INPUTS)', 'greenhouse.cycleSeedReserve()',
+          'greenhouse.toggleBestGenetics()' ].each { marker ->
+            if (!menu.contains(marker)) throw new GradleException("Advanced Seed Bank menu missing: ${marker}")
+        }
+        [ 'handleInventoryButtonClick(menu.containerId', 'Best genes:', 'Reserve: ',
+          'menu.priority(i)', 'menu.slotEnabled(i)' ].each { marker ->
+            if (!screen.contains(marker)) throw new GradleException("Advanced Seed Bank UI missing: ${marker}")
+        }
+        if (!planner.contains('candidate.priority() > bestPriority') ||
+            !planner.contains('Math.floorMod(candidate.slot() - startCursor, slotCount)'))
+            throw new GradleException('Advanced Seed Bank selection policy missing')
+        logger.lifecycle('Agri Evolution 0.22.0: nine-slot seed bank configurations and planner verified')
+    }
+}
+tasks.named('compileJava') { dependsOn(tasks.named('verifyAdvancedSeedBank')) }
+
+// 0.23.0: diagnostics are display-only; both the data bridge and persistent state
+// are checked without altering established greenhouse automation or approved art.
+// 0.29.5 extends the existing 42-slot dashboard sync with a read-only
+// snapshot of the last successfully planted seed's genome. Retain the old 0-41 indices.
+tasks.register('smartGreenhouseMonitoringSelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Test slot-exclusion explanations and monitoring efficiency calculations.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.farming.SeedBankMonitoringSelfTest'
+}
+
+tasks.register('verifySmartGreenhouseMonitoring') {
+    group = 'verification'
+    description = 'Check greenhouse monitoring sync (51 slots since 0.30.0), screen, and save keys.'
+    doLast {
+        def entity = readSource('content/BotanicalGreenhouseBlockEntity.java')
+        def menu = readSource('content/BotanicalGreenhouseMenu.java')
+        def screen = readSource('client/greenhouse/BotanicalGreenhouseScreen.java')
+        ['recordPlantCycle(', 'seedBankSummary()', 'MonitoringAttempts',
+         'MonitoringSuccessful', 'MonitoringLastResult', 'MonitoringLastSlot',
+         'MonitoringLastSpecies', 'getCount() { return DASHBOARD_DATA_COUNT; }'].each { needle ->
+            if (!entity.contains(needle)) throw new GradleException("Missing greenhouse monitoring entity: ${needle}")
+        }
+        ['new SimpleContainerData(BotanicalGreenhouseBlockEntity.DASHBOARD_DATA_COUNT)', 'checkContainerDataCount(data, BotanicalGreenhouseBlockEntity.DASHBOARD_DATA_COUNT)',
+         'monitorResultLabel()', 'monitorEligible()', 'monitorEfficiency()'].each { needle ->
+            if (!menu.contains(needle)) throw new GradleException("Missing greenhouse monitoring menu: ${needle}")
+        }
+        ['"Monitor"', 'case 7 -> monitoring(g, x, y)', 'menu.lastPlantedSlot()',
+         'menu.monitorDisabled()', 'menu.monitorReserved()', 'menu.monitorFiltered()'].each { needle ->
+            if (!screen.contains(needle)) throw new GradleException("Missing greenhouse monitor interface: ${needle}")
+        }
+        logger.lifecycle('Agri Evolution 0.29.5: dashboard monitoring sync, genetic snapshot and save fields verified')
+    }
+}
+tasks.named('compileJava') { dependsOn(tasks.named('verifySmartGreenhouseMonitoring')) }
+
+// v0.24.0 — standalone policy regression (runs as part of the Gradle project test classes).
+tasks.register('harvestExportPolicySelfTest', JavaExec) {
+    group = 'verification'
+    description = 'Check category selection, priority ties, export reserves and overflow threshold.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.agrievolution.farming.HarvestExportPolicySelfTest'
+}
+
+tasks.register('verifyHarvestExport0240') {
+    group = 'verification'
+    description = 'Verify harvest export capabilities, persisted settings and interface wiring.'
+    doLast {
+        def be = readSource('content/BotanicalGreenhouseBlockEntity.java')
+        def menu = readSource('content/BotanicalGreenhouseHarvestMenu.java')
+        def screens = readSource('client/greenhouse/BotanicalGreenhouseHarvestScreen.java')
+        // Transfer behavior is covered by ExportTransactionGameTests, including destination callbacks.
+        ['Game.hooks().itemOutput(', 'compactStorage()', 'ItemStack.isSameItemSameComponents',
+         'HarvestExportEnabled', 'HarvestExportPriorities', 'HarvestExportReserve',
+         'HarvestExportSide', 'getCount() { return 15; }'].each { token ->
+            if (!be.contains(token)) throw new GradleException("Missing 0.24 export logic: ${token}")
+        }
+        if (!menu.contains('greenhouse.toggleExportCategory') ||
+            !menu.contains('greenhouse.cycleExportPriority') ||
+            !screens.contains('handleInventoryButtonClick(menu.containerId'))
+            throw new GradleException('Harvest management settings menu missing')
+        logger.lifecycle('Agri Evolution: harvest export capabilities, menu and persistence verified')
+    }
+}
+tasks.named('compileJava') { dependsOn tasks.named('verifyHarvestExport0240') }
+
+// v0.30: optional greenhouse breeding/bonus-seed regression checks, no Gradle plugins needed.
+tasks.register('verifyAutoBreeding0300') {
+    group = 'verification'
+    description = 'Check integrated greenhouse breeding, starter drops, genetics and seed chances.'
+    doLast {
+        def entity = readSource('content/BotanicalGreenhouseBlockEntity.java')
+        def menu = readSource('content/BotanicalGreenhouseMenu.java')
+        def screen = readSource('client/greenhouse/BotanicalGreenhouseScreen.java')
+        def crop = readSource('content/AgriCropBlock.java')
+        ['SmartFarmingAutoBreed', 'breedFromSeedBank(server)',
+         'GenomeBreeder.cross(', 'SpeciesBreeder.cross(', 'RareTrait.inherit(',
+         'HybridLineageStorage', 'distributeDrops(List.of(offspring), futureBank, futureStorage)',
+         'getCount() { return DASHBOARD_DATA_COUNT; }'].each { k ->
+            if (!entity.contains(k)) throw new GradleException("Auto-breed entity missing: ${k}")
+        }
+        ['new SimpleContainerData(BotanicalGreenhouseBlockEntity.DASHBOARD_DATA_COUNT)', 'toggleAutoBreed()', 'autoBreedStatus()'].each { k ->
+            if (!menu.contains(k)) throw new GradleException("Auto-breed menu missing: ${k}")
+        }
+        ['Auto-breed:', 'handleInventoryButtonClick(menu.containerId, 10)'].each { k ->
+            if (!screen.contains(k)) throw new GradleException("Auto-breed UI missing: ${k}")
+        }
+        if (!crop.contains('ExtraSeedRules.chancePercent(') ||
+            !entity.contains('ExtraSeedRules.chancePercent('))
+            throw new GradleException('Extra seeds must work in BOTH harvest paths')
+        def base = file('src/main/resources/data')
+        ['neoforge/loot_modifiers/global_loot_modifiers.json',
+         'agri_evolution/loot_modifiers/tall_grass_starter_seed.json',
+         'agri_evolution/loot_modifiers/short_grass_starter_seed.json',
+         'agri_evolution/loot_table/starter_wild_seed.json'].each { path ->
+            if (!new File(base, path).exists() && !project(':common').file('src/main/resources/data/' + path).exists()) throw new GradleException("Starter loot missing: ${path}")
+        }
+        logger.lifecycle('Agri Evolution v0.30: auto-breed, genetics, drop chances and GUI verified (static)')
+    }
+}
+tasks.named('compileJava') { dependsOn tasks.named('verifyAutoBreeding0300') }
+
+// 0.32.2: future-proof the texture pipeline. Standalone gameplay icons/tiles are
+// 64x64; vertical animation strips consist of successive 64x64 frames.
+// Native-resolution GUI panels and entity skins are intentionally *not* resized:
+// their pixel/UV coordinates would otherwise require corresponding renderer changes.
+tasks.register('verifyTextureCatalog0322') {
+    group = 'verification'
+    description = 'Verify 64px item, block, seed and plant texture frames, with no partial-alpha fringes on standalone sprites.'
+    doLast {
+        def root = project(':common').file('src/main/resources/assets/agri_evolution/textures')
+        int sprites = 0
+        int strips = 0
+        ['block', 'item'].each { category ->
+            fileTree(new File(root, category)) { include '**/*.png' }.files.each { tex ->
+                def image = javax.imageio.ImageIO.read(tex)
+                if (image == null || image.width != 64 || image.height < 64 || (image.height % 64) != 0) {
+                    throw new GradleException("Texture must contain 64x64 frame(s): ${category}/${tex.name}")
+                }
+                if (category == 'block' && image.height != 64) {
+                    throw new GradleException("Block tile must be exactly 64x64: ${tex.name}")
+                }
+                if (category == 'seed' && image.height != 64) {
+                    throw new GradleException("Seed icon must be exactly 64x64: ${tex.name}")
+                }
+                if (image.height > 64) strips++
+                else sprites++
+                // Standalone inventory sprites and seed art must have clean cutout edges.
+                if (image.height == 64 && (category == 'item' || category == 'seed')) {
+                    for (int y=0; y<64; y++) {
+                        for (int x=0; x<64; x++) {
+                            int a = (image.getRGB(x,y) >>> 24) & 255
+                            if (a != 0 && a != 255)
+                                throw new GradleException("Semi-transparent fringe: ${category}/${tex.name} (${x},${y})")
+                        }
+                    }
+                }
+            }
+        }
+        // Check every explicit Agri Evolution model texture reference for a PNG.
+        def parser = new groovy.json.JsonSlurper()
+        def modelRoot = project(':common').file('src/main/resources/assets/agri_evolution/models')
+        int refs = 0
+        fileTree(modelRoot) { include '**/*.json' }.files.each { modelFile ->
+            def model = parser.parse(modelFile)
+            (model.textures ?: [:]).values().each { ref ->
+                if (ref instanceof String && ref.startsWith('agri_evolution:')) {
+                    def path = ref.substring('agri_evolution:'.length())
+                    def image = new File(root, path + '.png')
+                    if (!image.isFile()) throw new GradleException("Missing model texture ${ref} in ${modelFile.name}")
+                    refs++
+                }
+            }
+        }
+        logger.lifecycle("Agri Evolution: ${sprites} standalone 64px sprites, ${strips} preserved 64px-frame strips, ${refs} model references verified")
+        logger.lifecycle('Native GUI sheets are checked separately; retired assets are archived outside active resources.')
+    }
+}
+tasks.named('processResources') { dependsOn(tasks.named('verifyTextureCatalog0322')) }
+
+tasks.register('verifyRecipeCatalogue', Exec) {
+    group = 'verification'
+    description = 'Check the illustrated machine recipe catalogue against crafting recipes.'
+    workingDir rootProject.projectDir
+    commandLine 'node', 'tools/build_machine_recipe_catalog.cjs', '--check'
+}
+
+tasks.register('verifyMod') {
+    group = 'verification'
+    description = 'Build the mod and run all automated checks. Requires -PgameplayTests and Node.js.'
+    dependsOn 'build', 'compileGuiPreviewJava', 'verifyRecipeCatalogue',
+            'genomeSelfTest', 'speciesSelfTest', 'farmingSelfTest', 'seedAnalyzerSelfTest',
+            'breedingStationSelfTest', 'resourceProgressionSelfTest', 'seedBankPlannerSelfTest',
+            'smartGreenhouseMonitoringSelfTest', 'harvestExportPolicySelfTest', 'journalNavigationSelfTest'
+    if (project.hasProperty('gameplayTests')) dependsOn 'runGameplayTests'
+    doFirst {
+        if (!project.hasProperty('gameplayTests'))
+            throw new GradleException('Use -PgameplayTests verifyMod to include the server gameplay tests.')
+    }
+}
+
+
+String readSource(String path) {
+    String name = 'src/main/java/com/agrievolution/' + path
+    File shared = project(':common').file(name)
+    return (shared.exists() ? shared : file(name)).text
+}

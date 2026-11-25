@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "agri_evolution:item/trowel_empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "agri_evolution:tended": 1
+      },
+      "model": "agri_evolution:item/trowel_plant"
+    }
+  ]
+}

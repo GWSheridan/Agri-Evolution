@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1
+
+- Added Forge and Fabric builds for Minecraft 1.21.1 alongside NeoForge. Fabric requires Fabric API.
+- The three builds share the same crops, recipes, machines, journals and artwork. Existing NeoForge worlds keep their registry IDs and saved farm data.
+
 ## 1.5.0
 
 - Added crop rotation. Harvest a mature crop, then plant a different crop family on the same plot for a small growth bonus. Repeating a family keeps its normal growth rate. Plot history stays in the world save.

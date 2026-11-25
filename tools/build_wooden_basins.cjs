@@ -1,6 +1,6 @@
 // Hollow trough geometry; material artwork is kept separately in the local archive.
 const fs=require('node:fs');
-const root='src/main/resources/assets/agri_evolution/models/block/';
+const root='common/src/main/resources/assets/agri_evolution/models/block/';
 function box(from,to,texture,uv){
   return {from,to,faces:Object.fromEntries(['north','south','east','west','up','down'].map(side=>[side,{texture:'#'+texture,...(uv?{uv}:{})}]))};
 }

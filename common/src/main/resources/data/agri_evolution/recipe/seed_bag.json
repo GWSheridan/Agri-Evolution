@@ -1,0 +1,21 @@
+{
+  "pattern": [
+    "S S",
+    "L L",
+    "LLL"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:string"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    }
+  },
+  "type": "minecraft:crafting_shaped",
+  "result": {
+    "count": 1,
+    "id": "agri_evolution:seed_bag"
+  },
+  "category": "equipment"
+}

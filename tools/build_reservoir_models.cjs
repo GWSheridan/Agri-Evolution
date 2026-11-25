@@ -1,5 +1,5 @@
 const fs=require('fs');
-const root='src/main/resources/assets/agri_evolution/';
+const root='common/src/main/resources/assets/agri_evolution/';
 const textures={copper:'agri_evolution:block/irrigation_copper',enamel:'agri_evolution:block/irrigation_enamel',panel:'agri_evolution:block/reservoir_panel',particle:'agri_evolution:block/irrigation_copper'};
 function box(from,to,t='copper'){return {from,to,faces:Object.fromEntries(['north','south','east','west','up','down'].map(d=>[d,{texture:'#'+t}]))};}
 function save(p,o){fs.writeFileSync(root+p,JSON.stringify(o,null,2)+'\n');}
