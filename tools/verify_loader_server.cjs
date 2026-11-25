@@ -83,12 +83,18 @@ async function checkServer(port, password, phase) {
             await expect('tick sprint 415', /sprint/i);
             await awaitCheck('data get block 8 80 8 Water', /32000$/);
             await expect('execute if block 9 80 8 agri_evolution:water_reservoir[fill=4]', /Test passed/);
+            await expect('setblock 2 90 4 minecraft:farmland[moisture=0]', /Changed the block/);
+            await expect('setblock 6 90 4 agri_evolution:irrigation_basin[filled=true]', /Changed the block/);
+            await awaitCheck('execute if block 2 90 4 minecraft:farmland[moisture=7]', /Test passed/);
+            // With random ticks off, moisture after restart comes from the basin loading.
+            await expect('setblock 2 90 4 minecraft:farmland[moisture=0]', /Changed the block/);
         } else {
             await awaitCheck('execute if loaded 8 80 8', /Test passed/);
             await expect('data get block 8 80 8 Water', /32000$/);
             await expect('data get block 8 80 8 Renewable', /1b$/);
             await expect('execute if block 1 79 1 agri_evolution:agri_crop[age=7]', /Test passed/);
             await expect('execute if block 2 80 1 agri_evolution:seed_vault', /Test passed/);
+            await awaitCheck('execute if block 2 90 4 minecraft:farmland[moisture=7]', /Test passed/);
         }
         await expect('save-all flush', /Saved the game/);
         console.log(`Dedicated server ${phase} checks passed`);

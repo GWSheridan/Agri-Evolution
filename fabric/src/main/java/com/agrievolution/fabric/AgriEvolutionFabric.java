@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -21,12 +22,19 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.entries.NestedLootTable;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public final class AgriEvolutionFabric implements ModInitializer {
+    private final Map<ServerLevel, Set<LevelChunk>> pendingBlockEntityLoads = new HashMap<>();
+
     @Override
     public void onInitialize() {
         Game.install(new FabricGameHooks());
@@ -44,8 +52,12 @@ public final class AgriEvolutionFabric implements ModInitializer {
         ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, manager, success) -> {
             if (success) CropWeeds.tagsUpdated();
         });
-        ServerWorldEvents.UNLOAD.register((server, level) -> FabricWaterTickets.unload(level));
+        ServerWorldEvents.UNLOAD.register((server, level) -> {
+            pendingBlockEntityLoads.remove(level);
+            FabricWaterTickets.unload(level);
+        });
         ServerTickEvents.END_WORLD_TICK.register(level -> {
+            loadBlockEntities(level);
             for (var player : level.players()) {
                 FarmInspection.tick(player);
                 FarmLedgerService.playerTick(player);
@@ -56,14 +68,18 @@ public final class AgriEvolutionFabric implements ModInitializer {
             FarmLedgerService.survey(level);
             SprinklerGrowth.endTick(level);
         });
-        ServerChunkEvents.CHUNK_LOAD.register((level, chunk) ->
-                chunk.getBlockEntities().values().forEach(entity -> {
-                    if (entity instanceof ChunkAwareBlockEntity aware) aware.onLoad();
-                }));
-        ServerChunkEvents.CHUNK_UNLOAD.register((level, chunk) ->
-                chunk.getBlockEntities().values().forEach(entity -> {
-                    if (entity instanceof ChunkAwareBlockEntity aware) aware.onChunkUnloaded();
-                }));
+        ServerChunkEvents.CHUNK_LOAD.register((level, chunk) -> {
+            if (chunk.getBlockEntities().values().stream().anyMatch(ChunkAwareBlockEntity.class::isInstance)) {
+                pendingBlockEntityLoads.computeIfAbsent(level, ignored -> new LinkedHashSet<>()).add(chunk);
+            }
+        });
+        ServerChunkEvents.CHUNK_UNLOAD.register((level, chunk) -> {
+            var pending = pendingBlockEntityLoads.get(level);
+            if (pending != null) pending.remove(chunk);
+            for (var entity : chunk.getBlockEntities().values()) {
+                if (entity instanceof ChunkAwareBlockEntity aware) aware.onChunkUnloaded();
+            }
+        });
 
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
             if (player.isSpectator()) return InteractionResult.PASS;
@@ -87,6 +103,19 @@ public final class AgriEvolutionFabric implements ModInitializer {
         });
         reload("garden_orders", new GardenOrderReload());
         reload("vertical_greenhouse_harvests", new VerticalGreenhouseHarvests());
+    }
+
+    private void loadBlockEntities(ServerLevel level) {
+        // Chunk load events can fire before the chunk is available to world lookups.
+        var pending = pendingBlockEntityLoads.remove(level);
+        if (pending == null) return;
+        for (var chunk : pending) {
+            var pos = chunk.getPos();
+            if (level.getChunkSource().getChunkNow(pos.x, pos.z) != chunk) continue;
+            for (var entity : chunk.getBlockEntities().values()) {
+                if (entity instanceof ChunkAwareBlockEntity aware && !entity.isRemoved()) aware.onLoad();
+            }
+        }
     }
 
     private static void reload(String name, PreparableReloadListener listener) {
