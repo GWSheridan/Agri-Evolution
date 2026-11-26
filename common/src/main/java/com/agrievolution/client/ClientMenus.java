@@ -21,6 +21,7 @@ public final class ClientMenus {
         screens.register(AEMenus.GARDEN_WORK.get(), GardenWorkScreen::new);
         screens.register(AEMenus.SEED_VAULT.get(), SeedVaultScreen::new);
         screens.register(AEMenus.IRRIGATION_CONTROLLER.get(), IrrigationControllerScreen::new);
+        screens.register(AEMenus.RESOURCE_WORKSHOP.get(), ResourceWorkshopScreen::new);
         screens.register(AEMenus.BATCH_COOKING_STATION.get(), BatchCookingScreen::new);
         screens.register(AEMenus.SEED_BREEDING_STATION.get(), SeedBreedingStationScreen::new);
         screens.register(AEMenus.BOTANICAL_GREENHOUSE.get(), BotanicalGreenhouseScreen::new);

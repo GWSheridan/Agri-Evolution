@@ -1,0 +1,15 @@
+{
+  "type": "agri_evolution:resource_workshop",
+  "material": {
+    "item": "minecraft:iron_ingot"
+  },
+  "binder": {
+    "item": "minecraft:obsidian"
+  },
+  "result": {
+    "id": "agri_evolution:reinforced_bracket",
+    "count": 2
+  },
+  "tier": 2,
+  "ticks": 140
+}

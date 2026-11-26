@@ -22,6 +22,24 @@ public final class AEItems {
             properties -> new IrrigationFittingItem(AEBlocks.VERTICAL_GREENHOUSE.get(), properties), new Item.Properties());
     public static final Supplier<BlockItem> IRRIGATION_CONTROLLER = ITEMS.registerItem("irrigation_controller",
             properties -> new BlockItem(AEBlocks.IRRIGATION_CONTROLLER.get(), properties), new Item.Properties());
+    public static final Supplier<BlockItem> RESOURCE_WORKSHOP = ITEMS.registerItem("resource_workshop",
+            properties -> new BlockItem(AEBlocks.RESOURCE_WORKSHOP.get(), properties), new Item.Properties());
+    public static final Supplier<Item> SOIL_CONDITIONER = ITEMS.register("soil_conditioner",
+            () -> new Item(new Item.Properties()));
+    public static final Supplier<Item> COPPER_COUPLING = ITEMS.register("copper_coupling",
+            () -> new Item(new Item.Properties()));
+    public static final Supplier<Item> AMETHYST_LENS = ITEMS.register("amethyst_lens",
+            () -> new Item(new Item.Properties()));
+    public static final Supplier<Item> REINFORCED_BRACKET = ITEMS.register("reinforced_bracket",
+            () -> new Item(new Item.Properties()));
+    public static final Supplier<Item> NETHER_HEAT_CORE = ITEMS.register("nether_heat_core",
+            () -> new Item(new Item.Properties()));
+    public static final Supplier<Item> ENDER_RELAY = ITEMS.register("ender_relay",
+            () -> new Item(new Item.Properties()));
+    public static final Supplier<Item> WORKSHOP_REFINEMENT_UPGRADE = ITEMS.register("workshop_refinement_upgrade",
+            () -> new Item(new Item.Properties()));
+    public static final Supplier<Item> WORKSHOP_MASTERY_UPGRADE = ITEMS.register("workshop_mastery_upgrade",
+            () -> new Item(new Item.Properties()));
     public static final Supplier<BlockItem> BATCH_COOKING_STATION = ITEMS.registerItem("batch_cooking_station",
             properties -> new BlockItem(AEBlocks.BATCH_COOKING_STATION.get(), properties), new Item.Properties());
     public static final Supplier<BlockItem> GARDEN_ORDER_BOARD = ITEMS.registerItem("garden_order_board",

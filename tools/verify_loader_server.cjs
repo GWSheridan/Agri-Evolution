@@ -55,6 +55,15 @@ async function checkServer(port, password, phase) {
         return expect(command, pattern);
     }
 
+    const workshopJobs = [
+        [1, 'clay_ball', 'bone_meal', 'soil_conditioner', 2],
+        [1, 'copper_ingot', 'clay_ball', 'copper_coupling', 2],
+        [2, 'glass', 'amethyst_shard', 'amethyst_lens', 1],
+        [2, 'iron_ingot', 'obsidian', 'reinforced_bracket', 2],
+        [3, 'blaze_rod', 'magma_cream', 'nether_heat_core', 1],
+        [3, 'ender_pearl', 'popped_chorus_fruit', 'ender_relay', 1]
+    ];
+
     try {
         await consoleCommand(3, password);
         if (phase === 'seed') {
@@ -69,8 +78,14 @@ async function checkServer(port, password, phase) {
             await expect('setblock 2 80 1 agri_evolution:seed_vault', /Changed the block/);
             await expect('execute if data block 2 80 1 id', /Test passed/);
 
-            // Form a valid shell while ticks are frozen so early pieces cannot dismantle it.
             await consoleCommand(2, 'tick freeze');
+            for (const [index, [tier, material, binder]] of workshopJobs.entries()) {
+                const pos = (index + 2) + ' 80 4';
+                await expect('setblock ' + pos + ' agri_evolution:resource_workshop[tier=' + tier + ']', /Changed the block/);
+                const contents = '[{Slot:0b,id:"minecraft:' + material + '",count:1},{Slot:1b,id:"minecraft:' + binder + '",count:1}]';
+                await expect('data merge block ' + pos + ' {Items:' + contents + '}', /Modified block data/);
+            }
+            // Form a valid shell while ticks are frozen so early pieces cannot dismantle it.
             for (let x = 0; x < 3; x++) {
                 for (let y = 0; y < 3; y++) {
                     for (let z = 0; z < 3; z++) {
@@ -95,6 +110,11 @@ async function checkServer(port, password, phase) {
             await expect('execute if block 1 79 1 agri_evolution:agri_crop[age=7]', /Test passed/);
             await expect('execute if block 2 80 1 agri_evolution:seed_vault', /Test passed/);
             await awaitCheck('execute if block 2 90 4 minecraft:farmland[moisture=7]', /Test passed/);
+        }
+        for (const [index, [, , , result, count]] of workshopJobs.entries()) {
+            const pos = (index + 2) + ' 80 4';
+            await awaitCheck('execute if data block ' + pos + ' Items[{Slot:2b,id:"agri_evolution:' + result
+                    + '",count:' + count + '}]', /Test passed/);
         }
         await expect('save-all flush', /Saved the game/);
         console.log(`Dedicated server ${phase} checks passed`);

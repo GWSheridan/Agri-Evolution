@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "agri_evolution:soil_conditioner"
+    },
+    {
+      "item": "agri_evolution:pulled_weeds"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:compost_mulch",
+    "count": 2
+  }
+}

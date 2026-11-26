@@ -22,6 +22,7 @@ public final class GardenToolsClient {
         event.register(AEMenus.GARDEN_WORK.get(), GardenWorkScreen::new);
         event.register(AEMenus.SEED_VAULT.get(), SeedVaultScreen::new);
         event.register(AEMenus.IRRIGATION_CONTROLLER.get(), IrrigationControllerScreen::new);
+        event.register(AEMenus.RESOURCE_WORKSHOP.get(), ResourceWorkshopScreen::new);
         event.register(AEMenus.BATCH_COOKING_STATION.get(), BatchCookingScreen::new);
     }
     @SubscribeEvent public static void setup(FMLClientSetupEvent event) {

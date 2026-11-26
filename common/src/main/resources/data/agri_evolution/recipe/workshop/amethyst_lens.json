@@ -1,0 +1,15 @@
+{
+  "type": "agri_evolution:resource_workshop",
+  "material": {
+    "item": "minecraft:glass"
+  },
+  "binder": {
+    "item": "minecraft:amethyst_shard"
+  },
+  "result": {
+    "id": "agri_evolution:amethyst_lens",
+    "count": 1
+  },
+  "tier": 2,
+  "ticks": 120
+}

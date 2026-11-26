@@ -13,6 +13,8 @@ public final class ContentRegistration {
         platform.register(AEBlocks.BLOCKS);
         platform.register(AEBlockEntities.TYPES);
         platform.register(AEItems.ITEMS);
+        platform.register(AERecipes.TYPES);
+        platform.register(AERecipes.SERIALIZERS);
         platform.register(AEMenus.MENUS);
         platform.register(AEParticles.TYPES);
         platform.register(AEEntities.TYPES);

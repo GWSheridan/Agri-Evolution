@@ -11,6 +11,9 @@ public final class AEBlocks {
     static { ResourceCropMigration.aliases(BLOCKS, "_crop"); }
     public static final Supplier<IrrigationControllerBlock> IRRIGATION_CONTROLLER = BLOCKS.register("irrigation_controller",
             () -> new IrrigationControllerBlock(BlockBehaviour.Properties.of().strength(3).sound(SoundType.COPPER)));
+    public static final Supplier<ResourceWorkshopBlock> RESOURCE_WORKSHOP = BLOCKS.register("resource_workshop",
+            () -> new ResourceWorkshopBlock(BlockBehaviour.Properties.of().strength(3).sound(SoundType.COPPER)
+                    .pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK)));
     public static final Supplier<BatchCookingBlock> BATCH_COOKING_STATION = BLOCKS.register("batch_cooking_station",
             () -> new BatchCookingBlock(BlockBehaviour.Properties.of().strength(3).sound(SoundType.COPPER)));
     public static final Supplier<CompostBinBlock> COMPOST_BIN = BLOCKS.register("compost_bin",

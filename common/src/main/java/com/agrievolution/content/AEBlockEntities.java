@@ -11,6 +11,8 @@ public final class AEBlockEntities {
             new RegistrationSet<>(Registries.BLOCK_ENTITY_TYPE);
     public static final Supplier<BlockEntityType<IrrigationControllerBlockEntity>> IRRIGATION_CONTROLLER = TYPES.register(
             "irrigation_controller", () -> BlockEntityType.Builder.of(IrrigationControllerBlockEntity::new, AEBlocks.IRRIGATION_CONTROLLER.get()).build(null));
+    public static final Supplier<BlockEntityType<ResourceWorkshopBlockEntity>> RESOURCE_WORKSHOP = TYPES.register("resource_workshop",
+            () -> BlockEntityType.Builder.of(ResourceWorkshopBlockEntity::new, AEBlocks.RESOURCE_WORKSHOP.get()).build(null));
     public static final Supplier<BlockEntityType<BatchCookingBlockEntity>> BATCH_COOKING_STATION = TYPES.register(
             "batch_cooking_station", () -> BlockEntityType.Builder.of(BatchCookingBlockEntity::new, AEBlocks.BATCH_COOKING_STATION.get()).build(null));
     public static final Supplier<BlockEntityType<IrrigationValveBlockEntity>> IRRIGATION_VALVE = TYPES.register(

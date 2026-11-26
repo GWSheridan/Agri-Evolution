@@ -9,7 +9,10 @@ function alternatives(ingredient) {
     throw new Error('Unsupported journal ingredient: ' + JSON.stringify(ingredient));
 }
 
-const recipes = fs.readdirSync(directory).sort().flatMap(file => {
+const files = fs.readdirSync(directory, {withFileTypes: true})
+    .filter(entry => entry.isFile() && entry.name.endsWith('.json'))
+    .map(entry => entry.name).sort();
+const recipes = files.flatMap(file => {
     const recipe = JSON.parse(fs.readFileSync(directory + file, 'utf8'));
     if (!['minecraft:crafting_shaped', 'minecraft:crafting_shapeless'].includes(recipe.type)
             || recipe.result.id.endsWith('_seed')) return [];

@@ -1,0 +1,15 @@
+{
+  "type": "agri_evolution:resource_workshop",
+  "material": {
+    "item": "minecraft:blaze_rod"
+  },
+  "binder": {
+    "item": "minecraft:magma_cream"
+  },
+  "result": {
+    "id": "agri_evolution:nether_heat_core",
+    "count": 1
+  },
+  "tier": 3,
+  "ticks": 160
+}

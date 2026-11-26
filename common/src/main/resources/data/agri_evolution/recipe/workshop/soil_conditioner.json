@@ -1,0 +1,15 @@
+{
+  "type": "agri_evolution:resource_workshop",
+  "material": {
+    "item": "minecraft:clay_ball"
+  },
+  "binder": {
+    "item": "minecraft:bone_meal"
+  },
+  "result": {
+    "id": "agri_evolution:soil_conditioner",
+    "count": 2
+  },
+  "tier": 1,
+  "ticks": 80
+}

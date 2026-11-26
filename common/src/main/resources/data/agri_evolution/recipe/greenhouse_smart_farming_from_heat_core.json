@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "DHD",
+    " A ",
+    "CSC"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "H": {
+      "item": "agri_evolution:nether_heat_core"
+    },
+    "A": {
+      "item": "agri_evolution:greenhouse_automation_upgrade"
+    },
+    "C": {
+      "item": "agri_evolution:nutrient_compost"
+    },
+    "S": {
+      "item": "agri_evolution:seed_analyzer"
+    }
+  },
+  "result": {
+    "id": "agri_evolution:greenhouse_smart_farming_upgrade",
+    "count": 1
+  }
+}

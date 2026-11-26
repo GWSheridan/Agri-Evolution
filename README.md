@@ -62,6 +62,14 @@ Turn on **Preview**, close the screen and hold the ledger to see planting outlin
 
 Select a field, then use the ledger on a Botanical Greenhouse, Vertical Greenhouse, Irrigation Controller or Water Reservoir to link it. Each field supports eight machine links. The **Sharing** tab accepts an online player name or UUID and offers viewing or layout-editing access. Only the owner can rename or delete the field and manage invitations. Conflicting layout edits keep your draft until you reload it.
 
+## Resource Workshop
+
+Craft a Resource Workshop with copper ingots, a piston, smooth stone and a crafting table. Open it and use the arrows to check a recipe's material, binder and required tier. Insert the two ingredients to start processing. A full output pauses work.
+
+Mk I makes Soil Conditioner for Compost Mulch and Copper Couplings for pipes. Mk II adds Amethyst Lenses for soil research and Reinforced Brackets for irrigation controllers. Mk III makes Nether Heat Cores and Ender Relays for greenhouse and soil research upgrades. Install the two Workshop upgrades on the placed block in order.
+
+Hoppers feed material from above and binder from the side. Take output from below. Crops still give their usual harvests, and existing crafting recipes are still available.
+
 ## Build from source
 
 Use Java 25 to run the Gradle wrapper and install a Java 21 JDK for compilation and Minecraft. Gradle writes each JAR to its loader’s `build/libs` directory.

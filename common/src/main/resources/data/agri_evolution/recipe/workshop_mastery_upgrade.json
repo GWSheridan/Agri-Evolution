@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LGL",
+    "BEB",
+    " R "
+  ],
+  "key": {
+    "L": {
+      "item": "agri_evolution:amethyst_lens"
+    },
+    "G": {
+      "item": "minecraft:diamond"
+    },
+    "B": {
+      "item": "agri_evolution:reinforced_bracket"
+    },
+    "E": {
+      "item": "minecraft:ender_eye"
+    },
+    "R": {
+      "item": "minecraft:redstone_block"
+    }
+  },
+  "result": {
+    "id": "agri_evolution:workshop_mastery_upgrade",
+    "count": 1
+  }
+}

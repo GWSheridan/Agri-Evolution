@@ -1,0 +1,15 @@
+{
+  "type": "agri_evolution:resource_workshop",
+  "material": {
+    "item": "minecraft:copper_ingot"
+  },
+  "binder": {
+    "item": "minecraft:clay_ball"
+  },
+  "result": {
+    "id": "agri_evolution:copper_coupling",
+    "count": 2
+  },
+  "tier": 1,
+  "ticks": 100
+}

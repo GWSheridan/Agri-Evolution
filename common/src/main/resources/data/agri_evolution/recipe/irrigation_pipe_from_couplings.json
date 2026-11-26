@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "agri_evolution:copper_coupling"
+    },
+    {
+      "item": "agri_evolution:copper_coupling"
+    },
+    {
+      "item": "minecraft:glass"
+    }
+  ],
+  "result": {
+    "id": "agri_evolution:irrigation_pipe",
+    "count": 6
+  }
+}

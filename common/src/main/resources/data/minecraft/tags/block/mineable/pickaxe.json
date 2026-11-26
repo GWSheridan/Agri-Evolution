@@ -5,6 +5,7 @@
     "agri_evolution:irrigation_valve",
     "agri_evolution:irrigation_pipe",
     "agri_evolution:water_reservoir",
-    "agri_evolution:vertical_greenhouse"
+    "agri_evolution:vertical_greenhouse",
+    "agri_evolution:resource_workshop"
   ]
 }

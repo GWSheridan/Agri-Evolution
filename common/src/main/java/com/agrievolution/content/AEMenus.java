@@ -14,6 +14,8 @@ public final class AEMenus {
             () -> new MenuType<>(FarmLedgerMenu::new, FeatureFlags.DEFAULT_FLAGS));
     public static final Supplier<MenuType<IrrigationControllerMenu>> IRRIGATION_CONTROLLER = MENUS.register("irrigation_controller",
             () -> ContentRegistration.platform().extendedMenu(IrrigationControllerMenu::new));
+    public static final Supplier<MenuType<ResourceWorkshopMenu>> RESOURCE_WORKSHOP = MENUS.register("resource_workshop",
+            () -> new MenuType<>(ResourceWorkshopMenu::new, FeatureFlags.DEFAULT_FLAGS));
     public static final Supplier<MenuType<BatchCookingMenu>> BATCH_COOKING_STATION = MENUS.register("batch_cooking_station",
             () -> new MenuType<>(BatchCookingMenu::new, FeatureFlags.DEFAULT_FLAGS));
     public static final Supplier<MenuType<GardenWorkMenu>> GARDEN_WORK = MENUS.register("garden_work",

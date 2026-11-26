@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "front": "agri_evolution:block/resource_workshop_front",
+    "side": "agri_evolution:block/resource_workshop_side",
+    "top": "agri_evolution:block/resource_workshop_top",
+    "bottom": "agri_evolution:block/resource_workshop_bottom"
+  }
+}

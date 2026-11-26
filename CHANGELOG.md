@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+
+- Added the Resource Workshop, a three-tier machine for turning resource harvests into farm components.
+- Added six processing recipes and optional crafting recipes for mulch, pipes, irrigation controllers, soil research upgrades and the Smart Farming Upgrade.
+- The workshop saves its progress and inventory, supports hoppers and returns its installed upgrades when broken.
+
 ## 1.5.1
 
 - Added Forge and Fabric builds for Minecraft 1.21.1 alongside NeoForge. Fabric requires Fabric API.

@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CRC",
+    "KIK",
+    "B B"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:copper_ingot"
+    },
+    "R": {
+      "item": "minecraft:repeater"
+    },
+    "K": {
+      "item": "minecraft:comparator"
+    },
+    "I": {
+      "item": "agri_evolution:irrigation_valve"
+    },
+    "B": {
+      "item": "agri_evolution:reinforced_bracket"
+    }
+  },
+  "result": {
+    "id": "agri_evolution:irrigation_controller",
+    "count": 1
+  }
+}

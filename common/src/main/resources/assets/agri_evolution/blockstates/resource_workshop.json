@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "agri_evolution:block/resource_workshop"
+    },
+    "facing=east": {
+      "model": "agri_evolution:block/resource_workshop",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "agri_evolution:block/resource_workshop",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "agri_evolution:block/resource_workshop",
+      "y": 270
+    }
+  }
+}

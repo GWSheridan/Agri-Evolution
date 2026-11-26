@@ -1,0 +1,15 @@
+{
+  "type": "agri_evolution:resource_workshop",
+  "material": {
+    "item": "minecraft:ender_pearl"
+  },
+  "binder": {
+    "item": "minecraft:popped_chorus_fruit"
+  },
+  "result": {
+    "id": "agri_evolution:ender_relay",
+    "count": 1
+  },
+  "tier": 3,
+  "ticks": 200
+}
